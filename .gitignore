@@ -1,0 +1,41 @@
+################################
+# Visual Studio / .NET
+################################
+.vs/
+*.user
+*.suo
+*.cache
+*.log
+
+# Build outputs
+bin/
+obj/
+
+################################
+# App settings (security)
+################################
+appsettings.json
+appsettings.*.json
+
+# Keep sample config
+!appsettings.example.json
+
+################################
+# EF Core
+################################
+**/Migrations/
+*.mdf
+*.ldf
+*.db
+
+################################
+# Rider / VS Code
+################################
+.idea/
+.vscode/
+
+################################
+# OS
+################################
+.DS_Store
+Thumbs.db
