@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Motel.Data;
+using Motel.Repositories;
+using Motel.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +24,12 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
 })
 .AddEntityFrameworkStores<MotelDbContext>()
 .AddDefaultTokenProviders();
+
+// Repositories
+builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
+
+//Services
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 
 // (Optional) Session - hay dùng để lưu tạm
 builder.Services.AddSession(options =>
