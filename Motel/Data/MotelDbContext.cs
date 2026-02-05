@@ -1,18 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Motel.Models;
 
 namespace Motel.Data;
 
-public partial class MotelDbContext : DbContext
+public partial class MotelDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>, int>
 {
     public MotelDbContext(DbContextOptions<MotelDbContext> options)
         : base(options)
     {
     }
 
-    public virtual DbSet<AspNetUser> AspNetUsers { get; set; }
+    public virtual DbSet<ApplicationUser> AspNetUsers { get; set; }
 
     public virtual DbSet<Contract> Contracts { get; set; }
 
@@ -50,7 +52,8 @@ public partial class MotelDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<AspNetUser>(entity =>
+        base.OnModelCreating(modelBuilder);
+        modelBuilder.Entity<ApplicationUser>(entity =>
         {
             entity.HasIndex(e => e.Email, "UX_AspNetUsers_Email").IsUnique();
 
@@ -58,7 +61,7 @@ public partial class MotelDbContext : DbContext
             entity.Property(e => e.Email).HasMaxLength(256);
             entity.Property(e => e.FullName).HasMaxLength(150);
             entity.Property(e => e.PasswordHash).HasMaxLength(500);
-            entity.Property(e => e.Phone).HasMaxLength(30);
+            entity.Property(e => e.PhoneNumber).HasMaxLength(30);
         });
 
         modelBuilder.Entity<Contract>(entity =>

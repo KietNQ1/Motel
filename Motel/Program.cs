@@ -1,37 +1,52 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Motel.Data;
+using Motel.Models;
 using Motel.Repositories;
 using Motel.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// MVC
 builder.Services.AddControllersWithViews();
 
-// EF Core DbContext
+// DbContext
 builder.Services.AddDbContext<MotelDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Identity
-builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
+// =======================
+// Identity (INT KEY)
+// =======================
+builder.Services
+    .AddIdentity<ApplicationUser, IdentityRole<int>>(options =>
+    {
+        options.User.RequireUniqueEmail = true;
+
+        options.Password.RequireNonAlphanumeric = false;
+        options.Password.RequireUppercase = false;
+        options.Password.RequireLowercase = false;
+        options.Password.RequireDigit = false;
+        options.Password.RequiredLength = 6;
+    })
+    .AddEntityFrameworkStores<MotelDbContext>()
+    .AddDefaultTokenProviders();
+
+// Cookie config
+builder.Services.ConfigureApplicationCookie(options =>
 {
-    options.Password.RequireNonAlphanumeric = false;
-    options.Password.RequireUppercase = false;
-    options.Password.RequireLowercase = false;
-    options.Password.RequireDigit = false;
-    options.Password.RequiredLength = 6;
-})
-.AddEntityFrameworkStores<MotelDbContext>()
-.AddDefaultTokenProviders();
+    options.LoginPath = "/Account/Login";
+    options.AccessDeniedPath = "/Account/Denied";
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+    options.SlidingExpiration = true;
+});
 
 // Repositories
 builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
 
-//Services
+// Services
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 
-// (Optional) Session - hay dùng để lưu tạm
+// Session (optional – KHÔNG bắt buộc cho Identity)
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(30);
@@ -41,11 +56,12 @@ builder.Services.AddSession(options =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// =======================
+// HTTP PIPELINE
+// =======================
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -54,9 +70,9 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-// Auth middleware MUST be before Authorization
-app.UseSession();
-app.UseAuthentication();
+
+app.UseSession();        // optional
+app.UseAuthentication(); // Identity
 app.UseAuthorization();
 
 app.MapControllerRoute(
