@@ -11,6 +11,32 @@
 bin/
 obj/
 
+# NuGet packages
+packages/
+*.nupkg
+*.snupkg
+
+# Test results
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+coverage/
+
+# Publish profiles
+PublishProfiles/
+*.pubxml
+*.pubxml.user
+
+# ReSharper
+_ReSharper.*/
+*.DotSettings.user
+
+# NCrunch
+*.ncrunchsolution
+*.ncrunchproject
+.ncrunch*
+
 ################################
 # App settings (security)
 ################################
@@ -27,15 +53,56 @@ appsettings.*.json
 *.mdf
 *.ldf
 *.db
+*.sqlite
+*.sqlite3
 
 ################################
-# Rider / VS Code
+# JetBrains Rider
 ################################
 .idea/
+*.sln.iml
+*.iml
+.idea_modules/
+*.ipr
+*.iws
+out/
+
+################################
+# VS Code
+################################
 .vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+################################
+# Cursor IDE
+################################
+.cursor/
+*.cursorrules
+
+################################
+# Google Project IDX / Antigravity
+################################
+.idx/
+.google/
+workspace.json
+
+################################
+# Frontend (if using)
+################################
+node_modules/
+wwwroot/lib/
+package-lock.json
+yarn.lock
 
 ################################
 # OS
 ################################
 .DS_Store
 Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*~
