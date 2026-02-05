@@ -23,7 +23,7 @@ public partial class MeterReading
 
     public int RecordedByUserId { get; set; }
 
-    public virtual AspNetUser RecordedByUser { get; set; } = null!;
+    public virtual ApplicationUser RecordedByUser { get; set; } = null!;
 
     public virtual Room Room { get; set; } = null!;
 }

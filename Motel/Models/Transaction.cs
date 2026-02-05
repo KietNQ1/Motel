@@ -31,7 +31,7 @@ public partial class Transaction
 
     public virtual Contract? Contract { get; set; }
 
-    public virtual AspNetUser CreatedByUser { get; set; } = null!;
+    public virtual ApplicationUser CreatedByUser { get; set; } = null!;
 
     public virtual Invoice? Invoice { get; set; }
 

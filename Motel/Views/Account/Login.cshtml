@@ -1,0 +1,25 @@
+﻿@{
+	ViewData["title"] = "Login";
+}
+<h2>Login</h2>
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div style="color:red">
+        @foreach (var e in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+        {
+            <div>@e.ErrorMessage</div>
+        }
+    </div>
+}
+<form method="post">
+    <div style="color:pink">
+        <label>Email:</label>
+        <input type="text" name="email" style="color:red" />
+    </div>
+    <div style="color:pink">
+        <label>PassWord</label>
+        <input type="password" name="password" style="color:red" />
+    </div>
+    <button type="submit">Login</button>
+</form>
