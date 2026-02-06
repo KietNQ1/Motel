@@ -58,6 +58,8 @@ namespace Motel.Controllers
             return RedirectToAction("Login");
         }
         [HttpGet]
-        public IActionResult Register()
+        public IActionResult Register(){
+            return View();
+        }
     }
 }
