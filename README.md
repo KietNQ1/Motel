@@ -139,6 +139,7 @@ Các kỹ thuật chính:
 
    ```
    /database/seed_core.sql
+   /SQLAspCore.sql
    ```
 4. Seed dữ liệu demo nghiệp vụ:
 
