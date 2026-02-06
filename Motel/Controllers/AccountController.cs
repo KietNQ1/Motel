@@ -57,7 +57,5 @@ namespace Motel.Controllers
             await _signInManager.SignOutAsync();
             return RedirectToAction("Login");
         }
-        [HttpGet]
-        public IActionResult Register()
     }
 }

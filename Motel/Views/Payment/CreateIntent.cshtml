@@ -1,0 +1,149 @@
+﻿@model Motel.ViewModels.Payments.CreatePaymentIntentViewModel
+@{
+    ViewData["Title"] = "Create Payment Intent";
+}
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<script>
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: {
+                    primary: "#ea7c24",
+                    "background-light": "#f3f4f6",
+                    "background-dark": "#0f172a",
+                },
+                fontFamily: { display: ["Inter", "sans-serif"] },
+                borderRadius: { DEFAULT: "12px" }
+            },
+        },
+    };
+</script>
+
+<div class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex">
+    <main class="flex-1 flex flex-col items-center justify-center p-4 md:p-8 overflow-y-auto">
+        <div class="w-full max-w-lg mb-6 flex items-center gap-4">
+            <a href="javascript:history.back()" class="p-2 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 hover:scale-105 transition-transform">
+                <span class="material-symbols-outlined text-primary">chevron_left</span>
+            </a>
+            <h1 class="text-xl font-bold text-slate-800 dark:text-white">New Payment Intent</h1>
+        </div>
+
+        <div class="w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col">
+            <form asp-action="CreateIntent" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="p-8 space-y-8 overflow-y-auto max-h-[75vh]">
+                    <!-- Invoice (thay cho Tenant) -->
+                    <section class="space-y-3">
+                        <label class="block text-xs font-bold text-slate-400 dark:text-slate-500 tracking-widest uppercase">
+                            Invoice
+                        </label>
+
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <span class="material-symbols-outlined text-primary text-xl">receipt_long</span>
+                            </div>
+
+                            <select asp-for="InvoiceId" asp-items="Model.InvoiceOptions"
+                                    class="block w-full pl-12 pr-10 py-4 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl focus:ring-2 focus:ring-primary/50 text-slate-700 dark:text-slate-200 appearance-none transition-all">
+                            </select>
+
+                            <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                                <span class="material-symbols-outlined text-slate-400">expand_more</span>
+                            </div>
+                        </div>
+
+                        <span class="text-red-500 text-sm">@Html.ValidationMessageFor(m => m.InvoiceId)</span>
+                    </section>
+
+                    <!-- Amount: hiển thị thôi -->
+                    <section class="space-y-3">
+                        <label class="block text-xs font-bold text-slate-400 dark:text-slate-500 tracking-widest uppercase">Payment Amount</label>
+                        <div class="relative bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-6 flex items-center border-2 border-transparent">
+                            <span class="text-3xl font-bold text-primary mr-3">₫</span>
+
+                            <input asp-for="Amount" readonly
+                                   class="bg-transparent border-none p-0 text-4xl font-bold w-full focus:ring-0 text-slate-800 dark:text-white"
+                                   value="@Model.Amount.ToString("n0")" />
+                        </div>
+                    </section>
+
+                    <!-- Payment Method -->
+                    <section class="space-y-4">
+                        <label class="block text-xs font-bold text-slate-400 dark:text-slate-500 tracking-widest uppercase">Payment Method</label>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <!-- CASH -->
+                            <label class="relative flex flex-col items-center justify-center p-6 border-2 rounded-2xl cursor-pointer transition-colors
+                                          @(Model.Provider == "CASH" ? "border-primary bg-orange-50/50 dark:bg-primary/5" : "border-slate-50 dark:border-slate-800 bg-white dark:bg-slate-800")">
+                                <input type="radio" asp-for="Provider" value="CASH" class="hidden" />
+                                <div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 text-green-600 rounded-lg flex items-center justify-center mb-2">
+                                    <span class="material-symbols-outlined">payments</span>
+                                </div>
+                                <span class="text-sm font-semibold text-slate-700 dark:text-slate-200">Cash</span>
+                            </label>
+
+                            <!-- VNPAY -->
+                            <label class="relative flex flex-col items-center justify-center p-6 border-2 rounded-2xl cursor-pointer transition-colors
+                                          @(Model.Provider == "VNPAY" ? "border-primary bg-orange-50/50 dark:bg-primary/5" : "border-slate-50 dark:border-slate-800 bg-white dark:bg-slate-800")">
+                                <input type="radio" asp-for="Provider" value="VNPAY" class="hidden" />
+                                <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-lg flex items-center justify-center mb-2">
+                                    <span class="material-symbols-outlined">qr_code_2</span>
+                                </div>
+                                <span class="text-sm font-semibold text-slate-700 dark:text-slate-200">VNPay</span>
+                            </label>
+
+                            <!-- PAYOS -->
+                            <label class="relative flex flex-col items-center justify-center p-6 border-2 rounded-2xl cursor-pointer transition-colors
+                                          @(Model.Provider == "PAYOS" ? "border-primary bg-orange-50/50 dark:bg-primary/5" : "border-slate-50 dark:border-slate-800 bg-white dark:bg-slate-800")">
+                                <input type="radio" asp-for="Provider" value="PAYOS" class="hidden" />
+                                <div class="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 rounded-lg flex items-center justify-center mb-2">
+                                    <span class="material-symbols-outlined">account_balance</span>
+                                </div>
+                                <span class="text-sm font-semibold text-slate-700 dark:text-slate-200">PayOS</span>
+                            </label>
+
+                            <!-- MOMO -->
+                            <label class="relative flex flex-col items-center justify-center p-6 border-2 rounded-2xl cursor-pointer transition-colors
+                                          @(Model.Provider == "MOMO" ? "border-primary bg-orange-50/50 dark:bg-primary/5" : "border-slate-50 dark:border-slate-800 bg-white dark:bg-slate-800")">
+                                <input type="radio" asp-for="Provider" value="MOMO" class="hidden" />
+                                <div class="w-10 h-10 bg-pink-100 dark:bg-pink-900/30 text-pink-600 rounded-lg flex items-center justify-center mb-2">
+                                    <span class="material-symbols-outlined">smartphone</span>
+                                </div>
+                                <span class="text-sm font-semibold text-slate-700 dark:text-slate-200">MoMo</span>
+                            </label>
+                        </div>
+
+                        <span class="text-red-500 text-sm">@Html.ValidationMessageFor(m => m.Provider)</span>
+                    </section>
+
+                    <!-- Due Date + Note (optional, hiện tại logic chưa lưu vào DB, bạn để để dùng sau) -->
+                    <section class="space-y-3">
+                        <label class="block text-xs font-bold text-slate-400 dark:text-slate-500 tracking-widest uppercase">Due Date</label>
+                        <input asp-for="DueDate" type="date"
+                               class="block w-full py-4 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl focus:ring-2 focus:ring-primary/50 text-slate-700 dark:text-slate-200" />
+                    </section>
+
+                    <section class="space-y-3">
+                        <label class="block text-xs font-bold text-slate-400 dark:text-slate-500 tracking-widest uppercase">Payment Note</label>
+                        <textarea asp-for="Note" rows="3"
+                                  class="block w-full py-4 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl focus:ring-2 focus:ring-primary/50 text-slate-700 dark:text-slate-200 resize-none"
+                                  placeholder="e.g., July Rent + Electricity"></textarea>
+                    </section>
+                </div>
+
+                <div class="p-8 pt-4 bg-white dark:bg-slate-900 border-t border-slate-50 dark:border-slate-800">
+                    <button type="submit"
+                            class="w-full bg-primary hover:bg-orange-500 text-white font-bold py-5 rounded-2xl shadow-lg shadow-orange-500/30 flex items-center justify-center gap-2 transition-all active:scale-[0.98]">
+                        Create Payment Intent
+                        <span class="material-symbols-outlined">send</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>

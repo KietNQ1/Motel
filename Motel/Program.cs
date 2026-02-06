@@ -3,7 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using Motel.Data;
 using Motel.Models;
 using Motel.Repositories;
+using Motel.Repositories.Interface;
 using Motel.Services;
+using Motel.Services.Interface;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,9 +44,11 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 // Repositories
 builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
-
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 // Services
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
+
 
 // Session (optional – KHÔNG bắt buộc cho Identity)
 builder.Services.AddSession(options =>
