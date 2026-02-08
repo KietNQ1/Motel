@@ -1,0 +1,125 @@
+﻿@model Motel.ViewModels.Invoice.CreateInvoiceViewModel
+
+@{
+    ViewData["Title"] = "Tạo hóa đơn";
+}
+
+<h2 class="mb-3">Tạo hóa đơn</h2>
+
+<form asp-controller="Invoice" asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+
+    <!-- Validation summary -->
+    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+    <!-- Hidden -->
+    <input type="hidden" asp-for="ContractId" />
+
+    <!-- ======================
+         Thông tin chung
+         ====================== -->
+    <div class="card mb-3">
+        <div class="card-header fw-bold">
+            Thông tin hóa đơn
+        </div>
+        <div class="card-body">
+
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label asp-for="PeriodMonth" class="form-label"></label>
+                    <input asp-for="PeriodMonth" class="form-control" placeholder="YYYYMM" />
+                    <span asp-validation-for="PeriodMonth" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="DueDate" class="form-label"></label>
+                    <!-- DateOnly bind tốt với type=date -->
+                    <input asp-for="DueDate" type="date" class="form-control" />
+                    <span asp-validation-for="DueDate" class="text-danger"></span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ======================
+         Điện / nước
+         ====================== -->
+    <div class="card mb-3">
+        <div class="card-header fw-bold">
+            Chỉ số điện – nước
+            <span class="text-muted fw-normal">(có thể bỏ trống để lấy từ hệ thống)</span>
+        </div>
+
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <label asp-for="ElectricOld" class="form-label"></label>
+                    <input asp-for="ElectricOld" class="form-control" />
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="ElectricNew" class="form-label"></label>
+                    <input asp-for="ElectricNew" class="form-control" />
+                </div>
+
+                <div class="col-md-3">
+                    <label asp-for="WaterOld" class="form-label"></label>
+                    <input asp-for="WaterOld" class="form-control" />
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="WaterNew" class="form-label"></label>
+                    <input asp-for="WaterNew" class="form-control" />
+                </div>
+            </div>
+
+            <hr />
+
+            <div class="row">
+                <div class="col-md-3">
+                    <label asp-for="WaterPeopleCount" class="form-label"></label>
+                    <input asp-for="WaterPeopleCount" class="form-control" />
+                </div>
+
+                <div class="col-md-3">
+                    <label asp-for="WaterPricePerPerson" class="form-label"></label>
+                    <input asp-for="WaterPricePerPerson" class="form-control" />
+                </div>
+            </div>
+
+            <small class="text-muted d-block mt-2">
+                Nếu nhập số người + giá/người thì hệ thống sẽ tính nước theo người, không theo đồng hồ.
+            </small>
+        </div>
+    </div>
+
+    <!-- ======================
+         Phát sinh (tạm thời đơn giản)
+         ====================== -->
+    <div class="card mb-4">
+        <div class="card-header fw-bold">
+            Phát sinh (nếu có)
+        </div>
+        <div class="card-body">
+            <p class="text-muted">
+                Hiện tại chưa có UI thêm nhiều dòng. Bạn có thể mở rộng sau.
+            </p>
+        </div>
+    </div>
+
+    <!-- ======================
+         Actions
+         ====================== -->
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">
+            Tạo hóa đơn
+        </button>
+
+        <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">
+            Hủy
+        </a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
