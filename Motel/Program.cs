@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Motel.Data;
 using Motel.Models;
 using Motel.Repositories;
+using Motel.Repositories.Interface;
 using Motel.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -42,6 +43,8 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 // Repositories
 builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
+builder.Services.AddScoped<IPropertyRepository, PropertyRepository>();
+builder.Services.AddScoped<IRoomRepository, RoomRepository>();
 
 // Services
 builder.Services.AddScoped<IDashboardService, DashboardService>();

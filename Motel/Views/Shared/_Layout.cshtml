@@ -28,6 +28,7 @@
     <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.51.0/dist/apexcharts.min.js"></script>
     
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body class="bg-gray-50 dark:bg-gray-900">
     <div x-data="{ sidebarOpen: false }" class="flex min-h-screen">
