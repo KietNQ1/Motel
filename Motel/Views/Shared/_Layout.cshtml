@@ -1,4 +1,15 @@
-﻿<!DOCTYPE html>
+﻿@inject Microsoft.AspNetCore.Identity.UserManager<Motel.Models.ApplicationUser> UserManager
+
+@{
+    var currentUser = await UserManager.GetUserAsync(User);
+    var fullName = currentUser?.FullName ?? "Guest";
+    var nameParts = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+    var initials = nameParts.Length == 1 
+        ? (nameParts[0].Length >= 2 ? nameParts[0].Substring(0, 2) : nameParts[0]).ToUpper()
+        : (nameParts[0][0].ToString() + nameParts[nameParts.Length - 1][0].ToString()).ToUpper();
+}
+
+<!DOCTYPE html>
 <html lang="vi" x-data="{ darkMode: false }" :class="{ 'dark': darkMode }">
 <head>
     <meta charset="utf-8" />
@@ -13,13 +24,28 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: '#3b82f6',
-                        secondary: '#64748b'
+                        primary: '#f97316',
+                        'primary-dark': '#ea580c',
+                        secondary: '#efe7dd',
+                        'background-light': '#fcfaf8',
+                        'text-main': '#1b130d',
+                        'text-sub': '#6b594e',
+                        info: '#0ea5e9',
+                        success: '#10b981',
+                        warning: '#f59e0b',
+                        danger: '#ef4444'
+                    },
+                    fontFamily: {
+                        display: ['Manrope', 'sans-serif'],
+                        body: ['Manrope', 'sans-serif']
                     }
                 }
             }
         }
     </script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet"/>
     
     <!-- Alpine.js for interactivity -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.0/dist/cdn.min.js"></script>
@@ -30,7 +56,7 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
 </head>
-<body class="bg-gray-50 dark:bg-gray-900">
+<body class="bg-white dark:bg-gray-900 font-display">
     <div x-data="{ sidebarOpen: false }" class="flex min-h-screen">
         <!-- Sidebar -->
         <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" 
@@ -39,12 +65,12 @@
             <!-- Logo -->
             <div class="flex h-16 items-center justify-between border-b border-gray-200 px-6 dark:border-gray-700">
                 <a href="/" class="flex items-center space-x-2">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
                         <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
                         </svg>
                     </div>
-                    <span class="text-xl font-bold text-gray-800 dark:text-white">Motel Manager</span>
+                    <span class="text-xl font-bold text-text-main dark:text-white">Rentify</span>
                 </a>
                 <button @@click="sidebarOpen = false" class="lg:hidden">
                     <svg class="h-6 w-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -141,10 +167,10 @@
                     <div x-data="{ userMenuOpen: false }" class="relative">
                         <button @@click="userMenuOpen = !userMenuOpen" 
                                 class="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">
-                            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-sm font-medium text-white">
-                                AD
+                            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-medium text-white">
+                                @initials
                             </div>
-                            <span class="hidden text-sm font-medium text-gray-700 dark:text-gray-300 sm:block">Admin</span>
+                            <span class="hidden text-sm font-medium text-text-main dark:text-gray-300 sm:block">@fullName</span>
                         </button>
                         
                         <div x-show="userMenuOpen" 

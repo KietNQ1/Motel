@@ -1,5 +1,8 @@
 ﻿@model Motel.ViewModels.Account.RegisterViewModel
-
+@{
+	ViewData["title"] = "Login";
+    Layout = "~/Views/Shared/_LayoutLanding.cshtml";
+}
 <h2>Register</h2>
 
 @if (!ViewData.ModelState.IsValid)
