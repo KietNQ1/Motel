@@ -18,7 +18,7 @@ public class PaymentsController : Controller
         _paymentRepo = paymentRepo;
     }
 
-    // GET: /Payments/CreateIntent?invoiceId=1 (optional)
+    // GET: /Payment/CreateIntent?invoiceId=1 (optional)
     [HttpGet]
     public async Task<IActionResult> CreateIntent(int? invoiceId = null)
     {
@@ -55,7 +55,7 @@ public class PaymentsController : Controller
         return View(vm);
     }
 
-    // POST: /Payments/CreateIntent
+    // POST: /Payment/CreateIntent
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> CreateIntent(CreatePaymentIntentViewModel vm)
@@ -77,7 +77,7 @@ public class PaymentsController : Controller
         return RedirectToAction(nameof(IntentCreated), new { id = intent.PaymentIntentId });
     }
 
-    // GET: /Payments/IntentCreated/5
+    // GET: /Payment/IntentCreated/5
     [HttpGet]
     public IActionResult IntentCreated(int id)
     {
@@ -85,7 +85,7 @@ public class PaymentsController : Controller
         return View();
     }
 
-    // GET: /Payments/CashConfirm?paymentIntentId=5
+    // GET: /Payment/CashConfirm?paymentIntentId=5
     [HttpGet]
     public IActionResult CashConfirm(int paymentIntentId)
     {
@@ -94,7 +94,7 @@ public class PaymentsController : Controller
     }
 
 
-    // POST: /Payments/CashConfirm
+    // POST: /Payment/CashConfirm
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> CashConfirmPost(int paymentIntentId)
@@ -111,7 +111,7 @@ public class PaymentsController : Controller
         );
     }
 
-    // GET: /Payments/CashReceipt?paymentId=5
+    // GET: /Payment/CashReceipt?paymentId=5
     [HttpGet]
     public async Task<IActionResult> CashReceipt(int paymentId)
     {

@@ -1,0 +1,42 @@
+﻿@model Motel.ViewModels.Account.RegisterViewModel
+
+<h2>Register</h2>
+
+@if (!ViewData.ModelState.IsValid)
+{
+	<div style="color:red">
+
+	
+	@foreach (var e in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+	{
+		<div>
+			@e.ErrorMessage
+		</div>
+	}
+	</div>
+}
+
+<form method="post">
+	<div>
+		<label>email:</label>
+		<input name="Email"/>
+	</div>
+	
+	<div>
+		<label>Fullname:</label>
+		<input name="Fullname" />
+	</div>
+	<div>
+		<label>PhoneNumber:</label>
+		<input name="PhoneNumber" />
+	</div>
+	<div>
+		<label>PassWord:</label>
+		<input name="Password" type="password" />
+	</div>
+	<div>
+		<label>Confirm Password:</label>
+		<input name="ConfirmPassword" type="password" />
+	</div>
+	<button type="submit">Dang </button>
+</form>
