@@ -24,28 +24,22 @@ namespace Motel.Services
         {
             try
             {
-                // Load tất cả data song song để tối ưu performance
-                var roomStatsTask = _repository.GetRoomStatisticsAsync(landlordId);
-                var financialStatsTask = _repository.GetFinancialStatisticsAsync(landlordId);
-                var recentInvoicesTask = _repository.GetRecentInvoicesAsync(landlordId, 5);
-                var expiringContractsTask = _repository.GetExpiringContractsAsync(landlordId, 30);
-                var revenueChartTask = _repository.GetMonthlyRevenueDataAsync(landlordId, 12);
-
-                await Task.WhenAll(
-                    roomStatsTask, 
-                    financialStatsTask, 
-                    recentInvoicesTask, 
-                    expiringContractsTask, 
-                    revenueChartTask
-                );
+                // Load data tuần tự để tránh DbContext concurrency issues
+                var properties = await _repository.GetPropertiesAsync(landlordId);
+                var roomStats = await _repository.GetRoomStatisticsAsync(landlordId);
+                var financialStats = await _repository.GetFinancialStatisticsAsync(landlordId);
+                var recentInvoices = await _repository.GetRecentInvoicesAsync(landlordId, 5);
+                var expiringContracts = await _repository.GetExpiringContractsAsync(landlordId, 30);
+                var revenueChart = await _repository.GetMonthlyRevenueDataAsync(landlordId, 12);
 
                 return new DashboardIndexViewModel
                 {
-                    RoomStats = await roomStatsTask,
-                    FinancialStats = await financialStatsTask,
-                    RecentInvoices = await recentInvoicesTask,
-                    ExpiringContracts = await expiringContractsTask,
-                    RevenueChart = await revenueChartTask
+                    Properties = properties,
+                    RoomStats = roomStats,
+                    FinancialStats = financialStats,
+                    RecentInvoices = recentInvoices,
+                    ExpiringContracts = expiringContracts,
+                    RevenueChart = revenueChart
                 };
             }
             catch (Exception ex)
