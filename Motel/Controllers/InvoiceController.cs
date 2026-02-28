@@ -36,7 +36,13 @@ public sealed class InvoiceController : Controller
     public async Task<IActionResult> Create(CreateInvoiceViewModel vm, CancellationToken ct)
     {
         if (!ModelState.IsValid)
+        {
+            foreach (var e in ModelState.Values.SelectMany(v => v.Errors))
+            {
+                Console.WriteLine(e.ErrorMessage);
+            }
             return View(vm);
+        }
 
         try
         {
