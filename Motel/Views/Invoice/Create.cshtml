@@ -1,10 +1,14 @@
-﻿@model Motel.ViewModels.Invoice.CreateInvoiceViewModel
+@model Motel.ViewModels.Invoice.CreateInvoiceViewModel
 
 @{
     ViewData["Title"] = "Tạo hóa đơn";
 }
 
 <h2 class="mb-3">Tạo hóa đơn</h2>
+@if (!string.IsNullOrEmpty(Model.RoomName))
+{
+    <p class="text-muted mb-3"><strong>Phòng:</strong> @Model.RoomName</p>
+}
 
 <form asp-controller="Invoice" asp-action="Create" method="post">
     @Html.AntiForgeryToken()

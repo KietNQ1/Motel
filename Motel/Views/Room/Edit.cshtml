@@ -1,0 +1,65 @@
+@model Motel.ViewModels.Room.RoomEditViewModel
+
+@{
+    ViewData["Title"] = $"Chỉnh sửa phòng {Model.RoomName}";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-pencil"></i> Chỉnh sửa phòng @Model.RoomName
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post">
+                        <input type="hidden" asp-for="RoomId" />
+                        <input type="hidden" asp-for="RoomName" />
+                        
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Tên phòng</label>
+                            <input type="text" class="form-control" value="@Model.RoomName" disabled />
+                            <small class="form-text text-muted">Tên phòng không thể thay đổi</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="RentPrice" class="form-label"></label>
+                            <div class="input-group">
+                                <input asp-for="RentPrice" class="form-control" type="number" step="100000" />
+                                <span class="input-group-text">VNĐ/tháng</span>
+                            </div>
+                            <span asp-validation-for="RentPrice" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="MaxOccupants" class="form-label"></label>
+                            <input asp-for="MaxOccupants" class="form-control" type="number" min="1" max="20" />
+                            <span asp-validation-for="MaxOccupants" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a asp-action="Details" asp-route-id="@Model.RoomId" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Hủy
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Lưu thay đổi
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+}

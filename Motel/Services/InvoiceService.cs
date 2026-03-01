@@ -1,4 +1,4 @@
-﻿using Motel.Models;
+using Motel.Models;
 using Motel.Repositories.Interface;
 using Motel.Services.Interface;
 using Motel.ViewModels.Invoice;
@@ -42,16 +42,22 @@ public sealed class InvoiceService : IInvoiceService
                       ?? throw new InvalidOperationException("Contract không tồn tại hoặc không còn active.");
 
         // 2) Room tồn tại?
-        var room = await _roomRepo.GetByIdAsync(contract.RoomId, ct)
+        var room = await _roomRepo.GetRoomByIdAsync(contract.RoomId, ct)
                    ?? throw new InvalidOperationException("Room không tồn tại.");
 
         // 3) Chặn tạo trùng (ContractId + PeriodMonth)
         if (await _invoiceRepo.ExistsAsync(vm.ContractId, vm.PeriodMonth, ct))
             throw new InvalidOperationException("Hoá đơn kỳ này đã tồn tại cho hợp đồng này.");
 
-        // 4) Load utility settings theo kỳ
+        // 4) Load utility settings theo kỳ; nếu chưa có thì dùng mặc định (0) để vẫn tạo được hóa đơn
         var setting = await _settingRepo.GetEffectiveAsync(room.RoomId, vm.PeriodMonth, ct)
-                      ?? throw new InvalidOperationException("Chưa có cấu hình giá (RoomUtilitySettings) cho phòng.");
+                      ?? new RoomUtilitySetting
+                      {
+                          ElectricUnitPrice = 0,
+                          WaterUnitPrice = 0,
+                          InternetFee = 0,
+                          TrashFee = 0
+                      };
 
         // 5) Meter readings: ưu tiên vm, không có thì lấy DB
         var (eOld, eNew, wOld, wNew) = await ResolveMeterAsync(vm, room.RoomId, ct);

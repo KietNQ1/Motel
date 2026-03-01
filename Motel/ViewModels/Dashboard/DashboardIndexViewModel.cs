@@ -10,5 +10,16 @@ namespace Motel.ViewModels.Dashboard
         public List<RecentInvoiceViewModel> RecentInvoices { get; set; } = new();
         public List<ExpiringContractViewModel> ExpiringContracts { get; set; } = new();
         public MonthlyRevenueChartViewModel RevenueChart { get; set; } = new();
+        public List<PropertyOptionViewModel> Properties { get; set; } = new();
+    }
+
+    /// <summary>
+    /// ViewModel cho dropdown chọn property
+    /// </summary>
+    public class PropertyOptionViewModel
+    {
+        public int PropertyId { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Address { get; set; } = string.Empty;
     }
 }

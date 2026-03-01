@@ -1,10 +1,13 @@
-﻿namespace Motel.ViewModels.Invoice;
+namespace Motel.ViewModels.Invoice;
 
 public sealed class CreateInvoiceViewModel
 {
     public int ContractId { get; set; }
     public int PeriodMonth { get; set; } // YYYYMM
     public DateOnly DueDate { get; set; }
+
+    /// <summary> Tên phòng (hiển thị khi tạo hóa đơn từ room detail). </summary>
+    public string? RoomName { get; set; }
 
     // Nếu đã có MeterReadings trong DB thì có thể để null để service tự lấy
     public int? ElectricOld { get; set; }
