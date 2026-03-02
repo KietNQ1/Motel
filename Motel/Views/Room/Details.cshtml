@@ -37,6 +37,12 @@
             <a asp-action="Edit" asp-route-id="@Model.RoomId" class="btn btn-outline-primary">
                 <i class="bi bi-pencil"></i> Chỉnh sửa
             </a>
+            @if (Model.HasTenant && Model.ContractId.HasValue)
+            {
+                <a asp-controller="Invoice" asp-action="Create" asp-route-contractId="@Model.ContractId" class="btn btn-success ms-1">
+                    <i class="bi bi-receipt"></i> Tạm tính
+                </a>
+            }
         </div>
     </div>
 
@@ -208,7 +214,21 @@
 
                             <!-- Estimated Total -->
                             <div class="alert alert-success mt-4">
-                                <h5 class="mb-3"><i class="bi bi-calculator"></i> Tạm tính tiền trọ tháng này</h5>
+                                <h5 class="mb-3 d-flex justify-content-between align-items-center">
+                                    <span>
+                                        <i class="bi bi-calculator"></i> Tạm tính tiền trọ tháng này
+                                    </span>
+                                    @if (Model.ContractId.HasValue && Model.CurrentPeriodMonth.HasValue)
+                                    {
+                                        <a asp-controller="Invoice"
+                                           asp-action="Create"
+                                           asp-route-contractId="@Model.ContractId"
+                                           asp-route-periodMonth="@Model.CurrentPeriodMonth"
+                                           class="btn btn-light btn-sm">
+                                            <i class="bi bi-receipt"></i> Tạm tính / Lập hóa đơn
+                                        </a>
+                                    }
+                                </h5>
                                 <table class="table table-sm mb-0">
                                     <tr>
                                         <td>Tiền phòng:</td>

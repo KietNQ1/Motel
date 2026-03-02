@@ -6,27 +6,32 @@ using Motel.ViewModels.Room;
 
 namespace Motel.Repositories
 {
-    public class RoomRepository : IRoomRepository
+    public sealed class RoomRepository : IRoomRepository
     {
-        private readonly MotelDbContext _context;
+        private readonly MotelDbContext _db;
+        public RoomRepository(MotelDbContext db) => _db = db;
+        public Task<Room?> GetRoomByIdAsync(int roomId, CancellationToken ct = default)
+            => _db.Rooms
+                .FirstOrDefaultAsync(r => r.RoomId == roomId && !r.IsDeleted, ct);
 
-        public RoomRepository(MotelDbContext context)
+        // =========================
+        // ROOM DETAIL VIEW
+        // =========================
+        public async Task<RoomDetailViewModel?> GetRoomDetailAsync(int roomId, CancellationToken ct = default)
         {
-            _context = context;
-        }
-
-        public async Task<RoomDetailViewModel?> GetRoomDetailAsync(int roomId)
-        {
-            var room = await _context.Rooms
+            var room = await _db.Rooms
                 .Include(r => r.Property)
                 .Include(r => r.Contract)
                     .ThenInclude(c => c.Tenant)
                 .Include(r => r.RoomUtilitySettings)
                 .Include(r => r.MeterReadings.OrderByDescending(m => m.PeriodMonth).Take(2))
-                .FirstOrDefaultAsync(r => r.RoomId == roomId && !r.IsDeleted);
+                .FirstOrDefaultAsync(r => r.RoomId == roomId && !r.IsDeleted, ct);
 
-            if (room == null)
-                return null;
+            if (room == null) return null;
+
+            var contract = room.Contract;
+            var hasTenant = contract != null && !contract.IsDeleted && contract.Status == "active";
+            var tenant = contract?.Tenant;
 
             var viewModel = new RoomDetailViewModel
             {
@@ -36,79 +41,63 @@ namespace Motel.Repositories
                 Status = room.Status,
                 MaxOccupants = room.MaxOccupants,
                 PropertyName = room.Property.Name,
-                PropertyId = room.Property.PropertyId
+                PropertyId = room.Property.PropertyId,
+                HasTenant = hasTenant,
+                ContractId = contract?.ContractId,
+                TenantId = tenant?.TenantId,
+                TenantName = tenant?.FullName,
+                TenantPhone = tenant?.Phone,
+                TenantEmail = tenant?.Email,
+                ContractStartDate = contract?.StartDate,
+                ContractEndDate = contract?.EndDate,
+                DepositAmount = contract?.DepositAmount
             };
 
-            // Get active contract and tenant info
-            var activeContract = room.Contract;
-            if (activeContract != null && !activeContract.IsDeleted && activeContract.Status == "active")
-            {
-                viewModel.HasTenant = true;
-                viewModel.ContractId = activeContract.ContractId;
-                viewModel.TenantId = activeContract.TenantId;
-                viewModel.TenantName = activeContract.Tenant?.FullName;
-                viewModel.TenantPhone = activeContract.Tenant?.Phone;
-                viewModel.TenantEmail = activeContract.Tenant?.Email;
-                viewModel.ContractStartDate = activeContract.StartDate;
-                viewModel.ContractEndDate = activeContract.EndDate;
-                viewModel.DepositAmount = activeContract.DepositAmount;
-            }
-
-            // Get current utility settings
-            var currentUtility = room.RoomUtilitySettings
-                .Where(u => u.EffectiveTo == null || u.EffectiveTo >= DateOnly.FromDateTime(DateTime.Now))
-                .OrderByDescending(u => u.EffectiveFrom)
+            var today = DateOnly.FromDateTime(DateTime.Today);
+            var currentSetting = room.RoomUtilitySettings
+                .Where(s => s.EffectiveFrom <= today && (s.EffectiveTo == null || s.EffectiveTo >= today))
+                .OrderByDescending(s => s.EffectiveFrom)
                 .FirstOrDefault();
-
-            if (currentUtility != null)
+            if (currentSetting != null)
             {
-                viewModel.ElectricUnitPrice = currentUtility.ElectricUnitPrice;
-                viewModel.WaterUnitPrice = currentUtility.WaterUnitPrice;
-                viewModel.InternetFee = currentUtility.InternetFee;
-                viewModel.TrashFee = currentUtility.TrashFee;
+                viewModel.ElectricUnitPrice = currentSetting.ElectricUnitPrice;
+                viewModel.WaterUnitPrice = currentSetting.WaterUnitPrice;
+                viewModel.InternetFee = currentSetting.InternetFee;
+                viewModel.TrashFee = currentSetting.TrashFee;
             }
 
-            // Get meter readings (current and previous month)
-            var meterReadings = room.MeterReadings
-                .OrderByDescending(m => m.PeriodMonth)
-                .Take(2)
-                .ToList();
-
-            if (meterReadings.Any())
+            var readings = room.MeterReadings.OrderByDescending(m => m.PeriodMonth).Take(2).ToList();
+            if (readings.Count > 0)
             {
-                var currentReading = meterReadings[0];
-                viewModel.CurrentPeriodMonth = currentReading.PeriodMonth;
-                viewModel.CurrentElectricOld = currentReading.ElectricOld;
-                viewModel.CurrentElectricNew = currentReading.ElectricNew;
-                viewModel.CurrentWaterOld = currentReading.WaterOld;
-                viewModel.CurrentWaterNew = currentReading.WaterNew;
-
-                if (meterReadings.Count > 1)
-                {
-                    var previousReading = meterReadings[1];
-                    viewModel.PreviousPeriodMonth = previousReading.PeriodMonth;
-                    viewModel.PreviousElectricOld = previousReading.ElectricOld;
-                    viewModel.PreviousElectricNew = previousReading.ElectricNew;
-                    viewModel.PreviousWaterOld = previousReading.WaterOld;
-                    viewModel.PreviousWaterNew = previousReading.WaterNew;
-                }
+                var current = readings[0];
+                viewModel.CurrentPeriodMonth = current.PeriodMonth;
+                viewModel.CurrentElectricOld = current.ElectricOld;
+                viewModel.CurrentElectricNew = current.ElectricNew;
+                viewModel.CurrentWaterOld = current.WaterOld;
+                viewModel.CurrentWaterNew = current.WaterNew;
+            }
+            if (readings.Count > 1)
+            {
+                var prev = readings[1];
+                viewModel.PreviousPeriodMonth = prev.PeriodMonth;
+                viewModel.PreviousElectricOld = prev.ElectricOld;
+                viewModel.PreviousElectricNew = prev.ElectricNew;
+                viewModel.PreviousWaterOld = prev.WaterOld;
+                viewModel.PreviousWaterNew = prev.WaterNew;
             }
 
             return viewModel;
         }
 
-        public async Task<Room?> GetRoomByIdAsync(int roomId)
-        {
-            return await _context.Rooms
-                .FirstOrDefaultAsync(r => r.RoomId == roomId && !r.IsDeleted);
-        }
-
-        public async Task<bool> UpdateRoomAsync(Room room)
+        // =========================
+        // UPDATE ROOM
+        // =========================
+        public async Task<bool> UpdateRoomAsync(Room room, CancellationToken ct = default)
         {
             try
             {
-                _context.Rooms.Update(room);
-                await _context.SaveChangesAsync();
+                _db.Rooms.Update(room);
+                await _db.SaveChangesAsync(ct);
                 return true;
             }
             catch
@@ -117,30 +106,33 @@ namespace Motel.Repositories
             }
         }
 
+        // =========================
+        // RENT ROOM
+        // =========================
         public async Task<bool> RentRoomAsync(
-            int roomId, 
-            int landlordId, 
-            string tenantName, 
-            string? phone, 
-            string? email, 
-            string? identityNo, 
-            decimal depositAmount, 
-            DateOnly startDate, 
+            int roomId,
+            int landlordId,
+            string tenantName,
+            string? phone,
+            string? email,
+            string? identityNo,
+            decimal depositAmount,
+            DateOnly startDate,
             DateOnly endDate,
             int? initialElectric,
-            int? initialWater)
+            int? initialWater,
+            CancellationToken ct = default)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            await using var transaction = await _db.Database.BeginTransactionAsync(ct);
+
             try
             {
-                // 1. Get room and verify it's available
-                var room = await _context.Rooms
-                    .FirstOrDefaultAsync(r => r.RoomId == roomId && !r.IsDeleted);
-                
+                var room = await _db.Rooms
+                    .FirstOrDefaultAsync(r => r.RoomId == roomId && !r.IsDeleted, ct);
+
                 if (room == null || room.Status != "available")
                     return false;
 
-                // 2. Create Tenant
                 var tenant = new Tenant
                 {
                     LandlordId = landlordId,
@@ -151,10 +143,10 @@ namespace Motel.Repositories
                     IsDeleted = false,
                     CreatedAt = DateTime.Now
                 };
-                _context.Tenants.Add(tenant);
-                await _context.SaveChangesAsync(); // Save to get TenantId
 
-                // 3. Create Contract
+                _db.Tenants.Add(tenant);
+                await _db.SaveChangesAsync(ct);
+
                 var contract = new Contract
                 {
                     RoomId = roomId,
@@ -166,17 +158,16 @@ namespace Motel.Repositories
                     IsDeleted = false,
                     CreatedAt = DateTime.Now
                 };
-                _context.Contracts.Add(contract);
 
-                // 4. Update Room status
+                _db.Contracts.Add(contract);
+
                 room.Status = "occupied";
-                _context.Rooms.Update(room);
 
-                // 5. Create initial meter reading if provided
                 if (initialElectric.HasValue || initialWater.HasValue)
                 {
                     var currentMonth = int.Parse(DateTime.Now.ToString("yyyyMM"));
-                    var meterReading = new MeterReading
+
+                    _db.MeterReadings.Add(new MeterReading
                     {
                         RoomId = roomId,
                         PeriodMonth = currentMonth,
@@ -186,17 +177,17 @@ namespace Motel.Repositories
                         WaterNew = initialWater ?? 0,
                         RecordedAt = DateTime.Now,
                         RecordedByUserId = landlordId
-                    };
-                    _context.MeterReadings.Add(meterReading);
+                    });
                 }
 
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
+                await _db.SaveChangesAsync(ct);
+                await transaction.CommitAsync(ct);
+
                 return true;
             }
             catch
             {
-                await transaction.RollbackAsync();
+                await transaction.RollbackAsync(ct);
                 return false;
             }
         }

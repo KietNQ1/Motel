@@ -9,6 +9,17 @@ using Motel.Services.Interface;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddScoped<IContractRepository, ContractRepository>();
+builder.Services.AddScoped<IRoomRepository, RoomRepository>();
+builder.Services.AddScoped<IRoomUtilitySettingRepository, RoomUtilitySettingRepository>();
+builder.Services.AddScoped<IMeterReadingRepository, MeterReadingRepository>();
+builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
+builder.Services.AddScoped<IInvoiceLineRepository, InvoiceLineRepository>();
+
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+builder.Services.AddScoped<IInvoiceService, InvoiceService>();
+
 // MVC
 builder.Services.AddControllersWithViews();
 
