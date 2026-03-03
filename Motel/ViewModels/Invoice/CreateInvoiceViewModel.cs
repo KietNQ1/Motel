@@ -15,6 +15,9 @@ public sealed class CreateInvoiceViewModel
     public int? WaterOld { get; set; }
     public int? WaterNew { get; set; }
 
+    public decimal? ElectricUnitPrice { get; set; }
+    public decimal? WaterUnitPrice { get; set; }
+
     // Nước theo người (tuỳ chọn)
     public int? WaterPeopleCount { get; set; }
     public decimal? WaterPricePerPerson { get; set; }

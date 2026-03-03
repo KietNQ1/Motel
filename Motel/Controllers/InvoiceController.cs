@@ -11,17 +11,20 @@ public sealed class InvoiceController : Controller
     private readonly IContractRepository _contractRepo;
     private readonly IRoomRepository _roomRepo;
     private readonly IMeterReadingRepository _meterRepo;
+    private readonly IRoomUtilitySettingRepository _settingRepo;
 
     public InvoiceController(
         IInvoiceService invoiceService,
         IContractRepository contractRepo,
         IRoomRepository roomRepo,
-        IMeterReadingRepository meterRepo)
+        IMeterReadingRepository meterRepo,
+        IRoomUtilitySettingRepository settingRepo)
     {
         _invoiceService = invoiceService;
         _contractRepo = contractRepo;
         _roomRepo = roomRepo;
         _meterRepo = meterRepo;
+        _settingRepo = settingRepo;
     }
 
     // GET: /Invoice/Create?contractId=1&periodMonth=202602
@@ -45,6 +48,13 @@ public sealed class InvoiceController : Controller
             if (room != null)
             {
                 vm.RoomName = room.RoomName;
+            }
+
+            var setting = await _settingRepo.GetEffectiveAsync(contract.RoomId, yyyymm, ct);
+            if (setting != null)
+            {
+                vm.ElectricUnitPrice = setting.ElectricUnitPrice;
+                vm.WaterUnitPrice = setting.WaterUnitPrice;
             }
 
             var meter = await _meterRepo.GetByRoomAndPeriodAsync(contract.RoomId, yyyymm, ct);
