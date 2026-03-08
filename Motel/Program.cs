@@ -7,20 +7,12 @@ using Motel.Repositories;
 using Motel.Repositories.Interface;
 using Motel.Services;
 using Motel.Services.Interface;
+using Motel.Services.Interfaces;
 
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddScoped<IContractRepository, ContractRepository>();
-builder.Services.AddScoped<IRoomRepository, RoomRepository>();
-builder.Services.AddScoped<IRoomUtilitySettingRepository, RoomUtilitySettingRepository>();
-builder.Services.AddScoped<IMeterReadingRepository, MeterReadingRepository>();
-builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
-builder.Services.AddScoped<IInvoiceLineRepository, InvoiceLineRepository>();
-
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-
-builder.Services.AddScoped<IInvoiceService, InvoiceService>();
 
 // MVC
 builder.Services.AddControllersWithViews();
@@ -67,9 +59,21 @@ builder.Services.AddScoped<Microsoft.AspNetCore.Identity.UI.Services.IEmailSende
 builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
 builder.Services.AddScoped<IPropertyRepository, PropertyRepository>();
 builder.Services.AddScoped<IRoomRepository, RoomRepository>();
+builder.Services.AddScoped<IContractRepository, ContractRepository>();
+builder.Services.AddScoped<IRoomRepository, RoomRepository>();
+builder.Services.AddScoped<IRoomUtilitySettingRepository, RoomUtilitySettingRepository>();
+builder.Services.AddScoped<IMeterReadingRepository, MeterReadingRepository>();
+builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
+builder.Services.AddScoped<IInvoiceLineRepository, InvoiceLineRepository>();
+builder.Services.AddScoped<ITenantRepository, TenantRepository>();
+builder.Services.AddScoped<IContractRepository, ContractRepository>();
 
 // Services
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IRoomService, RoomService>();
+builder.Services.AddScoped<IInvoiceService, InvoiceService>();
+builder.Services.AddScoped<ITenantService, TenantService>();
+builder.Services.AddScoped<IContractService, ContractService>();
 
 // Session (optional – KHÔNG bắt buộc cho Identity)
 builder.Services.AddSession(options =>

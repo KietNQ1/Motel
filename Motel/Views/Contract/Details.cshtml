@@ -1,0 +1,62 @@
+﻿@model Motel.Models.Contract
+@{
+    ViewData["Title"] = "Chi tiết hợp đồng";
+    var occupants = ViewBag.Occupants as List<Motel.Models.RoomOccupancy> ?? new();
+}
+
+<div class="container py-4">
+    <h3 class="mb-3">Chi tiết hợp đồng</h3>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <p><strong>Phòng:</strong> @Model.Room.RoomName</p>
+            <p><strong>Nhà trọ:</strong> @Model.Room.Property.Name</p>
+            <p><strong>Người thuê chính:</strong> @Model.Tenant.FullName</p>
+            <p><strong>Tiền cọc:</strong> @Model.DepositAmount.ToString("N0") VNĐ</p>
+            <p><strong>Thời hạn:</strong> @Model.StartDate.ToString("dd/MM/yyyy") - @Model.EndDate.ToString("dd/MM/yyyy")</p>
+            <p><strong>Trạng thái:</strong> @Model.Status</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Người đang ở (@occupants.Count)</div>
+        <div class="card-body">
+            @if (!occupants.Any())
+            {
+                <div class="text-muted">Chưa có dữ liệu occupancy.</div>
+            }
+            else
+            {
+                <ul class="mb-0">
+                    @foreach (var o in occupants)
+                    {
+                        <li>
+                            @o.Tenant.FullName
+                            @if (o.IsPrimary)
+                            {
+                                <strong>(Chính)</strong>
+                            }
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+    </div>
+
+    <div class="d-flex gap-2 mt-3">
+        <a asp-controller="Property" asp-action="Details" asp-route-id="@Model.Room.PropertyId"
+           class="btn btn-secondary">Quay lại nhà trọ</a>
+
+        @if (Model.Status == "active")
+        {
+            <form asp-action="End" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="contractId" value="@Model.ContractId" />
+                <button type="submit" class="btn btn-danger"
+                        onclick="return confirm('Kết thúc hợp đồng phòng @Model.Room.RoomName?');">
+                    Kết thúc hợp đồng
+                </button>
+            </form>
+        }
+    </div>
+</div>

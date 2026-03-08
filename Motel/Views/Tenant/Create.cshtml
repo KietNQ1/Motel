@@ -1,0 +1,49 @@
+@model Motel.ViewModels.Tenant.TenantCreateViewModel
+@{
+    ViewData["Title"] = "Tạo người thuê";
+}
+
+<div class="container py-4">
+    <h3 class="mb-3">Tạo người thuê</h3>
+
+    <form asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
+
+        <input type="hidden" asp-for="ReturnRoomId" />
+
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="mb-3">
+            <label asp-for="FullName" class="form-label"></label>
+            <input asp-for="FullName" class="form-control" />
+            <span asp-validation-for="FullName" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Phone" class="form-label"></label>
+            <input asp-for="Phone" class="form-control" />
+            <span asp-validation-for="Phone" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Email" class="form-label"></label>
+            <input asp-for="Email" class="form-control" />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="IdentityNo" class="form-label"></label>
+            <input asp-for="IdentityNo" class="form-control" />
+            <span asp-validation-for="IdentityNo" class="text-danger"></span>
+        </div>
+
+        <div class="d-flex gap-2">
+            <a asp-controller="Property" asp-action="Index" class="btn btn-secondary">Hủy</a>
+            <button type="submit" class="btn btn-primary">Tạo</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
