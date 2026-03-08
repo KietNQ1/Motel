@@ -21,7 +21,7 @@ public partial class Room
 
     public DateTime CreatedAt { get; set; }
 
-    public virtual Contract? Contract { get; set; }
+    public virtual ICollection<Contract> Contracts { get; set; } = new List<Contract>();
 
     public virtual ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();
 
@@ -29,7 +29,7 @@ public partial class Room
 
     public virtual Property Property { get; set; } = null!;
 
-    public virtual RoomOccupancy? RoomOccupancy { get; set; }
+    public virtual ICollection<RoomOccupancy> RoomOccupancies { get; set; } = new List<RoomOccupancy>();
 
     public virtual ICollection<RoomUtilitySetting> RoomUtilitySettings { get; set; } = new List<RoomUtilitySetting>();
 

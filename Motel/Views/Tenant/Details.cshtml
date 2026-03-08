@@ -1,0 +1,22 @@
+﻿@model Motel.Models.Tenant
+@{
+    ViewData["Title"] = "Chi tiết người thuê";
+}
+
+<div class="container py-4">
+    <h3 class="mb-3">Chi tiết người thuê</h3>
+
+    <div class="card">
+        <div class="card-body">
+            <p><strong>Họ tên:</strong> @Model.FullName</p>
+            <p><strong>Điện thoại:</strong> @(Model.Phone ?? "Chưa có")</p>
+            <p><strong>Email:</strong> @(Model.Email ?? "Chưa có")</p>
+            <p><strong>CCCD/CMND:</strong> @(Model.IdentityNo ?? "Chưa có")</p>
+            <p><strong>Ngày tạo:</strong> @Model.CreatedAt.ToString("dd/MM/yyyy")</p>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <a asp-controller="Property" asp-action="Index" class="btn btn-secondary">Quay lại</a>
+    </div>
+</div>

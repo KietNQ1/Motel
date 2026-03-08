@@ -1,4 +1,4 @@
-﻿    using System;
+﻿using System;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
@@ -78,10 +78,11 @@ public partial class MotelDbContext : IdentityDbContext<ApplicationUser, Identit
                 .HasMaxLength(20)
                 .IsUnicode(false);
 
-            entity.HasOne(d => d.Room).WithOne(p => p.Contract)
-                .HasForeignKey<Contract>(d => d.RoomId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Contracts_Rooms");
+            entity.HasOne(d => d.Room)
+              .WithMany(p => p.Contracts)
+              .HasForeignKey(d => d.RoomId)
+              .OnDelete(DeleteBehavior.ClientSetNull)
+              .HasConstraintName("FK_Contracts_Rooms");
 
             entity.HasOne(d => d.Tenant).WithMany(p => p.Contracts)
                 .HasForeignKey(d => d.TenantId)
@@ -284,10 +285,11 @@ public partial class MotelDbContext : IdentityDbContext<ApplicationUser, Identit
                 .HasMaxLength(20)
                 .IsUnicode(false);
 
-            entity.HasOne(d => d.Room).WithOne(p => p.RoomOccupancy)
-                .HasForeignKey<RoomOccupancy>(d => d.RoomId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_RoomOccupancies_Rooms");
+            entity.HasOne(d => d.Room)
+              .WithMany(p => p.RoomOccupancies)
+              .HasForeignKey(d => d.RoomId)
+              .OnDelete(DeleteBehavior.ClientSetNull)
+              .HasConstraintName("FK_RoomOccupancies_Rooms");
 
             entity.HasOne(d => d.Tenant).WithMany(p => p.RoomOccupancies)
                 .HasForeignKey(d => d.TenantId)

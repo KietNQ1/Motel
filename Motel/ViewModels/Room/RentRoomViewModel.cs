@@ -9,27 +9,19 @@ namespace Motel.ViewModels.Room
         public decimal RentPrice { get; set; }
         public string PropertyName { get; set; } = string.Empty;
 
-        // Tenant Information
-        [Required(ErrorMessage = "Họ tên là bắt buộc")]
-        [StringLength(100, ErrorMessage = "Họ tên không được quá 100 ký tự")]
-        [Display(Name = "Họ tên người thuê")]
-        public string TenantFullName { get; set; } = string.Empty;
+        public int MaxOccupants { get; set; } // để validate số người ở ghép
 
-        [Phone(ErrorMessage = "Số điện thoại không hợp lệ")]
-        [Display(Name = "Số điện thoại")]
-        public string? TenantPhone { get; set; }
+        // Danh sách người ở (nhập tay)
+        [MinLength(1, ErrorMessage = "Phải có ít nhất 1 người ở")]
+        public List<TenantInputViewModel> Occupants { get; set; } = new();
 
-        [EmailAddress(ErrorMessage = "Email không hợp lệ")]
-        [Display(Name = "Email")]
-        public string? TenantEmail { get; set; }
+        // Chọn tenant chính bằng index trong Occupants
+        [Range(0, int.MaxValue, ErrorMessage = "Chưa chọn người thuê chính")]
+        public int PrimaryIndex { get; set; } = 0;
 
-        [StringLength(20, ErrorMessage = "Số CMND/CCCD không được quá 20 ký tự")]
-        [Display(Name = "Số CMND/CCCD")]
-        public string? IdentityNo { get; set; }
-
-        // Contract Information
+        // Contract
         [Required(ErrorMessage = "Tiền cọc là bắt buộc")]
-        [Range(0, 999999999, ErrorMessage = "Tiền cọc phải từ 0 đến 999,999,999")]
+        [Range(0, 999999999)]
         [Display(Name = "Tiền cọc (VNĐ)")]
         public decimal DepositAmount { get; set; }
 
@@ -41,13 +33,13 @@ namespace Motel.ViewModels.Room
         [Display(Name = "Ngày kết thúc hợp đồng")]
         public DateOnly EndDate { get; set; } = DateOnly.FromDateTime(DateTime.Now.AddMonths(6));
 
-        // Initial Meter Readings (optional)
+        // Initial meter (optional)
         [Display(Name = "Chỉ số điện ban đầu")]
-        [Range(0, 999999, ErrorMessage = "Chỉ số điện phải từ 0 đến 999,999")]
-        public int? InitialElectricReading { get; set; } = 0;
+        [Range(0, 999999)]
+        public int? InitialElectricReading { get; set; }
 
         [Display(Name = "Chỉ số nước ban đầu")]
-        [Range(0, 999999, ErrorMessage = "Chỉ số nước phải từ 0 đến 999,999")]
-        public int? InitialWaterReading { get; set; } = 0;
+        [Range(0, 999999)]
+        public int? InitialWaterReading { get; set; }
     }
 }

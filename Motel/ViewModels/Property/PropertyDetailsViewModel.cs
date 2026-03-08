@@ -17,9 +17,15 @@ namespace Motel.ViewModels.Property
         public int RoomId { get; set; }
         public string RoomName { get; set; } = string.Empty;
         public decimal RentPrice { get; set; }
-        public string Status { get; set; } = string.Empty; // available, occupied, maintenance
+        public string Status { get; set; } = string.Empty;
         public int MaxOccupants { get; set; }
+
         public bool HasTenant { get; set; }
-        public string? TenantName { get; set; }
+
+        // NEW
+        public int? ActiveContractId { get; set; }
+        public int OccupantsCount { get; set; }
+        public int? PrimaryTenantId { get; set; }
+        public string? TenantName { get; set; } // Primary tenant name (nguoi dai dien)
     }
 }
