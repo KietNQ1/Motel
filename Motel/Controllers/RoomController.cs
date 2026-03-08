@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Motel.Repositories.Interface;
 using Motel.ViewModels.Room;
+using Motel.Services.Interface;
 
 namespace Motel.Controllers
 {
@@ -10,12 +11,11 @@ namespace Motel.Controllers
     {
         private readonly IRoomRepository _roomRepository;
         private readonly ILogger<RoomController> _logger;
-
-        public RoomController(
-            IRoomRepository roomRepository,
-            ILogger<RoomController> logger)
+        private readonly IRoomService _roomService;
+        public RoomController(IRoomRepository roomRepository, IRoomService roomService, ILogger<RoomController> logger)
         {
             _roomRepository = roomRepository;
+            _roomService = roomService;
             _logger = logger;
         }
 
@@ -120,40 +120,35 @@ namespace Motel.Controllers
         // GET: Room/Rent/5
         public async Task<IActionResult> Rent(int id)
         {
-            try
+            var roomDetail = await _roomRepository.GetRoomDetailAsync(id);
+            if (roomDetail == null)
             {
-                // Use GetRoomDetailAsync to get full room info including property
-                var roomDetail = await _roomRepository.GetRoomDetailAsync(id);
-                
-                if (roomDetail == null)
-                {
-                    TempData["Error"] = "Không tìm thấy phòng.";
-                    return RedirectToAction("Index", "Property");
-                }
-
-                if (roomDetail.Status != "available")
-                {
-                    TempData["Error"] = "Phòng này không còn trống.";
-                    return RedirectToAction(nameof(Details), new { id });
-                }
-
-                var model = new RentRoomViewModel
-                {
-                    RoomId = roomDetail.RoomId,
-                    RoomName = roomDetail.RoomName,
-                    RentPrice = roomDetail.RentPrice,
-                    PropertyName = roomDetail.PropertyName,
-                    DepositAmount = roomDetail.RentPrice * 2 // Default: 2 months rent
-                };
-
-                return View(model);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error loading rent room form");
-                TempData["Error"] = "Có lỗi xảy ra. Vui lòng thử lại.";
+                TempData["Error"] = "Không tìm thấy phòng.";
                 return RedirectToAction("Index", "Property");
             }
+
+            if (roomDetail.Status != "available")
+            {
+                TempData["Error"] = "Phòng này không còn trống.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            var model = new RentRoomViewModel
+            {
+                RoomId = roomDetail.RoomId,
+                RoomName = roomDetail.RoomName,
+                RentPrice = roomDetail.RentPrice,
+                PropertyName = roomDetail.PropertyName,
+                MaxOccupants = roomDetail.MaxOccupants,
+                DepositAmount = roomDetail.RentPrice * 2,
+                Occupants = new List<TenantInputViewModel>
+        {
+            new TenantInputViewModel() // 1 dòng mặc định
+        },
+                PrimaryIndex = 0
+            };
+
+            return View(model);
         }
 
         // POST: Room/Rent
@@ -161,47 +156,25 @@ namespace Motel.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Rent(RentRoomViewModel model)
         {
-            _logger.LogInformation("Rent POST called for RoomId: {RoomId}", model.RoomId);
-            
-            if (!ModelState.IsValid)
-            {
-                _logger.LogWarning("ModelState is invalid. Errors: {Errors}", 
-                    string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)));
-                return View(model);
-            }
+            if (!ModelState.IsValid) return View(model);
 
             try
             {
                 var landlordId = GetCurrentLandlordId();
-                _logger.LogInformation("Attempting to rent room {RoomId} for tenant {TenantName}", 
-                    model.RoomId, model.TenantFullName);
 
-                var success = await _roomRepository.RentRoomAsync(
-                    model.RoomId,
-                    landlordId,
-                    model.TenantFullName,
-                    model.TenantPhone,
-                    model.TenantEmail,
-                    model.IdentityNo,
-                    model.DepositAmount,
-                    model.StartDate,
-                    model.EndDate,
-                    model.InitialElectricReading,
-                    model.InitialWaterReading
-                );
+                // TODO: khi có auth -> lấy đúng userId từ User
+                var userId = 1;
 
-                if (success)
+                var ok = await _roomService.RentRoomAsync(model, landlordId, userId);
+
+                if (ok)
                 {
-                    _logger.LogInformation("Successfully rented room {RoomId}", model.RoomId);
                     TempData["Success"] = $"Cho thuê phòng {model.RoomName} thành công!";
                     return RedirectToAction(nameof(Details), new { id = model.RoomId });
                 }
-                else
-                {
-                    _logger.LogWarning("Failed to rent room {RoomId} - repository returned false", model.RoomId);
-                    ModelState.AddModelError("", "Có lỗi xảy ra khi cho thuê phòng. Vui lòng thử lại.");
-                    return View(model);
-                }
+
+                ModelState.AddModelError("", "Cho thuê thất bại (phòng có thể đã được thuê hoặc dữ liệu không hợp lệ).");
+                return View(model);
             }
             catch (Exception ex)
             {

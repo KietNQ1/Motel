@@ -6,18 +6,15 @@ namespace Motel.Repositories.Interface
     public interface IRoomRepository
     {
         Task<Room?> GetRoomByIdAsync(int roomId, CancellationToken ct = default);
-
         Task<RoomDetailViewModel?> GetRoomDetailAsync(int roomId, CancellationToken ct = default);
-
         Task<bool> UpdateRoomAsync(Room room, CancellationToken ct = default);
 
         Task<bool> RentRoomAsync(
             int roomId,
             int landlordId,
-            string tenantName,
-            string? phone,
-            string? email,
-            string? identityNo,
+            int recordedByUserId,
+            List<TenantInputViewModel> occupants,
+            int primaryIndex,
             decimal depositAmount,
             DateOnly startDate,
             DateOnly endDate,

@@ -43,15 +43,17 @@ namespace Motel.Repositories
         public async Task<PropertyDetailsViewModel?> GetPropertyDetailsAsync(int propertyId)
         {
             var property = await _context.Properties
+                .Where(p => p.PropertyId == propertyId && !p.IsDeleted)
                 .Include(p => p.Rooms.Where(r => !r.IsDeleted))
-                    .ThenInclude(r => r.Contract)
-                        .ThenInclude(c => c.Tenant)
-                .FirstOrDefaultAsync(p => p.PropertyId == propertyId && !p.IsDeleted);
+                    .ThenInclude(r => r.Contracts) // load all contracts (or only active, xem note o duoi)
+                .Include(p => p.Rooms.Where(r => !r.IsDeleted))
+                    .ThenInclude(r => r.RoomOccupancies)
+                        .ThenInclude(o => o.Tenant)
+                .FirstOrDefaultAsync();
 
-            if (property == null)
-                return null;
+            if (property == null) return null;
 
-            var viewModel = new PropertyDetailsViewModel
+            var vm = new PropertyDetailsViewModel
             {
                 PropertyId = property.PropertyId,
                 Name = property.Name,
@@ -61,30 +63,46 @@ namespace Motel.Repositories
                 RoomsByFloor = new Dictionary<int, List<RoomGridItemViewModel>>()
             };
 
-            // Group rooms by floor (extract floor number from room name)
             var roomsByFloor = property.Rooms
                 .GroupBy(r => ExtractFloorNumber(r.RoomName))
                 .OrderBy(g => g.Key);
 
             foreach (var floorGroup in roomsByFloor)
             {
-                var roomList = floorGroup.Select(r => new RoomGridItemViewModel
+                var roomList = floorGroup.Select(r =>
                 {
-                    RoomId = r.RoomId,
-                    RoomName = r.RoomName,
-                    RentPrice = r.RentPrice,
-                    Status = r.Status,
-                    MaxOccupants = r.MaxOccupants,
-                    HasTenant = r.Contract != null && !r.Contract.IsDeleted && r.Contract.Status == "active",
-                    TenantName = r.Contract?.Tenant?.FullName
+                    var activeContract = r.Contracts
+                        .FirstOrDefault(c => !c.IsDeleted && c.Status == "active");
+
+                    var activeOccupants = r.RoomOccupancies
+                        .Where(o => o.Status == "active")
+                        .ToList();
+
+                    var primary = activeOccupants.FirstOrDefault(o => o.IsPrimary)
+                                  ?? activeOccupants.FirstOrDefault(); // fallback
+
+                    return new RoomGridItemViewModel
+                    {
+                        RoomId = r.RoomId,
+                        RoomName = r.RoomName,
+                        RentPrice = r.RentPrice,
+                        Status = r.Status,
+                        MaxOccupants = r.MaxOccupants,
+
+                        ActiveContractId = activeContract?.ContractId,
+                        HasTenant = activeContract != null,
+                        OccupantsCount = activeOccupants.Count,
+                        PrimaryTenantId = primary?.TenantId,
+                        TenantName = primary?.Tenant?.FullName
+                    };
                 })
-                .OrderBy(r => r.RoomName)
+                .OrderBy(x => x.RoomName)
                 .ToList();
 
-                viewModel.RoomsByFloor[floorGroup.Key] = roomList;
+                vm.RoomsByFloor[floorGroup.Key] = roomList;
             }
 
-            return viewModel;
+            return vm;
         }
 
         public async Task<int> CreatePropertyAsync(Property property)

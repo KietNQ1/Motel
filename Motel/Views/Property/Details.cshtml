@@ -72,31 +72,56 @@
                             };
 
                             <div class="col-md-3 col-sm-6">
-                                <a href="@Url.Action("Details", "Room", new { id = room.RoomId })" class="text-decoration-none">
-                                    <div class="card h-100 @statusClass" style="border-width: 2px;">
-                                        <div class="card-body text-center">
-                                            <h5 class="card-title">
-                                                <i class="bi bi-door-closed"></i> @room.RoomName
-                                            </h5>
-                                            <span class="badge @statusBadge mb-2">@statusText</span>
-                                            <p class="card-text mb-1">
-                                                <strong>@room.RentPrice.ToString("N0") VNĐ</strong>/tháng
-                                            </p>
-                                            @if (room.HasTenant)
-                                            {
-                                                <small class="text-muted">
-                                                    <i class="bi bi-person"></i> @room.TenantName
-                                                </small>
-                                            }
-                                            else
-                                            {
-                                                <small class="text-muted">
-                                                    <i class="bi bi-people"></i> Tối đa @room.MaxOccupants người
-                                                </small>
-                                            }
-                                        </div>
+                                <div class="card h-100 @statusClass" style="border-width: 2px;">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">
+                                            <i class="bi bi-door-closed"></i> @room.RoomName
+                                        </h5>
+
+                                        <span class="badge @statusBadge mb-2">@statusText</span>
+
+                                        <p class="card-text mb-1">
+                                            <strong>@room.RentPrice.ToString("N0") VNĐ</strong>/tháng
+                                        </p>
+
+                                        @if (room.HasTenant)
+                                        {
+                                            <small class="text-muted d-block">
+                                                <i class="bi bi-person"></i> @room.TenantName
+                                            </small>
+                                        }
+                                        else
+                                        {
+                                            <small class="text-muted d-block">
+                                                <i class="bi bi-people"></i> Tối đa @room.MaxOccupants người
+                                            </small>
+                                        }
+
+                                        <!-- ✅ Buttons: Contract + Occupants -->
+                                        @if (room.HasTenant && room.ActiveContractId != null)
+                                        {
+                                            <div class="d-flex justify-content-center gap-2 mt-2">
+                                                <a class="btn btn-sm btn-outline-primary"
+                                                   asp-controller="Contract" asp-action="Details" asp-route-id="@room.ActiveContractId">
+                                                    Hợp đồng
+                                                </a>
+
+                                                <a class="btn btn-sm btn-outline-secondary"
+                                                   asp-controller="Room" asp-action="Details" asp-route-id="@room.RoomId">
+                                                    Người ở: @room.OccupantsCount
+                                                </a>
+                                            </div>
+                                        }   
                                     </div>
-                                </a>
+
+                                    <!-- ✅ Optional: nút xem chi tiết phòng -->
+                                    <div class="card-footer bg-white text-center">
+                                        <a class="btn btn-sm btn-outline-dark w-100"
+                                           asp-controller="Room" asp-action="Details" asp-route-id="@room.RoomId">
+                                            Xem chi tiết phòng
+                                        </a>
+                                    </div>
+                                </div>
                             </div>
                         }
                     </div>

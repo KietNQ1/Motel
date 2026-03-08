@@ -13,10 +13,7 @@ namespace Motel.ViewModels.Room
 
         // Tenant Info (if occupied)
         public bool HasTenant { get; set; }
-        public int? TenantId { get; set; }
-        public string? TenantName { get; set; }
-        public string? TenantPhone { get; set; }
-        public string? TenantEmail { get; set; }
+        public List<TenantViewModel> Tenants { get; set; } = new();
 
         // Contract Info
         public int? ContractId { get; set; }
@@ -52,5 +49,14 @@ namespace Motel.ViewModels.Room
             (WaterUsage * WaterUnitPrice) + 
             InternetFee + 
             TrashFee;
+    }
+
+    public class TenantViewModel
+    {
+        public int TenantId { get; set; }
+        public string FullName { get; set; } = string.Empty;
+        public string? Phone { get; set; }
+        public string? Email { get; set; }
+        public bool IsPrimary { get; set; }
     }
 }

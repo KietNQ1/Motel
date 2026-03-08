@@ -78,7 +78,7 @@ public sealed class InvoiceService : IInvoiceService
                 "electric",
                 $"Tiền điện ({eOld} → {eNew})",
                 electricUsed,
-                setting.ElectricUnitPrice
+                vm.ElectricUnitPrice ?? setting.ElectricUnitPrice
             ));
         }
 
@@ -101,7 +101,7 @@ public sealed class InvoiceService : IInvoiceService
                     "water",
                     $"Tiền nước ({wOld} → {wNew})",
                     waterUsed,
-                    setting.WaterUnitPrice
+                    vm.WaterUnitPrice ?? setting.WaterUnitPrice
                 ));
             }
         }
