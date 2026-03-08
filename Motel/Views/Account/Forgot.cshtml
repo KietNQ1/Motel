@@ -1,0 +1,97 @@
+﻿@model Motel.ViewModels.Account.ForgotPasswordViewModel
+@{
+    ViewData["Title"] = "Forgot";
+    Layout = null;
+}
+<style>
+    .auth-container {
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    .auth-card {
+        background: white;
+        padding: 40px;
+        width: 380px;
+        border-radius: 12px;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+    }
+
+        .auth-card h2 {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+    .form-group {
+        margin-bottom: 18px;
+    }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            transition: 0.2s;
+        }
+
+            .form-group input:focus {
+                border-color: #667eea;
+                outline: none;
+                box-shadow: 0 0 0 2px rgba(102,126,234,0.2);
+            }
+
+    .auth-btn {
+        width: 100%;
+        padding: 10px;
+        background: #667eea;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+        .auth-btn:hover {
+            background: #5563d1;
+        }
+
+    .validation-error {
+        color: #e74c3c;
+        font-size: 13px;
+    }
+</style>
+
+<div class="auth-container">
+    <div class="auth-card">
+        <h2>Quên mật khẩu</h2>
+
+        <form asp-action="ForgotPassword" method="post">
+            @Html.AntiForgeryToken()
+
+            <div class="form-group">
+                <label asp-for="Email"></label>
+                <input asp-for="Email" />
+                <span asp-validation-for="Email" class="validation-error"></span>
+            </div>
+
+            <button type="submit" class="auth-btn">
+                Gửi email reset
+            </button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

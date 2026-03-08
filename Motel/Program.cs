@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Motel.Data;
 using Motel.Models;
@@ -8,13 +9,20 @@ using Motel.Services;
 using Motel.Services.Interface;
 using Motel.Services.Interfaces;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // MVC
 builder.Services.AddControllersWithViews();
-
+//google
+builder.Services.AddAuthentication()
+    .AddGoogle(options =>
+    {
+        options.ClientId = "899787470310-gpdcqiihnh6vjdreg36bs7cndlb7i293.apps.googleusercontent.com";
+        options.ClientSecret = "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";
+    });
 // DbContext
 builder.Services.AddDbContext<MotelDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -44,6 +52,8 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
     options.SlidingExpiration = true;
 });
+
+builder.Services.AddScoped<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender, EmailSender>();
 
 // Repositories
 builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
