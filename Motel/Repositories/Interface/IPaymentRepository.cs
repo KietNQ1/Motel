@@ -16,4 +16,5 @@ public interface IPaymentRepository
 
     Task SaveChangesAsync();
     Task<Payment?> GetPaymentForReceiptAsync(int paymentId);
+    Task<bool> HasPendingIntentAsync(int invoiceId);
 }

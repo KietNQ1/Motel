@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
-namespace Motel.ViewModels.Payments;
+namespace Motel.ViewModels.Payment;
 
 public class CreatePaymentIntentViewModel
 {

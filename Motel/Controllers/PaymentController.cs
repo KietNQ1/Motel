@@ -3,54 +3,57 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Motel.Repositories.Interface;
 using Motel.Services;
 using Motel.Services.Interface;
-using Motel.ViewModels.Payments;
+using Motel.ViewModels.Payment;
+using static Motel.ViewModels.Payment.CashReceiptViewModel;
 
 namespace Motel.Controllers;
 
-public class PaymentsController : Controller
+public class PaymentController : Controller
 {
     private readonly IPaymentService _paymentService;
     private readonly IPaymentRepository _paymentRepo;
+    private readonly IInvoiceRepository _invoiceRepo; // ✅ thêm
 
-    public PaymentsController(IPaymentService paymentService, IPaymentRepository paymentRepo)
+    public PaymentController(
+        IPaymentService paymentService,
+        IPaymentRepository paymentRepo,
+        IInvoiceRepository invoiceRepo)
     {
         _paymentService = paymentService;
         _paymentRepo = paymentRepo;
+        _invoiceRepo = invoiceRepo;
     }
 
-    // GET: /Payment/CreateIntent?invoiceId=1 (optional)
+   
+
+
+    // GET: /Payment/CreateIntent?invoiceId=1
     [HttpGet]
-    public async Task<IActionResult> CreateIntent(int? invoiceId = null)
+    public async Task<IActionResult> CreateIntent(int invoiceId)
     {
-        // TODO: bạn có thể lọc invoice theo landlord/tenant tuỳ dự án.
-        // Ở đây demo đơn giản: lấy 1 invoice nếu có invoiceId
+        var inv = await _invoiceRepo.GetByIdWithLinesAsync(invoiceId);
+        if (inv == null) return NotFound();
 
-        var vm = new CreatePaymentIntentViewModel();
+        // (optional) chặn invoice đã paid
+        // if (inv.Status == InvoiceStatus.Paid) return BadRequest("Invoice already paid");
 
-        // Bạn cần tự build danh sách InvoiceOptions.
-        // Nếu repo bạn chưa có hàm list invoice, tạm lấy 1 invoice theo id để demo.
-        if (invoiceId.HasValue)
+        var vm = new CreatePaymentIntentViewModel
         {
-            var inv = await _paymentRepo.GetInvoiceAsync(invoiceId.Value);
-            if (inv != null)
+            InvoiceId = inv.InvoiceId,
+            Amount = inv.TotalAmount, // nhớ đúng field
+            Provider = PaymentProviders.CASH // default tuỳ bạn
+        };
+
+        // Nếu UI bạn cần dropdown thì build 1 option cũng được
+        vm.InvoiceOptions = new List<SelectListItem>
+        {
+            new SelectListItem
             {
-                vm.InvoiceId = inv.InvoiceId;
-                // TODO: đổi đúng field tổng tiền của Invoice bạn
-                vm.Amount = inv.TotalAmount;
-
-                vm.InvoiceOptions.Add(new SelectListItem
-                {
-                    Value = inv.InvoiceId.ToString(),
-                    Text = $"Invoice #{inv.InvoiceId} - {vm.Amount:n0} VND",
-                    Selected = true
-                });
+                Value = inv.InvoiceId.ToString(),
+                Text = $"Invoice #{inv.InvoiceId} - {inv.TotalAmount:n0} VND",
+                Selected = true
             }
-        }
-        else
-        {
-            // Nếu bạn chưa có list invoice, cứ để 1 option placeholder để khỏi lỗi UI
-            vm.InvoiceOptions.Add(new SelectListItem { Value = "", Text = "Choose an invoice..." });
-        }
+        };
 
         return View(vm);
     }
@@ -63,18 +66,29 @@ public class PaymentsController : Controller
         if (!ModelState.IsValid)
             return View(vm);
 
-        var intent = await _paymentService.CreateIntentAsync(vm.InvoiceId, vm.Provider);
-
-        // Điều hướng theo provider
-        if (vm.Provider == PaymentProviders.CASH)
+        try
         {
-            // Sang màn xác nhận cash (landlord)
-            return RedirectToAction(nameof(CashConfirm), new { paymentIntentId = intent.PaymentIntentId });
-        }
+            vm.Provider = vm.Provider?.Trim().ToLower();
 
-        // Online: tạm thời bạn chưa implement gateway => trả về trang "chưa hỗ trợ"
-        // Sau này PAYOS/VNPAY/MOMO: tạo link/QR rồi redirect/show QR
-        return RedirectToAction(nameof(IntentCreated), new { id = intent.PaymentIntentId });
+            var intent = await _paymentService.CreateIntentAsync(vm.InvoiceId, vm.Provider);
+
+            if (vm.Provider == PaymentProviders.CASH)
+            {
+                return RedirectToAction(nameof(CashConfirm), new { paymentIntentId = intent.PaymentIntentId });
+            }
+
+            // Online: tạm thời bạn chưa implement gateway => trả về trang "chưa hỗ trợ"
+            // Sau này PAYOS/VNPAY/MOMO: tạo link/QR rồi redirect/show QR
+            return RedirectToAction(nameof(IntentCreated), new { id = intent.PaymentIntentId });
+        }
+        catch (Exception ex)
+        {
+            return RedirectToAction(nameof(PaymentNotice), new
+            {
+                message = ex.Message,
+                invoiceId = vm.InvoiceId
+            });
+        }
     }
 
     // GET: /Payment/IntentCreated/5
@@ -87,9 +101,18 @@ public class PaymentsController : Controller
 
     // GET: /Payment/CashConfirm?paymentIntentId=5
     [HttpGet]
-    public IActionResult CashConfirm(int paymentIntentId)
+    public async Task<IActionResult> CashConfirm(int paymentIntentId)
     {
-        ViewBag.PaymentIntentId = paymentIntentId;
+        var intent = await _paymentRepo.GetIntentAsync(paymentIntentId);
+        if (intent == null)
+            return NotFound();
+
+        ViewBag.PaymentIntentId = intent.PaymentIntentId;
+        ViewBag.InvoiceId = intent.InvoiceId;
+        ViewBag.Amount = intent.Amount.ToString("N0") + " đ";
+
+        ViewBag.RoomName = intent.Invoice?.Room?.RoomName ?? "Chưa có phòng";
+        ViewBag.TenantName = intent.Invoice?.Contract?.Tenant?.FullName ?? "Chưa có người thuê";
         return View();
     }
 
@@ -111,13 +134,15 @@ public class PaymentsController : Controller
         );
     }
 
+
     // GET: /Payment/CashReceipt?paymentId=5
     [HttpGet]
     public async Task<IActionResult> CashReceipt(int paymentId)
     {
-        // LẤY DATA ĐỂ HIỂN THỊ
         var payment = await _paymentRepo.GetPaymentForReceiptAsync(paymentId);
         if (payment == null) return NotFound();
+
+        var invoice = payment.Invoice;
 
         var vm = new CashReceiptViewModel
         {
@@ -125,15 +150,37 @@ public class PaymentsController : Controller
             ProviderTxnId = payment.ProviderTxnId,
             PaidAt = payment.PaidAt,
 
-            TenantName = payment.Invoice.Contract.Tenant.FullName,
-            TenantPhone = payment.Invoice.Contract.Tenant.Phone,
+            TenantName = invoice.Contract.Tenant.FullName,
+            TenantPhone = invoice.Contract.Tenant.Phone,
 
-            RoomName = payment.Invoice.Contract.Room.RoomName,
-            PropertyName = payment.Invoice.Contract.Room.Property.Name,
+            // ✅ sửa đúng navigation theo model Invoice của bạn
+            RoomName = invoice.Room.RoomName,
+            PropertyName = invoice.Room.Property.Name,
 
-            TotalAmount = payment.Amount
+            PeriodMonth = invoice.PeriodMonth,
+            DueDate = invoice.DueDate,
+
+            TotalAmount = payment.Amount,
+
+            // ✅ thêm lines (điện/nước/internet/rác/phát sinh…)
+            Lines = invoice.InvoiceLines.Select(l => new ReceiptLineVm
+            {
+                ItemType = l.ItemType,
+                Description = l.Description ?? l.ItemType,
+                Quantity = l.Quantity,
+                UnitPrice = l.UnitPrice,
+                LineTotal = l.LineTotal ?? (l.Quantity * l.UnitPrice)
+            }).ToList()
         };
 
         return View(vm);
+    }
+
+    [HttpGet]
+    public IActionResult PaymentNotice(string message, int? invoiceId)
+    {
+        ViewBag.Message = message;
+        ViewBag.InvoiceId = invoiceId;
+        return View();
     }
 }

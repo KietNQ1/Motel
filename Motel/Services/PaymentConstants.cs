@@ -2,24 +2,28 @@
 
 public static class PaymentProviders
 {
-    public const string CASH = "CASH";
-    public const string PAYOS = "PAYOS";
-    public const string VNPAY = "VNPAY";
-    public const string MOMO = "MOMO";
+    public const string CASH = "cash";
+    public const string PAYOS = "payos";
+    public const string VIETQR = "vietqr";
 }
 
 public static class PaymentIntentStatus
 {
-    public const string Pending = "Pending";
-    public const string Success = "Success";
-    public const string Failed = "Failed";
-    public const string Expired = "Expired";
-    public const string Canceled = "Canceled";
+    public const string Pending = "pending";
+    public const string Succeeded = "succeeded";
+    public const string Failed = "failed";
+    public const string Expired = "expired";
+    public const string Cancelled = "cancelled";
 }
 
 public static class PaymentStatus
 {
-    public const string Success = "Success";
-    public const string Failed = "Failed";
-    public const string Refunded = "Refunded";
+    public const string Succeeded = "succeeded";
+    public const string Failed = "failed";
+    public const string Refunded = "refunded";
+}
+public static class InvoiceStatus
+{
+    public const string Unpaid = "unpaid";
+    public const string Paid = "paid";
 }

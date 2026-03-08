@@ -1,5 +1,124 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
+﻿@{
+    ViewData["Title"] = "Xác nhận thanh toán tiền mặt";
 }
+
+<!DOCTYPE html>
+<html class="" lang="vi">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+
+<title>Xác nhận thanh toán tiền mặt</title>
+</head>
+
+<body class="font-display bg-slate-50 text-slate-900 min-h-screen">
+
+<div class="relative flex flex-col min-h-screen w-full overflow-x-hidden">
+
+<header class="flex items-center justify-between border-b border-slate-200 bg-white px-10 py-4">
+<h2 class="text-xl font-bold text-slate-800">Rentify</h2>
+</header>
+
+<main class="flex-1 flex flex-col items-center px-4 py-12">
+
+<div class="w-full max-w-2xl">
+
+<h1 class="text-3xl font-extrabold mb-6">Xác nhận thanh toán tiền mặt</h1>
+
+<div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+
+<div class="p-8 flex flex-col items-center text-center">
+
+<div class="w-20 h-20 rounded-full bg-orange-100 flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-orange-500 text-5xl">payments</span>
+</div>
+
+<div class="mb-8">
+<p class="text-slate-600">Số tiền thanh toán</p>
+<h2 class="text-5xl font-extrabold text-orange-500 mb-2">
+@ViewBag.Amount
+</h2>
+
+<p class="text-lg font-medium text-slate-700">
+@ViewBag.RoomName — @ViewBag.TenantName
+</p>
+</div>
+
+<div class="w-full border-t border-b border-slate-100 py-6 space-y-4 mb-8">
+
+<div class="flex justify-between">
+<span class="text-slate-500">Mã tham chiếu</span>
+<span class="font-bold font-mono">
+#INTENT-@ViewBag.PaymentIntentId
+</span>
+</div>
+
+<div class="flex justify-between">
+<span class="text-slate-500">Phương thức</span>
+<span class="font-bold text-orange-500">
+Tiền mặt
+</span>
+</div>
+
+</div>
+
+<!-- FORM CONFIRM -->
+<form asp-action="CashConfirmPost" method="post" class="w-full">
+
+@Html.AntiForgeryToken()
+
+<input type="hidden" name="paymentIntentId" value="@ViewBag.PaymentIntentId" />
+
+<div class="flex flex-col sm:flex-row gap-4">
+
+<button type="submit"
+class="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 px-6 rounded-lg flex items-center justify-center gap-2">
+
+<span class="material-symbols-outlined">check_circle</span>
+Xác nhận đã nhận tiền
+
+</button>
+
+<a asp-controller="Invoice"
+asp-action="Details"
+asp-route-id="@ViewBag.InvoiceId"
+class="flex-1 bg-white border border-slate-300 text-slate-700 font-bold py-4 px-6 rounded-lg text-center">
+
+Hủy giao dịch
+
+</a>
+
+</div>
+
+</form>
+
+<div class="mt-8 p-4 bg-orange-50 rounded-lg border border-orange-100">
+
+<p class="text-xs text-orange-800">
+
+Sau khi xác nhận, hệ thống sẽ tạo biên lai và đánh dấu hóa đơn đã thanh toán.
+
+</p>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</main>
+
+<footer class="py-6 border-t text-center text-sm text-slate-500">
+© 2024 Rentify
+</footer>
+
+</div>
+
+</body>
+</html>
