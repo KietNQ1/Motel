@@ -1,0 +1,21 @@
+﻿@{
+    ViewData["Title"] = "Thông báo thanh toán";
+}
+
+<div class="container mt-4">
+    <div class="alert alert-warning">
+        <h4>Thông báo</h4>
+        <p>@ViewBag.Message</p>
+    </div>
+
+    <div class="mt-3">
+        <a asp-action="Index" asp-controller="Home" class="btn btn-secondary">Về trang chủ</a>
+
+        @if (ViewBag.InvoiceId != null)
+        {
+            <a asp-action="Details" asp-controller="Invoice" asp-route-id="@ViewBag.InvoiceId" class="btn btn-primary">
+                Xem hóa đơn
+            </a>
+        }
+    </div>
+</div>

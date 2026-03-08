@@ -22,13 +22,31 @@
     <h2 class="mb-0">Hóa đơn #@Model.InvoiceId</h2>
 
     <div class="d-flex gap-2">
-        <a class="btn btn-secondary"
-           asp-controller="Invoice"
-           asp-action="Create"
-           asp-route-contractId="@Model.ContractId">
-            Tạo hóa đơn mới
+
+    <a class="btn btn-secondary"
+       asp-controller="Invoice"
+       asp-action="Create"
+       asp-route-contractId="@Model.ContractId">
+        Tạo hóa đơn mới
+    </a>
+
+    @if (Model.Status == "unpaid")
+    {
+        <a class="btn btn-success"
+           asp-controller="Payment"
+           asp-action="CreateIntent"
+           asp-route-invoiceId="@Model.InvoiceId">
+            Thanh toán
         </a>
-    </div>
+    }
+    else
+    {
+        <span class="badge bg-success align-self-center">
+            Đã thanh toán
+        </span>
+    }
+
+</div>
 </div>
 
 <!-- Thông tin chung -->

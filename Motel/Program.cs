@@ -67,6 +67,7 @@ builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
 builder.Services.AddScoped<IInvoiceLineRepository, InvoiceLineRepository>();
 builder.Services.AddScoped<ITenantRepository, TenantRepository>();
 builder.Services.AddScoped<IContractRepository, ContractRepository>();
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 
 // Services
 builder.Services.AddScoped<IDashboardService, DashboardService>();
@@ -74,6 +75,8 @@ builder.Services.AddScoped<IRoomService, RoomService>();
 builder.Services.AddScoped<IInvoiceService, InvoiceService>();
 builder.Services.AddScoped<ITenantService, TenantService>();
 builder.Services.AddScoped<IContractService, ContractService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
+
 
 // Session (optional – KHÔNG bắt buộc cho Identity)
 builder.Services.AddSession(options =>

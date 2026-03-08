@@ -1,0 +1,265 @@
+﻿@model Motel.ViewModels.Payment.CreatePaymentIntentViewModel
+@{
+    Layout = null;
+    ViewData["Title"] = "Create Payment Intent - Hostel Manager";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>@ViewData["Title"]</title>
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#f27121",
+                        "background-light": "#f8fafc",
+                    },
+                    fontFamily: { "display": ["Inter"] },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24; }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-900 font-display">
+<div class="flex min-h-screen flex-col">
+    <header class="w-full bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-[1400px] mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-[#e65c00] h-10 w-10 rounded-lg flex items-center justify-center text-white">
+                    <span class="material-symbols-outlined">apartment</span>
+                </div>
+                <span class="text-2xl font-bold text-slate-800">Rentify</span>
+            </div>
+
+            <nav class="hidden md:flex items-center gap-8">
+                <a class="text-slate-600 font-semibold hover:text-primary transition-colors" href="#">Trang Chủ</a>
+                <a class="text-slate-600 font-semibold hover:text-primary transition-colors" href="#">Trọ Của Tôi</a>
+                <a class="text-slate-600 font-semibold hover:text-primary transition-colors" href="#">Báo Cáo</a>
+                <a class="text-slate-600 font-semibold hover:text-primary transition-colors" href="#">Dịch Vụ</a>
+                <a class="text-slate-600 font-semibold hover:text-primary transition-colors" href="#">Hỗ Trợ</a>
+            </nav>
+
+            <div class="flex items-center gap-4">
+                <button class="relative p-2 text-slate-400 hover:text-primary transition-colors">
+                    <span class="material-symbols-outlined">notifications</span>
+                    <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                </button>
+                <div class="h-8 w-[1px] bg-slate-200 mx-2"></div>
+                <div class="flex items-center gap-3">
+                    <div class="text-right hidden sm:block">
+                        <p class="text-sm font-bold text-slate-800">Nguyễn Văn A</p>
+                        <p class="text-xs text-slate-500">Chủ nhà</p>
+                    </div>
+                    <div class="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center text-primary">
+                        <span class="material-symbols-outlined">person</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 overflow-y-auto bg-[#f8fafc] p-8">
+        <div class="max-w-5xl mx-auto">
+            <div class="mb-8">
+                <nav class="flex items-center gap-2 text-sm text-slate-500 mb-4">
+                    <a class="hover:text-primary transition-colors"
+                       asp-controller="Payment"
+                       asp-action="CreateIntent"
+                       asp-route-invoiceId="@Model.InvoiceId">Thanh toán</a>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
+                    <span class="text-slate-900 font-medium">Tạo yêu cầu thanh toán</span>
+                </nav>
+
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Tạo yêu cầu thanh toán</h2>
+                        <p class="text-slate-600 mt-1">Liên kết thanh toán cho hóa đơn của người thuê.</p>
+                    </div>
+                </div>
+            </div>
+
+            <form asp-action="CreateIntent" method="post">
+                @Html.AntiForgeryToken()
+
+                <!-- nếu select invoice, không cần hidden. Nếu bạn muốn khóa invoiceId: dùng hidden + readonly -->
+                @* <input type="hidden" asp-for="InvoiceId" /> *@
+
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <!-- Thông tin invoice -->
+                    <div class="p-8 border-b border-slate-200">
+                        <div class="flex items-center gap-2 text-primary mb-6">
+                            <span class="material-symbols-outlined">receipt_long</span>
+                            <h3 class="text-lg font-bold">Thông tin hóa đơn</h3>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <label class="text-sm font-semibold text-slate-700">Chọn hóa đơn</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                        <span class="material-symbols-outlined text-sm">search</span>
+                                    </div>
+
+                                    <select asp-for="InvoiceId"
+                                            asp-items="Model.InvoiceOptions"
+                                            class="w-full px-4 py-2.5 pl-10 rounded-lg border-slate-300 bg-white focus:ring-primary focus:border-primary">
+                                    </select>
+                                </div>
+                                <span class="text-red-500 text-sm">@Html.ValidationMessageFor(m => m.InvoiceId)</span>
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="text-sm font-semibold text-slate-700">Số tiền thanh toán</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <span class="text-slate-500 font-bold">đ</span>
+                                    </div>
+
+                                    <!-- readonly để user không sửa amount -->
+                                    <input asp-for="Amount" readonly
+                                           class="w-full px-4 py-2.5 pl-8 rounded-lg border-slate-300 bg-white focus:ring-primary focus:border-primary"
+                                           value="@Model.Amount.ToString("n0")" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cấu hình thanh toán -->
+                    <div class="p-8 border-b border-slate-200">
+                        <div class="flex items-center gap-2 text-primary mb-6">
+                            <span class="material-symbols-outlined">account_balance_wallet</span>
+                            <h3 class="text-lg font-bold">Cấu hình thanh toán</h3>
+                        </div>
+
+                        <div class="space-y-6">
+                            <div>
+                                <label class="text-sm font-semibold text-slate-700 mb-4 block">Chọn phương thức thanh toán</label>
+
+                                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                                    <!-- CASH -->
+                                    <label class="cursor-pointer group">
+                                        <input class="peer hidden" type="radio" asp-for="Provider" value="cash" />
+                                        <div class="flex flex-col items-center justify-center p-6 rounded-xl border-2 border-slate-200 bg-white hover:bg-slate-50 peer-checked:border-primary peer-checked:bg-orange-50 transition-all">
+                                            <span class="material-symbols-outlined text-4xl mb-2 text-slate-400 group-hover:text-primary peer-checked:text-primary">payments</span>
+                                            <span class="text-sm font-bold">Tiền mặt</span>
+                                        </div>
+                                    </label>
+
+                                    <!-- PAYOS -->
+                                    <label class="cursor-pointer group">
+                                        <input class="peer hidden" type="radio" asp-for="Provider" value="payos" />
+                                        <div class="flex flex-col items-center justify-center p-6 rounded-xl border-2 border-slate-200 bg-white hover:bg-slate-50 peer-checked:border-primary peer-checked:bg-orange-50 transition-all">
+                                            <span class="material-symbols-outlined text-4xl mb-2 text-slate-400 group-hover:text-primary peer-checked:text-primary">account_balance</span>
+                                            <span class="text-sm font-bold">PayOS</span>
+                                        </div>
+                                    </label>
+
+                                    <!-- VIETQR -->
+                                    <label class="cursor-pointer group">
+                                        <input class="peer hidden" type="radio" asp-for="Provider" value="vietqr" />
+                                        <div class="flex flex-col items-center justify-center p-6 rounded-xl border-2 border-slate-200 bg-white hover:bg-slate-50 peer-checked:border-primary peer-checked:bg-orange-50 transition-all">
+                                            <span class="material-symbols-outlined text-4xl mb-2 text-slate-400 group-hover:text-primary peer-checked:text-primary">qr_code_2</span>
+                                            <span class="text-sm font-bold">VietQR</span>
+                                        </div>
+                                    </label>
+                                </div>
+
+                                <span class="text-red-500 text-sm">@Html.ValidationMessageFor(m => m.Provider)</span>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="space-y-2">
+                                    <label class="text-sm font-semibold text-slate-700">Ngày hết hạn</label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                            <span class="material-symbols-outlined text-sm">calendar_today</span>
+                                        </div>
+                                        <input asp-for="DueDate" type="date"
+                                               class="w-full px-4 py-2.5 pl-10 rounded-lg border-slate-300 bg-white focus:ring-primary focus:border-primary" />
+                                    </div>
+                                </div>
+
+                                @* <div class="space-y-2">
+                                    <label class="text-sm font-semibold text-slate-700">Mã tham chiếu (Tùy chọn)</label>
+                                    <input asp-for="ReferenceCode"
+                                           class="w-full px-4 py-2.5 rounded-lg border-slate-300 bg-white focus:ring-primary focus:border-primary"
+                                           placeholder="e.g. INV-2023-001" />
+                                </div> *@
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="text-sm font-semibold text-slate-700">Ghi chú thanh toán</label>
+                                <textarea asp-for="Note" rows="4"
+                                          class="w-full px-4 py-2.5 rounded-lg border-slate-300 bg-white focus:ring-primary focus:border-primary"
+                                          placeholder="Nhập thêm chi tiết như tiền thuê hàng tháng, tiền điện nước, v.v."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Area -->
+                    <div class="p-8 bg-slate-50 border-t border-slate-200 flex flex-col md:flex-row items-center justify-between gap-4">
+                        <div class="text-sm text-slate-500">Bằng cách nhấn tạo, một thông báo tự động sẽ được gửi đến khách thuê.</div>
+                        <div class="flex items-center gap-3 w-full md:w-auto">
+                            <a asp-controller="Invoice" asp-action="Details" asp-route-id="@Model.InvoiceId"
+                               class="flex-1 md:flex-none px-6 py-3 rounded-lg border border-slate-300 font-bold hover:bg-slate-100 transition-colors text-center">
+                                Hủy bỏ
+                            </a>
+
+                            <button type="submit"
+                                    class="flex-1 md:flex-none px-8 py-3 rounded-lg bg-primary text-white font-bold hover:bg-orange-600 transition-colors shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
+                                <span class="material-symbols-outlined">send</span>
+                                Tạo yêu cầu thanh toán
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Info Help Section (giữ nguyên mẫu) -->
+            <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="flex gap-4 p-4 rounded-xl bg-blue-50 border border-blue-100">
+                    <span class="material-symbols-outlined text-blue-600">info</span>
+                    <div>
+                        <h4 class="font-bold text-sm text-blue-900">Tự động nhắc nhở</h4>
+                        <p class="text-xs text-blue-800/70 mt-1">Tenants get notified via App and SMS 2 days before the due date.</p>
+                    </div>
+                </div>
+
+                <div class="flex gap-4 p-4 rounded-xl bg-orange-50 border border-orange-100">
+                    <span class="material-symbols-outlined text-orange-600">security</span>
+                    <div>
+                        <h4 class="font-bold text-sm text-orange-900">Thanh toán an toàn</h4>
+                        <p class="text-xs text-orange-800/70 mt-1">All online transactions are encrypted and tracked in real-time.</p>
+                    </div>
+                </div>
+
+                <div class="flex gap-4 p-4 rounded-xl bg-green-50 border border-green-100">
+                    <span class="material-symbols-outlined text-green-600">receipt_long</span>
+                    <div>
+                        <h4 class="font-bold text-sm text-green-900">Hóa đơn tức thì</h4>
+                        <p class="text-xs text-green-800/70 mt-1">PDF receipts are automatically generated once payment is confirmed.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+</body>
+</html>
