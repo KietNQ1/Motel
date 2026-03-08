@@ -1,8 +1,26 @@
 ﻿@model Motel.ViewModels.Account.RegisterViewModel
 
+
 @{
     ViewData["Title"] = "Register";
     Layout = null;
+
+}
+<h2>Register</h2>
+
+@if (!ViewData.ModelState.IsValid)
+{
+	<div style="color:red">
+
+	
+	@foreach (var e in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+	{
+		<div>
+			@e.ErrorMessage
+		</div>
+	}
+	</div>
+
 }
 
 <style>

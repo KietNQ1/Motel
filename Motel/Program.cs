@@ -4,9 +4,23 @@ using Microsoft.EntityFrameworkCore;
 using Motel.Data;
 using Motel.Models;
 using Motel.Repositories;
+using Motel.Repositories.Interface;
 using Motel.Services;
+using Motel.Services.Interface;
+
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddScoped<IContractRepository, ContractRepository>();
+builder.Services.AddScoped<IRoomRepository, RoomRepository>();
+builder.Services.AddScoped<IRoomUtilitySettingRepository, RoomUtilitySettingRepository>();
+builder.Services.AddScoped<IMeterReadingRepository, MeterReadingRepository>();
+builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
+builder.Services.AddScoped<IInvoiceLineRepository, InvoiceLineRepository>();
+
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+builder.Services.AddScoped<IInvoiceService, InvoiceService>();
 
 // MVC
 builder.Services.AddControllersWithViews();
@@ -47,10 +61,12 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.SlidingExpiration = true;
 });
 
-builder.Services.AddScoped<IEmailSender, EmailSender>();
+builder.Services.AddScoped<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender, EmailSender>();
 
 // Repositories
 builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
+builder.Services.AddScoped<IPropertyRepository, PropertyRepository>();
+builder.Services.AddScoped<IRoomRepository, RoomRepository>();
 
 // Services
 builder.Services.AddScoped<IDashboardService, DashboardService>();

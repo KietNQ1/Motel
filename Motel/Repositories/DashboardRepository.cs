@@ -19,68 +19,152 @@ namespace Motel.Repositories
 
         public async Task<RoomStatisticsViewModel> GetRoomStatisticsAsync(int landlordId)
         {
-            // HARD CODE - TODO: Replace with real database query
-            await Task.CompletedTask;
+            var rooms = await _context.Rooms
+                .Include(r => r.Property)
+                .Where(r => r.Property.LandlordId == landlordId && !r.IsDeleted)
+                .ToListAsync();
+
+            var totalRooms = rooms.Count;
+            var occupiedRooms = rooms.Count(r => r.Status == "occupied");
+            var availableRooms = rooms.Count(r => r.Status == "available");
+            var maintenanceRooms = rooms.Count(r => r.Status == "maintenance");
+
+            var occupancyRate = totalRooms > 0 ? (decimal)occupiedRooms / totalRooms * 100 : 0;
+
             return new RoomStatisticsViewModel
             {
-                TotalRooms = 50,
-                OccupiedRooms = 38,
-                AvailableRooms = 10,
-                MaintenanceRooms = 2,
-                OccupancyRate = 76.0m
+                TotalRooms = totalRooms,
+                OccupiedRooms = occupiedRooms,
+                AvailableRooms = availableRooms,
+                MaintenanceRooms = maintenanceRooms,
+                OccupancyRate = Math.Round(occupancyRate, 1)
             };
         }
 
         public async Task<FinancialStatisticsViewModel> GetFinancialStatisticsAsync(int landlordId)
         {
-            // HARD CODE - TODO: Replace with real database query
-            await Task.CompletedTask;
+            var currentMonth = DateTime.Now.Year * 100 + DateTime.Now.Month;
+
+            var invoices = await _context.Invoices
+                .Include(i => i.Room)
+                    .ThenInclude(r => r.Property)
+                .Where(i => i.Room.Property.LandlordId == landlordId && i.PeriodMonth == currentMonth)
+                .ToListAsync();
+
+            var monthlyRevenue = invoices.Sum(i => i.TotalAmount);
+            var collectedAmount = invoices.Where(i => i.Status == "paid").Sum(i => i.TotalAmount);
+            var unpaidAmount = invoices.Where(i => i.Status == "unpaid").Sum(i => i.TotalAmount);
+            var unpaidInvoiceCount = invoices.Count(i => i.Status == "unpaid");
+
+            var collectionRate = monthlyRevenue > 0 ? collectedAmount / monthlyRevenue * 100 : 0;
+
             return new FinancialStatisticsViewModel
             {
-                MonthlyRevenue = 125000000,
-                CollectedAmount = 98000000,
-                UnpaidAmount = 27000000,
-                UnpaidInvoiceCount = 8,
-                CollectionRate = 78.4m
+                MonthlyRevenue = monthlyRevenue,
+                CollectedAmount = collectedAmount,
+                UnpaidAmount = unpaidAmount,
+                UnpaidInvoiceCount = unpaidInvoiceCount,
+                CollectionRate = Math.Round(collectionRate, 1)
             };
         }
 
         public async Task<List<RecentInvoiceViewModel>> GetRecentInvoicesAsync(int landlordId, int count)
         {
-            // HARD CODE - TODO: Replace with real database query
-            await Task.CompletedTask;
-            return new List<RecentInvoiceViewModel>
-            {
-                new RecentInvoiceViewModel { InvoiceId = 1, RoomName = "Phòng 101", PropertyName = "Nhà Trọ ABC", PeriodMonth = 202602, TotalAmount = 3500000, Status = "paid", DueDate = DateTime.Now.AddDays(-5) },
-                new RecentInvoiceViewModel { InvoiceId = 2, RoomName = "Phòng 205", PropertyName = "Nhà Trọ XYZ", PeriodMonth = 202602, TotalAmount = 4200000, Status = "unpaid", DueDate = DateTime.Now.AddDays(5) },
-                new RecentInvoiceViewModel { InvoiceId = 3, RoomName = "Phòng 302", PropertyName = "Nhà Trọ ABC", PeriodMonth = 202602, TotalAmount = 3800000, Status = "paid", DueDate = DateTime.Now.AddDays(-2) },
-                new RecentInvoiceViewModel { InvoiceId = 4, RoomName = "Phòng 410", PropertyName = "Nhà Trọ XYZ", PeriodMonth = 202602, TotalAmount = 5000000, Status = "unpaid", DueDate = DateTime.Now.AddDays(10) },
-                new RecentInvoiceViewModel { InvoiceId = 5, RoomName = "Phòng 108", PropertyName = "Nhà Trọ ABC", PeriodMonth = 202602, TotalAmount = 3200000, Status = "paid", DueDate = DateTime.Now.AddDays(-8) }
-            };
+            var invoices = await _context.Invoices
+                .Include(i => i.Room)
+                    .ThenInclude(r => r.Property)
+                .Where(i => i.Room.Property.LandlordId == landlordId)
+                .OrderByDescending(i => i.CreatedAt)
+                .Take(count)
+                .Select(i => new RecentInvoiceViewModel
+                {
+                    InvoiceId = i.InvoiceId,
+                    RoomName = i.Room.RoomName,
+                    PropertyName = i.Room.Property.Name,
+                    PeriodMonth = i.PeriodMonth,
+                    TotalAmount = i.TotalAmount,
+                    Status = i.Status,
+                    DueDate = i.DueDate.ToDateTime(TimeOnly.MinValue)
+                })
+                .ToListAsync();
+
+            return invoices;
         }
 
         public async Task<List<ExpiringContractViewModel>> GetExpiringContractsAsync(int landlordId, int daysAhead)
         {
-            // HARD CODE - TODO: Replace with real database query
-            await Task.CompletedTask;
-            return new List<ExpiringContractViewModel>
-            {
-                new ExpiringContractViewModel { ContractId = 1, RoomName = "Phòng 201", PropertyName = "Nhà Trọ ABC", TenantName = "Nguyễn Văn A", EndDate = DateTime.Now.AddDays(5), DaysRemaining = 5 },
-                new ExpiringContractViewModel { ContractId = 2, RoomName = "Phòng 305", PropertyName = "Nhà Trọ XYZ", TenantName = "Trần Thị B", EndDate = DateTime.Now.AddDays(12), DaysRemaining = 12 },
-                new ExpiringContractViewModel { ContractId = 3, RoomName = "Phòng 402", PropertyName = "Nhà Trọ ABC", TenantName = "Lê Văn C", EndDate = DateTime.Now.AddDays(20), DaysRemaining = 20 },
-                new ExpiringContractViewModel { ContractId = 4, RoomName = "Phòng 105", PropertyName = "Nhà Trọ XYZ", TenantName = "Phạm Thị D", EndDate = DateTime.Now.AddDays(28), DaysRemaining = 28 }
-            };
+            var today = DateOnly.FromDateTime(DateTime.Today);
+            var futureDate = today.AddDays(daysAhead);
+
+            var contracts = await _context.Contracts
+                .Include(c => c.Room)
+                    .ThenInclude(r => r.Property)
+                .Include(c => c.Tenant)
+                .Where(c => c.Room.Property.LandlordId == landlordId
+                    && c.Status == "active"
+                    && !c.IsDeleted
+                    && c.EndDate >= today
+                    && c.EndDate <= futureDate)
+                .OrderBy(c => c.EndDate)
+                .Select(c => new ExpiringContractViewModel
+                {
+                    ContractId = c.ContractId,
+                    RoomName = c.Room.RoomName,
+                    PropertyName = c.Room.Property.Name,
+                    TenantName = c.Tenant.FullName,
+                    EndDate = c.EndDate.ToDateTime(TimeOnly.MinValue),
+                    DaysRemaining = c.EndDate.DayNumber - today.DayNumber
+                })
+                .ToListAsync();
+
+            return contracts;
         }
 
         public async Task<MonthlyRevenueChartViewModel> GetMonthlyRevenueDataAsync(int landlordId, int monthCount)
         {
-            // HARD CODE - TODO: Replace with real database query
-            await Task.CompletedTask;
+            var months = new List<string>();
+            var revenues = new List<decimal>();
+
+            var currentDate = DateTime.Now;
+
+            for (int i = monthCount - 1; i >= 0; i--)
+            {
+                var targetMonth = currentDate.AddMonths(-i);
+                var periodMonth = targetMonth.Year * 100 + targetMonth.Month;
+
+                var monthRevenue = await _context.Invoices
+                    .Include(inv => inv.Room)
+                        .ThenInclude(r => r.Property)
+                    .Where(inv => inv.Room.Property.LandlordId == landlordId
+                        && inv.PeriodMonth == periodMonth
+                        && inv.Status == "paid")
+                    .SumAsync(inv => inv.TotalAmount);
+
+                months.Add($"T{targetMonth.Month}");
+                revenues.Add(monthRevenue);
+            }
+
             return new MonthlyRevenueChartViewModel
             {
-                Months = new List<string> { "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12", "T1", "T2" },
-                Revenues = new List<decimal> { 95000000, 102000000, 98000000, 110000000, 115000000, 108000000, 120000000, 125000000, 118000000, 122000000, 130000000, 125000000 }
+                Months = months,
+                Revenues = revenues
             };
+        }
+
+        public async Task<List<PropertyOptionViewModel>> GetPropertiesAsync(int landlordId)
+        {
+            var properties = await _context.Properties
+                .Where(p => p.LandlordId == landlordId && !p.IsDeleted)
+                .OrderBy(p => p.Name)
+                .Select(p => new PropertyOptionViewModel
+                {
+                    PropertyId = p.PropertyId,
+                    Name = p.Name,
+                    Address = p.Address
+                })
+                .ToListAsync();
+
+            return properties;
         }
     }
 }

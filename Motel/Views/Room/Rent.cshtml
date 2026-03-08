@@ -1,0 +1,140 @@
+@model Motel.ViewModels.Room.RentRoomViewModel
+
+@{
+    ViewData["Title"] = $"Cho thuê phòng {Model.RoomName}";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-person-plus"></i> Cho thuê phòng @Model.RoomName
+                    </h4>
+                    <small>@Model.PropertyName - Giá thuê: @Model.RentPrice.ToString("N0") VNĐ/tháng</small>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Rent" method="post">
+                        <input type="hidden" asp-for="RoomId" />
+                        <input type="hidden" asp-for="RoomName" />
+                        <input type="hidden" asp-for="RentPrice" />
+                        <input type="hidden" asp-for="PropertyName" />
+                        
+                        @if (!ViewData.ModelState.IsValid)
+                        {
+                            <div class="alert alert-danger" role="alert">
+                                <h5 class="alert-heading"><i class="bi bi-exclamation-triangle"></i> Có lỗi xảy ra!</h5>
+                                <div asp-validation-summary="All"></div>
+                            </div>
+                        }
+
+                        <h5 class="border-bottom pb-2 mb-3">Thông tin người thuê</h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="TenantFullName" class="form-label"></label>
+                                <input asp-for="TenantFullName" class="form-control" placeholder="Nguyễn Văn A" />
+                                <span asp-validation-for="TenantFullName" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="TenantPhone" class="form-label"></label>
+                                <input asp-for="TenantPhone" class="form-control" placeholder="0901234567" />
+                                <span asp-validation-for="TenantPhone" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="TenantEmail" class="form-label"></label>
+                                <input asp-for="TenantEmail" class="form-control" type="email" placeholder="email@example.com" />
+                                <span asp-validation-for="TenantEmail" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="IdentityNo" class="form-label"></label>
+                                <input asp-for="IdentityNo" class="form-control" placeholder="001234567890" />
+                                <span asp-validation-for="IdentityNo" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <h5 class="border-bottom pb-2 mb-3 mt-4">Thông tin hợp đồng</h5>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="StartDate" class="form-label"></label>
+                                <input asp-for="StartDate" class="form-control" type="date" />
+                                <span asp-validation-for="StartDate" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="EndDate" class="form-label"></label>
+                                <input asp-for="EndDate" class="form-control" type="date" />
+                                <span asp-validation-for="EndDate" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="DepositAmount" class="form-label"></label>
+                            <div class="input-group">
+                                <input asp-for="DepositAmount" class="form-control" type="number" step="100000" />
+                                <span class="input-group-text">VNĐ</span>
+                            </div>
+                            <span asp-validation-for="DepositAmount" class="text-danger"></span>
+                            <small class="form-text text-muted">
+                                Mặc định: 2 tháng tiền phòng (@((Model.RentPrice * 2).ToString("N0")) VNĐ)
+                            </small>
+                        </div>
+
+                        <h5 class="border-bottom pb-2 mb-3 mt-4">Chỉ số điện nước ban đầu (tùy chọn)</h5>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="InitialElectricReading" class="form-label"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-lightning-charge"></i></span>
+                                    <input asp-for="InitialElectricReading" class="form-control" type="number" min="0" />
+                                    <span class="input-group-text">số</span>
+                                </div>
+                                <span asp-validation-for="InitialElectricReading" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="InitialWaterReading" class="form-label"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-droplet"></i></span>
+                                    <input asp-for="InitialWaterReading" class="form-control" type="number" min="0" />
+                                    <span class="input-group-text">số</span>
+                                </div>
+                                <span asp-validation-for="InitialWaterReading" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            <strong>Lưu ý:</strong> Sau khi cho thuê, phòng sẽ chuyển sang trạng thái "Đã thuê" và tạo hợp đồng mới.
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a asp-action="Details" asp-route-id="@Model.RoomId" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Hủy
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle"></i> Xác nhận cho thuê
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+}

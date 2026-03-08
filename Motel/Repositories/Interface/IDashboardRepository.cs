@@ -31,5 +31,10 @@ namespace Motel.Repositories
         /// Lấy dữ liệu doanh thu theo tháng
         /// </summary>
         Task<MonthlyRevenueChartViewModel> GetMonthlyRevenueDataAsync(int landlordId, int monthCount);
+        
+        /// <summary>
+        /// Lấy danh sách properties của landlord
+        /// </summary>
+        Task<List<PropertyOptionViewModel>> GetPropertiesAsync(int landlordId);
     }
 }
