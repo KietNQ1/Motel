@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using Motel.Data;
 using Motel.Models;
 using Motel.Repositories.Interface;
 using Motel.Services.Interface;
@@ -14,6 +16,7 @@ public sealed class InvoiceService : IInvoiceService
     private readonly IInvoiceRepository _invoiceRepo;
     private readonly IInvoiceLineRepository _lineRepo;
     private readonly IUnitOfWork _uow;
+    private readonly MotelDbContext _db;
 
     public InvoiceService(
         IContractRepository contractRepo,
@@ -22,7 +25,8 @@ public sealed class InvoiceService : IInvoiceService
         IMeterReadingRepository meterRepo,
         IInvoiceRepository invoiceRepo,
         IInvoiceLineRepository lineRepo,
-        IUnitOfWork uow)
+        IUnitOfWork uow,
+        MotelDbContext db)
     {
         _contractRepo = contractRepo;
         _roomRepo = roomRepo;
@@ -31,6 +35,7 @@ public sealed class InvoiceService : IInvoiceService
         _invoiceRepo = invoiceRepo;
         _lineRepo = lineRepo;
         _uow = uow;
+        _db = db;
     }
 
     public async Task<int> CreateInvoiceAsync(CreateInvoiceViewModel vm, CancellationToken ct = default)
@@ -151,11 +156,90 @@ public sealed class InvoiceService : IInvoiceService
             newInvoiceId = invoice.InvoiceId;
         }, ct);
 
+        // 8) Lưu chỉ số điện/nước vào MeterReadings (UPSERT qua stored procedure)
+        //    Chỉ lưu khi user nhập đủ 4 giá trị chỉ số
+        if (vm.ElectricOld.HasValue && vm.ElectricNew.HasValue
+            && vm.WaterOld.HasValue && vm.WaterNew.HasValue)
+        {
+            var contract2 = await _contractRepo.GetActiveByIdAsync(vm.ContractId, ct);
+            if (contract2 != null)
+            {
+                await _meterRepo.SaveMeterReadingAsync(
+                    roomId:           contract2.RoomId,
+                    periodMonth:      vm.PeriodMonth,
+                    electricOld:      vm.ElectricOld.Value,
+                    electricNew:      vm.ElectricNew.Value,
+                    waterOld:         vm.WaterOld.Value,
+                    waterNew:         vm.WaterNew.Value,
+                    recordedByUserId: 1,  // TODO: lấy từ claims sau khi có auth
+                    ct:               ct
+                );
+            }
+        }
+
         return newInvoiceId;
     }
 
     public Task<Invoice?> GetInvoiceWithLinesAsync(int invoiceId, CancellationToken ct = default)
         => _invoiceRepo.GetByIdWithLinesAsync(invoiceId, ct);
+
+    public async Task<List<TransactionHistoryViewModel>> GetTransactionHistoryAsync(
+        int landlordId, CancellationToken ct = default)
+    {
+        // Query từ view vw_TransactionHistory
+        var rows = await _db.Database
+            .SqlQueryRaw<TransactionHistoryRaw>(
+                @"SELECT InvoiceId, PeriodMonth, PeriodLabel, TotalAmount, InvoiceStatus,
+                         DueDate, InvoiceCreatedAt, RoomId, RoomName, RentPrice,
+                         PropertyName, TenantName, TenantPhone, ContractId,
+                         PaidAmount, PaidAt
+                  FROM   dbo.vw_TransactionHistory
+                  WHERE  LandlordId = {0}
+                  ORDER  BY InvoiceCreatedAt DESC",
+                landlordId)
+            .ToListAsync(ct);
+
+        return rows.Select(r => new TransactionHistoryViewModel
+        {
+            InvoiceId        = r.InvoiceId,
+            PeriodMonth      = r.PeriodMonth,
+            PeriodLabel      = r.PeriodLabel,
+            TotalAmount      = r.TotalAmount,
+            InvoiceStatus    = r.InvoiceStatus,
+            DueDate          = r.DueDate,
+            InvoiceCreatedAt = r.InvoiceCreatedAt,
+            RoomId           = r.RoomId,
+            RoomName         = r.RoomName,
+            RentPrice        = r.RentPrice,
+            PropertyName     = r.PropertyName,
+            TenantName       = r.TenantName,
+            TenantPhone      = r.TenantPhone,
+            ContractId       = r.ContractId,
+            PaidAmount       = r.PaidAmount,
+            PaidAt           = r.PaidAt
+        }).ToList();
+    }
+
+    // Raw DTO for SQL query mapping
+    private sealed class TransactionHistoryRaw
+    {
+        public int InvoiceId { get; set; }
+        public int PeriodMonth { get; set; }
+        public string PeriodLabel { get; set; } = string.Empty;
+        public decimal TotalAmount { get; set; }
+        public string InvoiceStatus { get; set; } = string.Empty;
+        public DateOnly DueDate { get; set; }
+        public DateTime InvoiceCreatedAt { get; set; }
+        public int RoomId { get; set; }
+        public string RoomName { get; set; } = string.Empty;
+        public decimal RentPrice { get; set; }
+        public string PropertyName { get; set; } = string.Empty;
+        public string TenantName { get; set; } = string.Empty;
+        public string? TenantPhone { get; set; }
+        public int ContractId { get; set; }
+        public decimal? PaidAmount { get; set; }
+        public DateTime? PaidAt { get; set; }
+    }
 
     // ----------------- helpers -----------------
 

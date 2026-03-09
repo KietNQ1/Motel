@@ -8,4 +8,6 @@ public interface IInvoiceService
     Task<int> CreateInvoiceAsync(CreateInvoiceViewModel vm, CancellationToken ct = default);
 
     Task<Invoice?> GetInvoiceWithLinesAsync(int invoiceId, CancellationToken ct = default);
+
+    Task<List<TransactionHistoryViewModel>> GetTransactionHistoryAsync(int landlordId, CancellationToken ct = default);
 }
