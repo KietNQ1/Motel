@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Motel.Data;
 using Motel.Models;
 using Motel.Repositories.Interface;
@@ -87,7 +87,8 @@ public sealed class ContractRepository : IContractRepository
 
     public Task<Contract?> GetContractDetailsAsync(int contractId, int landlordId, CancellationToken ct = default)
         => _db.Contracts
-            .Include(c => c.Room).ThenInclude(r => r.Property)
+            .Include(c => c.Room).ThenInclude(r => r.Property).ThenInclude(p => p.Landlord).ThenInclude(l => l.User)
+            .Include(c => c.Room).ThenInclude(r => r.RoomUtilitySettings)
             .Include(c => c.Tenant)
             .FirstOrDefaultAsync(c =>
                 c.ContractId == contractId &&
