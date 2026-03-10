@@ -17,6 +17,18 @@ namespace Motel.Controllers
         private int GetCurrentLandlordId() => 1;
 
         [HttpGet]
+        public async Task<IActionResult> Index(int propertyId)
+        {
+            var viewModel = await _service.GetTenantsByPropertyIdAsync(GetCurrentLandlordId(), propertyId);
+            if (viewModel == null)
+            {
+                TempData["Error"] = "Không tìm thấy nhà trọ hoặc bạn không có quyền truy cập.";
+                return RedirectToAction("Index", "Property");
+            }
+            return View(viewModel);
+        }
+
+        [HttpGet]
         public IActionResult Create(int? returnRoomId = null)
             => View(new TenantCreateViewModel { ReturnRoomId = returnRoomId });
 

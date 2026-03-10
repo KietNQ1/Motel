@@ -19,6 +19,9 @@
             }
         </div>
         <div class="col-md-4 text-end">
+            <a asp-controller="Tenant" asp-action="Index" asp-route-propertyId="@Model.PropertyId" class="btn btn-outline-primary mb-2 mb-md-0 me-md-2">
+                <i class="bi bi-people"></i> Người thuê
+            </a>
             <a asp-action="Index" class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left"></i> Quay lại
             </a>
