@@ -27,7 +27,16 @@ public sealed class InvoiceController : Controller
         _settingRepo = settingRepo;
     }
 
-    // GET: /Invoice/Create?contractId=1&periodMonth=202602
+    // GET: /Invoice/History
+    [HttpGet]
+    public async Task<IActionResult> History(CancellationToken ct)
+    {
+        // TODO: lấy landlordId từ claims sau khi có auth, tạm dùng 1
+        var landlordId = 1;
+        var history = await _invoiceService.GetTransactionHistoryAsync(landlordId, ct);
+        return View(history);
+    }
+
     [HttpGet]
     public async Task<IActionResult> Create(int contractId, int? periodMonth, CancellationToken ct)
     {
