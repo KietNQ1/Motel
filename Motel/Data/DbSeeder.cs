@@ -20,6 +20,7 @@ namespace Motel.Data
             }
 
             // Seed Roles
+            Console.WriteLine("=> Seeding Roles...");
             var roles = new[] { "Admin", "Landlord" };
             foreach (var role in roles)
             {
@@ -30,6 +31,7 @@ namespace Motel.Data
             }
 
             // Seed Admin User
+            Console.WriteLine("=> Seeding Admin User...");
             var adminEmail = "admin@motel.local";
             if (await userManager.FindByEmailAsync(adminEmail) == null)
             {
@@ -48,6 +50,7 @@ namespace Motel.Data
             }
 
             // Seed Landlord User
+            Console.WriteLine("=> Seeding Landlord User...");
             var landlordEmail = "landlord1@motel.local";
             var landlordUser = await userManager.FindByEmailAsync(landlordEmail);
             if (landlordUser == null)
@@ -64,9 +67,14 @@ namespace Motel.Data
                 {
                     await userManager.AddToRoleAsync(landlordUser, "Landlord");
                 }
+                else
+                {
+                    Console.WriteLine("=> FAILED to create Landlord User. Errors: " + string.Join(", ", result.Errors.Select(e => e.Description)));
+                }
             }
 
             // At this point, ensure we have the landlord profile
+            Console.WriteLine($"=> Seeding Landlord Profile for UserId={landlordUser.Id}...");
             var landlordProfile = await context.Landlords.FirstOrDefaultAsync(l => l.UserId == landlordUser.Id && !l.IsDeleted);
             if (landlordProfile == null)
             {
@@ -82,6 +90,7 @@ namespace Motel.Data
             }
 
             // Seed demo Property
+            Console.WriteLine("=> Seeding Demo Property...");
             var propertyName = "Nhà trọ A";
             var property = await context.Properties.FirstOrDefaultAsync(p => p.LandlordId == landlordProfile.LandlordId && p.Name == propertyName && !p.IsDeleted);
             if (property == null)
@@ -99,6 +108,7 @@ namespace Motel.Data
             }
 
             // Seed Rooms
+            Console.WriteLine("=> Seeding Demo Rooms...");
             var roomA101 = await context.Rooms.FirstOrDefaultAsync(r => r.PropertyId == property.PropertyId && r.RoomName == "A101" && !r.IsDeleted);
             if (roomA101 == null)
             {
@@ -248,6 +258,26 @@ namespace Motel.Data
             {
                 invoice.TotalAmount = totalAmount;
                 context.Invoices.Update(invoice);
+                await context.SaveChangesAsync();
+            }
+
+            // Seed Initial Tax Rule (Circular 40/2021/TT-BTC)
+            var ruleName = "Thông tư 40/2021/TT-BTC";
+            var taxRule = await context.TaxRules.FirstOrDefaultAsync(r => r.RuleName == ruleName);
+            if (taxRule == null)
+            {
+                taxRule = new TaxRule
+                {
+                    RuleName = ruleName,
+                    VatRate = 0.0500m,
+                    PitRate = 0.0500m,
+                    RevenueThreshold = 100000000.00m,
+                    EffectiveDate = new DateOnly(2021, 6, 7),
+                    EndDate = null,
+                    IsActive = true,
+                    Notes = "Luật thuế hiện hành cho cho thuê tài sản. Doanh thu trên 100 triệu/năm chịu thuế VAT 5% và thuế TNCN 5%."
+                };
+                context.TaxRules.Add(taxRule);
                 await context.SaveChangesAsync();
             }
         }

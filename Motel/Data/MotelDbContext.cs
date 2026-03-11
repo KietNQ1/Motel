@@ -388,7 +388,9 @@ public partial class MotelDbContext : IdentityDbContext<ApplicationUser, Identit
 
         modelBuilder.Entity<TaxEstimation>(entity =>
         {
-            entity.HasIndex(e => new { e.LandlordId, e.Year }, "UX_TaxEstimations_LandlordId_Year").IsUnique();
+            entity.HasIndex(e => new { e.LandlordId, e.Year }, "IX_TaxEstimations_Landlord").IsDescending(false, true);
+
+            entity.HasIndex(e => new { e.LandlordId, e.Year }, "UK_TaxEstimations_LandlordYear").IsUnique();
 
             entity.Property(e => e.CalculatedAt).HasDefaultValueSql("(sysdatetime())");
             entity.Property(e => e.PitAmount).HasColumnType("decimal(18, 2)");
@@ -410,10 +412,12 @@ public partial class MotelDbContext : IdentityDbContext<ApplicationUser, Identit
 
         modelBuilder.Entity<TaxRule>(entity =>
         {
+            entity.HasIndex(e => new { e.EffectiveDate, e.IsActive }, "IX_TaxRules_EffectiveDate").IsDescending(true, false);
+
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysdatetime())");
             entity.Property(e => e.PitRate).HasColumnType("decimal(5, 4)");
             entity.Property(e => e.RevenueThreshold).HasColumnType("decimal(18, 2)");
-            entity.Property(e => e.RuleName).HasMaxLength(100);
+            entity.Property(e => e.RuleName).HasMaxLength(200);
             entity.Property(e => e.VatRate).HasColumnType("decimal(5, 4)");
         });
 

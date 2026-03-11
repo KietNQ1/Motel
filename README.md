@@ -16,7 +16,7 @@
 * Thanh toán hóa đơn *(dự kiến tích hợp ZaloPay)*
 * Lưu trữ file hợp đồng (scan)
 
-Dự án được thiết kế theo hướng **thực tế**, sử dụng **Data First**, **soft delete**, **ràng buộc dữ liệu chặt chẽ ở tầng database**, phù hợp cho làm việc nhóm và mở rộng sau này.
+Dự án được thiết kế theo hướng **thực tế**, sử dụng **Code First**, **soft delete**, **ràng buộc dữ liệu chặt chẽ ở tầng database**, phù hợp cho làm việc nhóm và mở rộng sau này.
 
 ---
 
@@ -49,7 +49,7 @@ The project follows a **Data First approach** with strong **database constraints
 
 * **.NET 8**
 * **ASP.NET Core MVC**
-* **Entity Framework Core – Data First**
+* **Entity Framework Core – Code First**
 * **SQL Server (SSMS 2022)**
 * **ASP.NET Core Identity**
 * **ZaloPay** *(planned)*
