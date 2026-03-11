@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Motel.Helpers;
 using Motel.Services.Interfaces;
 using Motel.ViewModels.Tenant;
 
@@ -8,18 +9,22 @@ namespace Motel.Controllers
     {
         private readonly ITenantService _service;
         private readonly ILogger<TenantController> _logger;
-        public TenantController(ITenantService service, ILogger<TenantController> logger)
+        private readonly LandlordHelper _landlordHelper;
+
+        public TenantController(
+            ITenantService service, 
+            ILogger<TenantController> logger,
+            LandlordHelper landlordHelper)
         {
             _service = service;
             _logger = logger;
+            _landlordHelper = landlordHelper;
         }
 
-        private int GetCurrentLandlordId() => 1;
-
-        [HttpGet]
+[HttpGet]
         public async Task<IActionResult> Index(int propertyId)
         {
-            var viewModel = await _service.GetTenantsByPropertyIdAsync(GetCurrentLandlordId(), propertyId);
+            var viewModel = await _service.GetTenantsByPropertyIdAsync(await _landlordHelper.GetCurrentLandlordIdAsync(User), propertyId);
             if (viewModel == null)
             {
                 TempData["Error"] = "Không tìm thấy nhà trọ hoặc bạn không có quyền truy cập.";
@@ -40,7 +45,7 @@ namespace Motel.Controllers
 
             try
             {
-                var id = await _service.CreateTenantAsync(GetCurrentLandlordId(), vm);
+                var id = await _service.CreateTenantAsync(await _landlordHelper.GetCurrentLandlordIdAsync(User), vm);
                 TempData["Success"] = "Tạo người thuê thành công!";
 
                 if (vm.ReturnRoomId.HasValue)
@@ -59,7 +64,7 @@ namespace Motel.Controllers
         [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
-            var tenant = await _service.GetTenantDetailsAsync(GetCurrentLandlordId(), id);
+            var tenant = await _service.GetTenantDetailsAsync(await _landlordHelper.GetCurrentLandlordIdAsync(User), id);
             if (tenant == null)
             {
                 TempData["Error"] = "Không tìm thấy người thuê.";

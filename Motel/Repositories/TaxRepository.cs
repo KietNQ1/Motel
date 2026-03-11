@@ -15,8 +15,14 @@ public sealed class TaxRepository : ITaxRepository
     public TaxRepository(MotelDbContext db) => _db = db;
 
     /// <summary>
+    /// Lấy quy định thuế đang áp dụng cho một ngày cụ thể
     /// Get the active tax rule for a specific date
-    /// Business Logic: Returns the rule where effectiveDate <= targetDate and (endDate is null or endDate >= targetDate)
+    /// 
+    /// Business Logic: 
+    /// - Chỉ lấy rule có IsActive = true
+    /// - effectiveDate <= targetDate (đã bắt đầu áp dụng)
+    /// - endDate = null HOẶC endDate >= targetDate (chưa hết hạn)
+    /// - Nếu có nhiều rule, lấy rule mới nhất (OrderBy EffectiveDate DESC)
     /// </summary>
     public async Task<TaxRule?> GetActiveTaxRuleAsync(DateOnly? effectiveDate = null, CancellationToken ct = default)
     {
@@ -33,11 +39,15 @@ public sealed class TaxRepository : ITaxRepository
     }
 
     /// <summary>
+    /// Lấy tất cả hợp đồng của chủ nhà có overlap với một năm cụ thể
     /// Get all active contracts for a landlord in a specific calendar year
+    /// 
     /// Business Logic:
-    ///   - Only include contracts that overlap with the target year
-    ///   - Include Room and Property to get RentPrice and verify ownership
-    ///   - Revenue is calculated based on overlap period, not full contract period
+    /// - Chỉ lấy hợp đồng KHÔNG bị xóa (IsDeleted = false)
+    /// - Thuộc property của landlord này
+    /// - Property không bị xóa
+    /// - Hợp đồng có overlap với năm: StartDate <= yearEnd AND EndDate >= yearStart
+    /// - Include Room và Property để lấy RentPrice và verify ownership
     /// </summary>
     public async Task<List<Contract>> GetLandlordContractsForYearAsync(int landlordId, int year, CancellationToken ct = default)
     {
@@ -52,7 +62,7 @@ public sealed class TaxRepository : ITaxRepository
                 !c.IsDeleted &&
                 c.Room.Property.LandlordId == landlordId &&
                 !c.Room.Property.IsDeleted &&
-                // Contract overlaps with the year
+                // Hợp đồng overlap với năm: Contract overlaps with the year
                 c.StartDate <= yearEnd &&
                 c.EndDate >= yearStart)
             .ToListAsync(ct);

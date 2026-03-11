@@ -25,6 +25,8 @@ public partial class Landlord
 
     public virtual ICollection<Subscription> Subscriptions { get; set; } = new List<Subscription>();
 
+    public virtual ICollection<TaxEstimation> TaxEstimations { get; set; } = new List<TaxEstimation>();
+
     public virtual ICollection<Tenant> Tenants { get; set; } = new List<Tenant>();
 
     public virtual ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
