@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Motel.Helpers;
 using Motel.Repositories.Interface;
 using Motel.ViewModels.Room;
 using Motel.Services.Interface;
@@ -12,11 +13,18 @@ namespace Motel.Controllers
         private readonly IRoomRepository _roomRepository;
         private readonly ILogger<RoomController> _logger;
         private readonly IRoomService _roomService;
-        public RoomController(IRoomRepository roomRepository, IRoomService roomService, ILogger<RoomController> logger)
+        private readonly LandlordHelper _landlordHelper;
+
+        public RoomController(
+            IRoomRepository roomRepository, 
+            IRoomService roomService, 
+            ILogger<RoomController> logger,
+            LandlordHelper landlordHelper)
         {
             _roomRepository = roomRepository;
             _roomService = roomService;
             _logger = logger;
+            _landlordHelper = landlordHelper;
         }
 
         // GET: Room/Details/5
@@ -160,7 +168,7 @@ namespace Motel.Controllers
 
             try
             {
-                var landlordId = GetCurrentLandlordId();
+                var landlordId = await _landlordHelper.GetCurrentLandlordIdAsync(User);
 
                 // TODO: khi có auth -> lấy đúng userId từ User
                 var userId = 1;
@@ -182,16 +190,6 @@ namespace Motel.Controllers
                 ModelState.AddModelError("", $"Có lỗi xảy ra: {ex.Message}");
                 return View(model);
             }
-        }
-
-        /// <summary>
-        /// Helper: Get current landlord ID from authenticated user
-        /// TODO: Implement proper authentication with claims
-        /// </summary>
-        private int GetCurrentLandlordId()
-        {
-            // TODO: Get from User.Claims when authentication is fully implemented
-            return 1; // Hardcoded for development
         }
     }
 }

@@ -17,12 +17,19 @@ namespace Motel.Repositories
             _context = context;
         }
 
-        public async Task<RoomStatisticsViewModel> GetRoomStatisticsAsync(int landlordId)
+        public async Task<RoomStatisticsViewModel> GetRoomStatisticsAsync(int landlordId, int? propertyId = null)
         {
-            var rooms = await _context.Rooms
+            var query = _context.Rooms
                 .Include(r => r.Property)
-                .Where(r => r.Property.LandlordId == landlordId && !r.IsDeleted)
-                .ToListAsync();
+                .Where(r => r.Property.LandlordId == landlordId && !r.IsDeleted);
+
+            // Lọc theo property nếu có
+            if (propertyId.HasValue)
+            {
+                query = query.Where(r => r.PropertyId == propertyId.Value);
+            }
+
+            var rooms = await query.ToListAsync();
 
             var totalRooms = rooms.Count;
             var occupiedRooms = rooms.Count(r => r.Status == "occupied");
@@ -41,15 +48,22 @@ namespace Motel.Repositories
             };
         }
 
-        public async Task<FinancialStatisticsViewModel> GetFinancialStatisticsAsync(int landlordId)
+        public async Task<FinancialStatisticsViewModel> GetFinancialStatisticsAsync(int landlordId, int? propertyId = null)
         {
             var currentMonth = DateTime.Now.Year * 100 + DateTime.Now.Month;
 
-            var invoices = await _context.Invoices
+            var query = _context.Invoices
                 .Include(i => i.Room)
                     .ThenInclude(r => r.Property)
-                .Where(i => i.Room.Property.LandlordId == landlordId && i.PeriodMonth == currentMonth)
-                .ToListAsync();
+                .Where(i => i.Room.Property.LandlordId == landlordId && i.PeriodMonth == currentMonth);
+
+            // Lọc theo property nếu có
+            if (propertyId.HasValue)
+            {
+                query = query.Where(i => i.Room.PropertyId == propertyId.Value);
+            }
+
+            var invoices = await query.ToListAsync();
 
             var monthlyRevenue = invoices.Sum(i => i.TotalAmount);
             var collectedAmount = invoices.Where(i => i.Status == "paid").Sum(i => i.TotalAmount);
@@ -68,12 +82,20 @@ namespace Motel.Repositories
             };
         }
 
-        public async Task<List<RecentInvoiceViewModel>> GetRecentInvoicesAsync(int landlordId, int count)
+        public async Task<List<RecentInvoiceViewModel>> GetRecentInvoicesAsync(int landlordId, int count, int? propertyId = null)
         {
-            var invoices = await _context.Invoices
+            var query = _context.Invoices
                 .Include(i => i.Room)
                     .ThenInclude(r => r.Property)
-                .Where(i => i.Room.Property.LandlordId == landlordId)
+                .Where(i => i.Room.Property.LandlordId == landlordId);
+
+            // Lọc theo property nếu có
+            if (propertyId.HasValue)
+            {
+                query = query.Where(i => i.Room.PropertyId == propertyId.Value);
+            }
+
+            var invoices = await query
                 .OrderByDescending(i => i.CreatedAt)
                 .Take(count)
                 .Select(i => new RecentInvoiceViewModel
@@ -91,12 +113,12 @@ namespace Motel.Repositories
             return invoices;
         }
 
-        public async Task<List<ExpiringContractViewModel>> GetExpiringContractsAsync(int landlordId, int daysAhead)
+        public async Task<List<ExpiringContractViewModel>> GetExpiringContractsAsync(int landlordId, int daysAhead, int? propertyId = null)
         {
             var today = DateOnly.FromDateTime(DateTime.Today);
             var futureDate = today.AddDays(daysAhead);
 
-            var contracts = await _context.Contracts
+            var query = _context.Contracts
                 .Include(c => c.Room)
                     .ThenInclude(r => r.Property)
                 .Include(c => c.Tenant)
@@ -104,7 +126,15 @@ namespace Motel.Repositories
                     && c.Status == "active"
                     && !c.IsDeleted
                     && c.EndDate >= today
-                    && c.EndDate <= futureDate)
+                    && c.EndDate <= futureDate);
+
+            // Lọc theo property nếu có
+            if (propertyId.HasValue)
+            {
+                query = query.Where(c => c.Room.PropertyId == propertyId.Value);
+            }
+
+            var contracts = await query
                 .OrderBy(c => c.EndDate)
                 .Select(c => new ExpiringContractViewModel
                 {
@@ -120,7 +150,7 @@ namespace Motel.Repositories
             return contracts;
         }
 
-        public async Task<MonthlyRevenueChartViewModel> GetMonthlyRevenueDataAsync(int landlordId, int monthCount)
+        public async Task<MonthlyRevenueChartViewModel> GetMonthlyRevenueDataAsync(int landlordId, int monthCount, int? propertyId = null)
         {
             var months = new List<string>();
             var revenues = new List<decimal>();
@@ -132,13 +162,20 @@ namespace Motel.Repositories
                 var targetMonth = currentDate.AddMonths(-i);
                 var periodMonth = targetMonth.Year * 100 + targetMonth.Month;
 
-                var monthRevenue = await _context.Invoices
+                var query = _context.Invoices
                     .Include(inv => inv.Room)
                         .ThenInclude(r => r.Property)
                     .Where(inv => inv.Room.Property.LandlordId == landlordId
                         && inv.PeriodMonth == periodMonth
-                        && inv.Status == "paid")
-                    .SumAsync(inv => inv.TotalAmount);
+                        && inv.Status == "paid");
+
+                // Lọc theo property nếu có
+                if (propertyId.HasValue)
+                {
+                    query = query.Where(inv => inv.Room.PropertyId == propertyId.Value);
+                }
+
+                var monthRevenue = await query.SumAsync(inv => inv.TotalAmount);
 
                 months.Add($"T{targetMonth.Month}");
                 revenues.Add(monthRevenue);

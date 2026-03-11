@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Motel.Helpers;
 using Motel.Models;
 using Motel.Repositories.Interface;
 using Motel.ViewModels.Property;
@@ -12,13 +13,16 @@ namespace Motel.Controllers
     {
         private readonly IPropertyRepository _propertyRepository;
         private readonly ILogger<PropertyController> _logger;
+        private readonly LandlordHelper _landlordHelper;
 
         public PropertyController(
             IPropertyRepository propertyRepository,
-            ILogger<PropertyController> logger)
+            ILogger<PropertyController> logger,
+            LandlordHelper landlordHelper)
         {
             _propertyRepository = propertyRepository;
             _logger = logger;
+            _landlordHelper = landlordHelper;
         }
 
         // GET: Property/Index
@@ -26,7 +30,7 @@ namespace Motel.Controllers
         {
             try
             {
-                var landlordId = GetCurrentLandlordId();
+                var landlordId = await _landlordHelper.GetCurrentLandlordIdAsync(User);
                 var properties = await _propertyRepository.GetPropertiesByLandlordIdAsync(landlordId);
                 return View(properties);
             }
@@ -56,7 +60,7 @@ namespace Motel.Controllers
 
             try
             {
-                var landlordId = GetCurrentLandlordId();
+                var landlordId = await _landlordHelper.GetCurrentLandlordIdAsync(User);
 
                 var property = new Property
                 {
@@ -95,7 +99,7 @@ namespace Motel.Controllers
         {
             try
             {
-                var landlordId = GetCurrentLandlordId();
+                var landlordId = await _landlordHelper.GetCurrentLandlordIdAsync(User);
                 
                 if (!await _propertyRepository.PropertyExistsAsync(id, landlordId))
                 {
@@ -154,7 +158,7 @@ namespace Motel.Controllers
 
             try
             {
-                var landlordId = GetCurrentLandlordId();
+                var landlordId = await _landlordHelper.GetCurrentLandlordIdAsync(User);
                 
                 if (!await _propertyRepository.PropertyExistsAsync(model.PropertyId, landlordId))
                 {
@@ -218,7 +222,7 @@ namespace Motel.Controllers
         {
             try
             {
-                var landlordId = GetCurrentLandlordId();
+                var landlordId = await _landlordHelper.GetCurrentLandlordIdAsync(User);
                 
                 if (!await _propertyRepository.PropertyExistsAsync(id, landlordId))
                 {
@@ -243,15 +247,6 @@ namespace Motel.Controllers
             }
         }
 
-        /// <summary>
-        /// Helper: Get current landlord ID from authenticated user
-        /// TODO: Implement proper authentication with claims
-        /// </summary>
-        private int GetCurrentLandlordId()
-        {
-            // TODO: Get from User.Claims when authentication is fully implemented
-            // Example: return int.Parse(User.FindFirst("LandlordId")?.Value ?? "0");
-            return 1; // Hardcoded for development (landlord1@motel.local)
-        }
+
     }
 }
