@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using Motel.Data;
 using Motel.Models;
 using Motel.Repositories.Interface;
@@ -15,4 +16,24 @@ public sealed class MeterReadingRepository : IMeterReadingRepository
         => _db.MeterReadings
             .AsNoTracking()
             .FirstOrDefaultAsync(m => m.RoomId == roomId && m.PeriodMonth == periodMonth, ct);
+
+    public async Task SaveMeterReadingAsync(
+        int roomId, int periodMonth,
+        int electricOld, int electricNew,
+        int waterOld, int waterNew,
+        int recordedByUserId,
+        CancellationToken ct = default)
+    {
+        // Gọi stored procedure sp_SaveMeterReading (UPSERT)
+        await _db.Database.ExecuteSqlRawAsync(
+            "EXEC dbo.sp_SaveMeterReading @RoomId, @PeriodMonth, @ElectricOld, @ElectricNew, @WaterOld, @WaterNew, @RecordedByUserId",
+            new SqlParameter("@RoomId",           roomId),
+            new SqlParameter("@PeriodMonth",      periodMonth),
+            new SqlParameter("@ElectricOld",      electricOld),
+            new SqlParameter("@ElectricNew",      electricNew),
+            new SqlParameter("@WaterOld",         waterOld),
+            new SqlParameter("@WaterNew",         waterNew),
+            new SqlParameter("@RecordedByUserId", recordedByUserId)
+        );
+    }
 }

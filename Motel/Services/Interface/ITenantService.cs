@@ -7,5 +7,6 @@ namespace Motel.Services.Interfaces
     {
         Task<int> CreateTenantAsync(int landlordId, TenantCreateViewModel vm);
         Task<Tenant?> GetTenantDetailsAsync(int landlordId, int tenantId);
+        Task<PropertyTenantsViewModel?> GetTenantsByPropertyIdAsync(int landlordId, int propertyId);
     }
 }
