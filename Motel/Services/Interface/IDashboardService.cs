@@ -10,6 +10,8 @@ namespace Motel.Services
         /// <summary>
         /// Lấy tất cả dữ liệu cần thiết cho Dashboard
         /// </summary>
-        Task<DashboardIndexViewModel> GetDashboardDataAsync(int landlordId);
+        /// <param name="landlordId">ID của chủ nhà</param>
+        /// <param name="propertyId">ID tòa nhà để lọc (null = tất cả)</param>
+        Task<DashboardIndexViewModel> GetDashboardDataAsync(int landlordId, int? propertyId = null);
     }
 }

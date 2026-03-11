@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Motel.Helpers;
 using Motel.Services.Interfaces;
 using Motel.ViewModels.Contract;
 
@@ -8,19 +9,22 @@ namespace Motel.Controllers
     {
         private readonly IContractService _service;
         private readonly ILogger<ContractController> _logger;
+        private readonly LandlordHelper _landlordHelper;
 
-        public ContractController(IContractService service, ILogger<ContractController> logger)
+        public ContractController(
+            IContractService service, 
+            ILogger<ContractController> logger,
+            LandlordHelper landlordHelper)
         {
             _service = service;
             _logger = logger;
+            _landlordHelper = landlordHelper;
         }
 
-        private int GetCurrentLandlordId() => 1;
-
-        [HttpGet]
+[HttpGet]
         public async Task<IActionResult> Create(int roomId)
         {
-            var vm = await _service.BuildCreateViewModelAsync(GetCurrentLandlordId(), roomId);
+            var vm = await _service.BuildCreateViewModelAsync(await _landlordHelper.GetCurrentLandlordIdAsync(User), roomId);
             if (vm == null)
             {
                 TempData["Error"] = "Không thể tạo hợp đồng (phòng không tồn tại hoặc đã có hợp đồng active).";
@@ -36,14 +40,14 @@ namespace Motel.Controllers
             if (!ModelState.IsValid)
             {
                 // rebuild tenant list
-                var rebuilt = await _service.BuildCreateViewModelAsync(GetCurrentLandlordId(), vm.RoomId);
+                var rebuilt = await _service.BuildCreateViewModelAsync(await _landlordHelper.GetCurrentLandlordIdAsync(User), vm.RoomId);
                 if (rebuilt != null) vm.TenantOptions = rebuilt.TenantOptions;
                 return View(vm);
             }
 
             try
             {
-                var id = await _service.CreateContractAsync(GetCurrentLandlordId(), vm);
+                var id = await _service.CreateContractAsync(await _landlordHelper.GetCurrentLandlordIdAsync(User), vm);
                 TempData["Success"] = "Tạo hợp đồng thành công!";
                 return RedirectToAction(nameof(Details), new { id });
             }
@@ -51,7 +55,7 @@ namespace Motel.Controllers
             {
                 _logger.LogError(ex, "Create contract error");
 
-                var rebuilt = await _service.BuildCreateViewModelAsync(GetCurrentLandlordId(), vm.RoomId);
+                var rebuilt = await _service.BuildCreateViewModelAsync(await _landlordHelper.GetCurrentLandlordIdAsync(User), vm.RoomId);
                 if (rebuilt != null) vm.TenantOptions = rebuilt.TenantOptions;
 
                 ModelState.AddModelError("", ex.Message);
@@ -62,7 +66,7 @@ namespace Motel.Controllers
         [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
-            var (contract, occ) = await _service.GetContractDetailsAsync(GetCurrentLandlordId(), id);
+            var (contract, occ) = await _service.GetContractDetailsAsync(await _landlordHelper.GetCurrentLandlordIdAsync(User), id);
             if (contract == null)
             {
                 TempData["Error"] = "Không tìm thấy hợp đồng.";
@@ -79,7 +83,7 @@ namespace Motel.Controllers
         {
             try
             {
-                var ok = await _service.EndContractAsync(GetCurrentLandlordId(), contractId);
+                var ok = await _service.EndContractAsync(await _landlordHelper.GetCurrentLandlordIdAsync(User), contractId);
                 if (!ok)
                 {
                     TempData["Error"] = "Không thể kết thúc hợp đồng.";

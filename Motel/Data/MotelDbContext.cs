@@ -46,6 +46,10 @@ public partial class MotelDbContext : IdentityDbContext<ApplicationUser, Identit
 
     public virtual DbSet<Subscription> Subscriptions { get; set; }
 
+    public virtual DbSet<TaxEstimation> TaxEstimations { get; set; }
+
+    public virtual DbSet<TaxRule> TaxRules { get; set; }
+
     public virtual DbSet<Tenant> Tenants { get; set; }
 
     public virtual DbSet<Transaction> Transactions { get; set; }
@@ -368,6 +372,37 @@ public partial class MotelDbContext : IdentityDbContext<ApplicationUser, Identit
                 .HasForeignKey(d => d.LandlordId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Subscriptions_Landlords");
+        });
+
+        modelBuilder.Entity<TaxEstimation>(entity =>
+        {
+            entity.HasIndex(e => new { e.LandlordId, e.Year }, "UX_TaxEstimations_LandlordId_Year").IsUnique();
+
+            entity.Property(e => e.CalculatedAt).HasDefaultValueSql("(sysdatetime())");
+            entity.Property(e => e.PitAmount).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TaxableRevenue).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TotalRevenue).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TotalTaxAmount).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.VatAmount).HasColumnType("decimal(18, 2)");
+
+            entity.HasOne(d => d.Landlord).WithMany(p => p.TaxEstimations)
+                .HasForeignKey(d => d.LandlordId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_TaxEstimations_Landlords");
+
+            entity.HasOne(d => d.TaxRule).WithMany(p => p.TaxEstimations)
+                .HasForeignKey(d => d.TaxRuleId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_TaxEstimations_TaxRules");
+        });
+
+        modelBuilder.Entity<TaxRule>(entity =>
+        {
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysdatetime())");
+            entity.Property(e => e.PitRate).HasColumnType("decimal(5, 4)");
+            entity.Property(e => e.RevenueThreshold).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.RuleName).HasMaxLength(100);
+            entity.Property(e => e.VatRate).HasColumnType("decimal(5, 4)");
         });
 
         modelBuilder.Entity<Tenant>(entity =>
