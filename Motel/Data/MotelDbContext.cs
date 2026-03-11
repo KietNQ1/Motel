@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
@@ -62,6 +62,15 @@ public partial class MotelDbContext : IdentityDbContext<ApplicationUser, Identit
             entity.Property(e => e.FullName).HasMaxLength(150);
             entity.Property(e => e.PasswordHash).HasMaxLength(500);
             entity.Property(e => e.PhoneNumber).HasMaxLength(30);
+
+            // Indexes from SQLAspCore
+            entity.HasIndex(e => e.NormalizedUserName, "UX_AspNetUsers_NormalizedUserName").IsUnique().HasFilter("[NormalizedUserName] IS NOT NULL");
+            entity.HasIndex(e => e.NormalizedEmail, "IX_AspNetUsers_NormalizedEmail");
+        });
+
+        modelBuilder.Entity<IdentityRole<int>>(entity =>
+        {
+            entity.HasIndex(e => e.NormalizedName, "UX_AspNetRoles_NormalizedName").IsUnique().HasFilter("[NormalizedName] IS NOT NULL");
         });
 
         modelBuilder.Entity<Contract>(entity =>
@@ -226,6 +235,9 @@ public partial class MotelDbContext : IdentityDbContext<ApplicationUser, Identit
             entity.Property(e => e.Status)
                 .HasMaxLength(20)
                 .IsUnicode(false);
+
+            entity.HasCheckConstraint("CK_PaymentIntents_Provider", "Provider IN ('cash', 'payos', 'vietqr')");
+
 
             entity.HasOne(d => d.Invoice).WithMany(p => p.PaymentIntents)
                 .HasForeignKey(d => d.InvoiceId)

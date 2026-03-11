@@ -326,7 +326,7 @@ CREATE TABLE dbo.PaymentIntents
     ExpiredAt         DATETIME2      NULL,
 
     CONSTRAINT FK_PaymentIntents_Invoices FOREIGN KEY (InvoiceId) REFERENCES dbo.Invoices(InvoiceId),
-    CONSTRAINT CK_PaymentIntents_Provider CHECK (Provider IN ('momo','zalopay','vnpay','bank')),
+    CONSTRAINT CK_PaymentIntents_Provider CHECK (Provider IN ('cash','payos','vietqr')),
     CONSTRAINT CK_PaymentIntents_Status CHECK (Status IN ('created','pending','succeeded','failed','cancelled')),
     CONSTRAINT CK_PaymentIntents_AmountNonNegative CHECK (Amount >= 0)
 );
@@ -559,4 +559,248 @@ CREATE INDEX IX_Tenants_LandlordId ON dbo.Tenants(LandlordId) WHERE IsDeleted = 
 CREATE INDEX IX_Contracts_RoomId ON dbo.Contracts(RoomId) WHERE IsDeleted = 0;
 CREATE INDEX IX_Invoices_ContractId ON dbo.Invoices(ContractId);
 CREATE INDEX IX_Payments_InvoiceId ON dbo.Payments(InvoiceId);
+GO
+
+------------------------------------------------------------
+-- 5) EXTEND AspNetUsers (Identity columns) & Roles
+------------------------------------------------------------
+
+ALTER TABLE dbo.AspNetUsers ADD
+    UserName NVARCHAR(256) NULL,
+    NormalizedUserName NVARCHAR(256) NULL,
+    NormalizedEmail NVARCHAR(256) NULL,
+    EmailConfirmed BIT NOT NULL CONSTRAINT DF_AspNetUsers_EmailConfirmed DEFAULT (0),
+    SecurityStamp NVARCHAR(256) NULL,
+    ConcurrencyStamp NVARCHAR(256) NULL,
+    PhoneNumber NVARCHAR(30) NULL,
+    PhoneNumberConfirmed BIT NOT NULL CONSTRAINT DF_AspNetUsers_PhoneConfirmed DEFAULT (0),
+    TwoFactorEnabled BIT NOT NULL CONSTRAINT DF_AspNetUsers_2FA DEFAULT (0),
+    LockoutEnd DATETIMEOFFSET NULL,
+    LockoutEnabled BIT NOT NULL CONSTRAINT DF_AspNetUsers_LockoutEnabled DEFAULT (1),
+    AccessFailedCount INT NOT NULL CONSTRAINT DF_AspNetUsers_AccessFailed DEFAULT (0);
+GO
+
+-- Init normalized fields for existing users
+UPDATE dbo.AspNetUsers
+SET
+    UserName = Email,
+    NormalizedUserName = UPPER(Email),
+    NormalizedEmail = UPPER(Email)
+WHERE UserName IS NULL;
+GO
+
+CREATE UNIQUE INDEX UX_AspNetUsers_NormalizedUserName
+ON dbo.AspNetUsers (NormalizedUserName)
+WHERE NormalizedUserName IS NOT NULL;
+GO
+
+CREATE INDEX IX_AspNetUsers_NormalizedEmail
+ON dbo.AspNetUsers (NormalizedEmail);
+GO
+
+CREATE TABLE dbo.AspNetRoles
+(
+    Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_AspNetRoles PRIMARY KEY,
+    Name NVARCHAR(256) NULL,
+    NormalizedName NVARCHAR(256) NULL,
+    ConcurrencyStamp NVARCHAR(256) NULL
+);
+GO
+
+CREATE UNIQUE INDEX UX_AspNetRoles_NormalizedName
+ON dbo.AspNetRoles (NormalizedName)
+WHERE NormalizedName IS NOT NULL;
+GO
+
+CREATE TABLE dbo.AspNetUserRoles
+(
+    UserId INT NOT NULL,
+    RoleId INT NOT NULL,
+    CONSTRAINT PK_AspNetUserRoles PRIMARY KEY (UserId, RoleId),
+    CONSTRAINT FK_UserRoles_Users FOREIGN KEY (UserId)
+        REFERENCES dbo.AspNetUsers(Id) ON DELETE CASCADE,
+    CONSTRAINT FK_UserRoles_Roles FOREIGN KEY (RoleId)
+        REFERENCES dbo.AspNetRoles(Id) ON DELETE CASCADE
+);
+GO
+
+CREATE TABLE dbo.AspNetUserClaims
+(
+    Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_AspNetUserClaims PRIMARY KEY,
+    UserId INT NOT NULL,
+    ClaimType NVARCHAR(256) NULL,
+    ClaimValue NVARCHAR(1024) NULL,
+    CONSTRAINT FK_UserClaims_Users FOREIGN KEY (UserId)
+        REFERENCES dbo.AspNetUsers(Id) ON DELETE CASCADE
+);
+GO
+
+CREATE TABLE dbo.AspNetRoleClaims
+(
+    Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_AspNetRoleClaims PRIMARY KEY,
+    RoleId INT NOT NULL,
+    ClaimType NVARCHAR(256) NULL,
+    ClaimValue NVARCHAR(1024) NULL,
+    CONSTRAINT FK_RoleClaims_Roles FOREIGN KEY (RoleId)
+        REFERENCES dbo.AspNetRoles(Id) ON DELETE CASCADE
+);
+GO
+
+CREATE TABLE dbo.AspNetUserLogins
+(
+    LoginProvider NVARCHAR(128) NOT NULL,
+    ProviderKey NVARCHAR(128) NOT NULL,
+    ProviderDisplayName NVARCHAR(256) NULL,
+    UserId INT NOT NULL,
+    CONSTRAINT PK_AspNetUserLogins PRIMARY KEY (LoginProvider, ProviderKey),
+    CONSTRAINT FK_UserLogins_Users FOREIGN KEY (UserId)
+        REFERENCES dbo.AspNetUsers(Id) ON DELETE CASCADE
+);
+GO
+
+CREATE TABLE dbo.AspNetUserTokens
+(
+    UserId INT NOT NULL,
+    LoginProvider NVARCHAR(128) NOT NULL,
+    Name NVARCHAR(128) NOT NULL,
+    Value NVARCHAR(2048) NULL,
+    CONSTRAINT PK_AspNetUserTokens PRIMARY KEY (UserId, LoginProvider, Name),
+    CONSTRAINT FK_UserTokens_Users FOREIGN KEY (UserId)
+        REFERENCES dbo.AspNetUsers(Id) ON DELETE CASCADE
+);
+GO
+
+INSERT INTO dbo.AspNetRoles (Name, NormalizedName)
+VALUES
+    (N'Admin',    N'ADMIN'),
+    (N'Landlord', N'LANDLORD'),
+    (N'Staff',    N'STAFF');
+GO
+
+------------------------------------------------------------
+-- 6) Stored Procedure: sp_SaveMeterReading
+------------------------------------------------------------
+IF OBJECT_ID(N'dbo.sp_SaveMeterReading', N'P') IS NOT NULL
+    DROP PROCEDURE dbo.sp_SaveMeterReading;
+GO
+
+CREATE PROCEDURE dbo.sp_SaveMeterReading
+    @RoomId           INT,
+    @PeriodMonth      INT,
+    @ElectricOld      INT,
+    @ElectricNew      INT,
+    @WaterOld         INT,
+    @WaterNew         INT,
+    @RecordedByUserId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Validate
+    IF @ElectricNew < @ElectricOld
+        THROW 50001, N'Chỉ số điện mới không thể nhỏ hơn chỉ số cũ.', 1;
+
+    IF @WaterNew < @WaterOld
+        THROW 50002, N'Chỉ số nước mới không thể nhỏ hơn chỉ số cũ.', 1;
+
+    IF @PeriodMonth NOT BETWEEN 190001 AND 999912
+        THROW 50003, N'PeriodMonth không hợp lệ (định dạng YYYYMM).', 1;
+
+    -- MERGE: nếu đã có bản ghi thì UPDATE, chưa có thì INSERT
+    MERGE dbo.MeterReadings AS target
+    USING (
+        SELECT 
+            @RoomId           AS RoomId,
+            @PeriodMonth      AS PeriodMonth,
+            @ElectricOld      AS ElectricOld,
+            @ElectricNew      AS ElectricNew,
+            @WaterOld         AS WaterOld,
+            @WaterNew         AS WaterNew,
+            @RecordedByUserId AS RecordedByUserId
+    ) AS source
+    ON  target.RoomId      = source.RoomId
+    AND target.PeriodMonth = source.PeriodMonth
+
+    WHEN MATCHED THEN
+        UPDATE SET
+            ElectricOld      = source.ElectricOld,
+            ElectricNew      = source.ElectricNew,
+            WaterOld         = source.WaterOld,
+            WaterNew         = source.WaterNew,
+            RecordedByUserId = source.RecordedByUserId,
+            RecordedAt       = SYSDATETIME()
+
+    WHEN NOT MATCHED THEN
+        INSERT (RoomId, PeriodMonth, ElectricOld, ElectricNew, WaterOld, WaterNew, RecordedByUserId, RecordedAt)
+        VALUES (source.RoomId, source.PeriodMonth, source.ElectricOld, source.ElectricNew, 
+                source.WaterOld, source.WaterNew, source.RecordedByUserId, SYSDATETIME());
+END;
+GO
+
+------------------------------------------------------------
+-- 7) View: vw_TransactionHistory
+------------------------------------------------------------
+IF OBJECT_ID(N'dbo.vw_TransactionHistory', N'V') IS NOT NULL
+    DROP VIEW dbo.vw_TransactionHistory;
+GO
+
+CREATE VIEW dbo.vw_TransactionHistory
+AS
+SELECT
+    -- Invoice info
+    i.InvoiceId,
+    i.PeriodMonth,
+    CAST(i.PeriodMonth / 100 AS VARCHAR(4)) + N'/' 
+        + RIGHT('0' + CAST(i.PeriodMonth % 100 AS VARCHAR(2)), 2)   AS PeriodLabel,
+    i.TotalAmount,
+    i.Status                                                         AS InvoiceStatus,
+    i.DueDate,
+    i.CreatedAt                                                      AS InvoiceCreatedAt,
+
+    -- Room & Property
+    r.RoomId,
+    r.RoomName,
+    r.RentPrice,
+    p.PropertyId,
+    p.Name                                                           AS PropertyName,
+
+    -- Tenant
+    t.TenantId,
+    t.FullName                                                       AS TenantName,
+    t.Phone                                                          AS TenantPhone,
+    t.Email                                                          AS TenantEmail,
+
+    -- Contract
+    c.ContractId,
+    c.StartDate                                                      AS ContractStart,
+    c.EndDate                                                        AS ContractEnd,
+
+    -- Landlord
+    l.LandlordId,
+    l.DisplayName                                                    AS LandlordName,
+
+    -- Payment status
+    pay.PaidAmount,
+    pay.PaidAt
+
+FROM dbo.Invoices           i
+INNER JOIN dbo.Contracts    c  ON  c.ContractId = i.ContractId
+INNER JOIN dbo.Tenants      t  ON  t.TenantId   = c.TenantId
+INNER JOIN dbo.Rooms        r  ON  r.RoomId     = i.RoomId
+INNER JOIN dbo.Properties   p  ON  p.PropertyId = r.PropertyId
+INNER JOIN dbo.Landlords    l  ON  l.LandlordId = p.LandlordId
+LEFT JOIN (
+    SELECT
+        py.InvoiceId,
+        SUM(py.Amount)  AS PaidAmount,
+        MAX(py.PaidAt)  AS PaidAt
+    FROM dbo.Payments py
+    WHERE py.Status = 'success'
+    GROUP BY py.InvoiceId
+)                           pay ON pay.InvoiceId = i.InvoiceId
+
+WHERE i.Status != 'cancelled'
+  AND c.IsDeleted = 0
+  AND r.IsDeleted = 0
+  AND p.IsDeleted = 0;
 GO
