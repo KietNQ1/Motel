@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Motel.Data;
+using Motel.Helpers;
 using Motel.Models;
 using Motel.Repositories;
 using Motel.Repositories.Interface;
@@ -68,6 +69,7 @@ builder.Services.AddScoped<IInvoiceLineRepository, InvoiceLineRepository>();
 builder.Services.AddScoped<ITenantRepository, TenantRepository>();
 builder.Services.AddScoped<IContractRepository, ContractRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<ITaxRepository, TaxRepository>();
 builder.Services.AddScoped<IRoomFurnitureRepository, RoomFurnitureRepository>();
 
 // Services
@@ -77,7 +79,12 @@ builder.Services.AddScoped<IInvoiceService, InvoiceService>();
 builder.Services.AddScoped<ITenantService, TenantService>();
 builder.Services.AddScoped<IContractService, ContractService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<ITaxService, TaxService>();
+
+// Helpers
+builder.Services.AddScoped<LandlordHelper>();
 builder.Services.AddScoped<IRoomFurnitureService, RoomFurnitureService>();
+
 
 // Session (optional – KHÔNG bắt buộc cho Identity)
 builder.Services.AddSession(options =>
@@ -88,6 +95,21 @@ builder.Services.AddSession(options =>
 });
 
 var app = builder.Build();
+
+// Auto seed data
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        await DbSeeder.SeedAsync(services);
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred seeding the DB.");
+    }
+}
 
 // =======================
 // HTTP PIPELINE

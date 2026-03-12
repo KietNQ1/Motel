@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
@@ -48,6 +48,10 @@ public partial class MotelDbContext : IdentityDbContext<ApplicationUser, Identit
 
     public virtual DbSet<Subscription> Subscriptions { get; set; }
 
+    public virtual DbSet<TaxEstimation> TaxEstimations { get; set; }
+
+    public virtual DbSet<TaxRule> TaxRules { get; set; }
+
     public virtual DbSet<Tenant> Tenants { get; set; }
 
     public virtual DbSet<Transaction> Transactions { get; set; }
@@ -64,6 +68,15 @@ public partial class MotelDbContext : IdentityDbContext<ApplicationUser, Identit
             entity.Property(e => e.FullName).HasMaxLength(150);
             entity.Property(e => e.PasswordHash).HasMaxLength(500);
             entity.Property(e => e.PhoneNumber).HasMaxLength(30);
+
+            // Indexes from SQLAspCore
+            entity.HasIndex(e => e.NormalizedUserName, "UX_AspNetUsers_NormalizedUserName").IsUnique().HasFilter("[NormalizedUserName] IS NOT NULL");
+            entity.HasIndex(e => e.NormalizedEmail, "IX_AspNetUsers_NormalizedEmail");
+        });
+
+        modelBuilder.Entity<IdentityRole<int>>(entity =>
+        {
+            entity.HasIndex(e => e.NormalizedName, "UX_AspNetRoles_NormalizedName").IsUnique().HasFilter("[NormalizedName] IS NOT NULL");
         });
 
         modelBuilder.Entity<Contract>(entity =>
@@ -229,6 +242,9 @@ public partial class MotelDbContext : IdentityDbContext<ApplicationUser, Identit
                 .HasMaxLength(20)
                 .IsUnicode(false);
 
+            entity.HasCheckConstraint("CK_PaymentIntents_Provider", "Provider IN ('cash', 'payos', 'vietqr')");
+
+
             entity.HasOne(d => d.Invoice).WithMany(p => p.PaymentIntents)
                 .HasForeignKey(d => d.InvoiceId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -370,6 +386,41 @@ public partial class MotelDbContext : IdentityDbContext<ApplicationUser, Identit
                 .HasForeignKey(d => d.LandlordId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Subscriptions_Landlords");
+        });
+
+        modelBuilder.Entity<TaxEstimation>(entity =>
+        {
+            entity.HasIndex(e => new { e.LandlordId, e.Year }, "IX_TaxEstimations_Landlord").IsDescending(false, true);
+
+            entity.HasIndex(e => new { e.LandlordId, e.Year }, "UK_TaxEstimations_LandlordYear").IsUnique();
+
+            entity.Property(e => e.CalculatedAt).HasDefaultValueSql("(sysdatetime())");
+            entity.Property(e => e.PitAmount).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TaxableRevenue).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TotalRevenue).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TotalTaxAmount).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.VatAmount).HasColumnType("decimal(18, 2)");
+
+            entity.HasOne(d => d.Landlord).WithMany(p => p.TaxEstimations)
+                .HasForeignKey(d => d.LandlordId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_TaxEstimations_Landlords");
+
+            entity.HasOne(d => d.TaxRule).WithMany(p => p.TaxEstimations)
+                .HasForeignKey(d => d.TaxRuleId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_TaxEstimations_TaxRules");
+        });
+
+        modelBuilder.Entity<TaxRule>(entity =>
+        {
+            entity.HasIndex(e => new { e.EffectiveDate, e.IsActive }, "IX_TaxRules_EffectiveDate").IsDescending(true, false);
+
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysdatetime())");
+            entity.Property(e => e.PitRate).HasColumnType("decimal(5, 4)");
+            entity.Property(e => e.RevenueThreshold).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.RuleName).HasMaxLength(200);
+            entity.Property(e => e.VatRate).HasColumnType("decimal(5, 4)");
         });
 
         modelBuilder.Entity<Tenant>(entity =>

@@ -1,9 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Motel.Data;
-using Motel.Models;
+using Motel.Helpers;
 using Motel.Services;
 
 namespace Motel.Controllers
@@ -13,30 +10,27 @@ namespace Motel.Controllers
     {
         private readonly IDashboardService _dashboardService;
         private readonly ILogger<DashboardController> _logger;
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly MotelDbContext _context;
+        private readonly LandlordHelper _landlordHelper;
 
         public DashboardController(
             IDashboardService dashboardService,
             ILogger<DashboardController> logger,
-            UserManager<ApplicationUser> userManager,
-            MotelDbContext context)
+            LandlordHelper landlordHelper)
         {
             _dashboardService = dashboardService;
             _logger = logger;
-            _userManager = userManager;
-            _context = context;
+            _landlordHelper = landlordHelper;
         }
 
         /// <summary>
         /// Dashboard Index - Trang chủ với tất cả metrics
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int? propertyId = null)
         {
             try
             {
-                var landlordId = await GetCurrentLandlordIdAsync();
+                var landlordId = await _landlordHelper.GetCurrentLandlordIdAsync(User);
                 
                 if (landlordId == 0)
                 {
@@ -45,7 +39,10 @@ namespace Motel.Controllers
                     return RedirectToAction("Index", "Home");
                 }
                 
-                var viewModel = await _dashboardService.GetDashboardDataAsync(landlordId);
+                var viewModel = await _dashboardService.GetDashboardDataAsync(landlordId, propertyId);
+                
+                // Store selected propertyId to preserve dropdown selection
+                ViewBag.SelectedPropertyId = propertyId;
                 
                 return View(viewModel);
             }
@@ -56,25 +53,6 @@ namespace Motel.Controllers
                 
                 return View(new Motel.ViewModels.Dashboard.DashboardIndexViewModel());
             }
-        }
-
-        /// <summary>
-        /// Helper: Lấy LandlordId từ authenticated user
-        /// </summary>
-        private async Task<int> GetCurrentLandlordIdAsync()
-        {
-            if (!User.Identity?.IsAuthenticated ?? false)
-                return 0;
-
-            var currentUser = await _userManager.GetUserAsync(User);
-            if (currentUser == null)
-                return 0;
-
-            var landlord = await _context.Landlords
-                .Where(l => l.UserId == currentUser.Id && !l.IsDeleted)
-                .FirstOrDefaultAsync();
-
-            return landlord?.LandlordId ?? 0;
         }
     }
 }

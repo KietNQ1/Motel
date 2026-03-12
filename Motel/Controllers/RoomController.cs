@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Motel.Helpers;
 using Motel.Repositories.Interface;
 using Motel.ViewModels.Room;
 using Motel.Services.Interface;
@@ -12,12 +13,16 @@ namespace Motel.Controllers
         private readonly IRoomRepository _roomRepository;
         private readonly ILogger<RoomController> _logger;
         private readonly IRoomService _roomService;
+        private readonly LandlordHelper _landlordHelper;
         private readonly IRoomFurnitureService _furnitureService;
-        public RoomController(IRoomRepository roomRepository, IRoomService roomService, ILogger<RoomController> logger, IRoomFurnitureService furnitureService)
+       
+        
+        public RoomController(IRoomRepository roomRepository, IRoomService roomService, ILogger<RoomController> logger, LandlordHelper landlordHelper, IRoomFurnitureService furnitureService)
         {
             _roomRepository = roomRepository;
             _roomService = roomService;
             _logger = logger;
+            _landlordHelper = landlordHelper;
             _furnitureService = furnitureService;
         }
 
@@ -166,7 +171,7 @@ namespace Motel.Controllers
 
             try
             {
-                var landlordId = GetCurrentLandlordId();
+                var landlordId = await _landlordHelper.GetCurrentLandlordIdAsync(User);
 
                 // TODO: khi có auth -> lấy đúng userId từ User
                 var userId = 1;
