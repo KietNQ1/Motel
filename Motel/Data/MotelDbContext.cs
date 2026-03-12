@@ -360,6 +360,8 @@ public partial class MotelDbContext : IdentityDbContext<ApplicationUser, Identit
             entity.HasKey(e => e.StoredFileRefId);
 
             entity.ToTable("StoredFileReference");
+            
+            entity.HasCheckConstraint("CK_StoredFileReference_RefType", "[RefType] IN ('tenant', 'room', 'property', 'ticket', 'meter', 'invoice', 'contract', 'roomfurniture')");
 
             entity.HasIndex(e => new { e.StoredFileId, e.RefType, e.RefId }, "UX_StoredFileReference_Dedupe").IsUnique();
 
