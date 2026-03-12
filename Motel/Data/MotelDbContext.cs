@@ -36,6 +36,8 @@ public partial class MotelDbContext : IdentityDbContext<ApplicationUser, Identit
 
     public virtual DbSet<Room> Rooms { get; set; }
 
+    public virtual DbSet<RoomFurniture> RoomFurnitures { get; set; }
+
     public virtual DbSet<RoomOccupancy> RoomOccupancies { get; set; }
 
     public virtual DbSet<RoomUtilitySetting> RoomUtilitySettings { get; set; }
@@ -478,6 +480,30 @@ public partial class MotelDbContext : IdentityDbContext<ApplicationUser, Identit
             entity.HasOne(d => d.Tenant).WithMany(p => p.Transactions)
                 .HasForeignKey(d => d.TenantId)
                 .HasConstraintName("FK_Transactions_Tenants");
+        });
+
+        modelBuilder.Entity<RoomFurniture>(entity =>
+        {
+            entity.HasKey(e => e.FurnitureId);
+
+            entity.Property(e => e.Name)
+                .IsRequired()
+                .HasMaxLength(100);
+
+            entity.Property(e => e.Description)
+                .HasMaxLength(500);
+
+            entity.Property(e => e.IsDeleted)
+                .HasDefaultValue(false);
+
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())");
+
+            entity.HasOne(e => e.Room)
+                .WithMany(r => r.RoomFurnitures)
+                .HasForeignKey(e => e.RoomId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_RoomFurnitures_Rooms");
         });
 
         OnModelCreatingPartial(modelBuilder);

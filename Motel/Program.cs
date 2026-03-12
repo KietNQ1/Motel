@@ -70,6 +70,7 @@ builder.Services.AddScoped<ITenantRepository, TenantRepository>();
 builder.Services.AddScoped<IContractRepository, ContractRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<ITaxRepository, TaxRepository>();
+builder.Services.AddScoped<IRoomFurnitureRepository, RoomFurnitureRepository>();
 
 // Services
 builder.Services.AddScoped<IDashboardService, DashboardService>();
@@ -82,6 +83,7 @@ builder.Services.AddScoped<ITaxService, TaxService>();
 
 // Helpers
 builder.Services.AddScoped<LandlordHelper>();
+builder.Services.AddScoped<IRoomFurnitureService, RoomFurnitureService>();
 
 
 // Session (optional – KHÔNG bắt buộc cho Identity)

@@ -14,17 +14,16 @@ namespace Motel.Controllers
         private readonly ILogger<RoomController> _logger;
         private readonly IRoomService _roomService;
         private readonly LandlordHelper _landlordHelper;
-
-        public RoomController(
-            IRoomRepository roomRepository, 
-            IRoomService roomService, 
-            ILogger<RoomController> logger,
-            LandlordHelper landlordHelper)
+        private readonly IRoomFurnitureService _furnitureService;
+       
+        
+        public RoomController(IRoomRepository roomRepository, IRoomService roomService, ILogger<RoomController> logger, LandlordHelper landlordHelper, IRoomFurnitureService furnitureService)
         {
             _roomRepository = roomRepository;
             _roomService = roomService;
             _logger = logger;
             _landlordHelper = landlordHelper;
+            _furnitureService = furnitureService;
         }
 
         // GET: Room/Details/5
@@ -33,19 +32,23 @@ namespace Motel.Controllers
             try
             {
                 var room = await _roomRepository.GetRoomDetailAsync(id);
-                
+
                 if (room == null)
                 {
                     TempData["Error"] = "Không tìm thấy phòng.";
                     return RedirectToAction("Index", "Property");
                 }
 
+                room.Furnitures = (await _furnitureService.GetFurnituresForRoomAsync(id)).ToList();
+
                 return View(room);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading room details");
-                TempData["Error"] = "Không thể tải thông tin phòng. Vui lòng thử lại sau.";
+
+                TempData["Error"] = "Không thể tải thông tin phòng.";
+
                 return RedirectToAction("Index", "Property");
             }
         }
@@ -190,6 +193,43 @@ namespace Motel.Controllers
                 ModelState.AddModelError("", $"Có lỗi xảy ra: {ex.Message}");
                 return View(model);
             }
+        }
+
+        /// <summary>
+        /// Helper: Get current landlord ID from authenticated user
+        /// TODO: Implement proper authentication with claims
+        /// </summary>
+        private int GetCurrentLandlordId()
+        {
+            // TODO: Get from User.Claims when authentication is fully implemented
+            return 1; // Hardcoded for development
+        }
+
+
+        // Action cho Landlord thêm nội thất (GET/POST)
+        [HttpGet]
+        public IActionResult AddFurniture(int roomId)
+        {
+            // Kiểm tra ownership (giả sử qua service hoặc middleware)
+            return View(new AddFurnitureViewModel { RoomId = roomId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddFurniture(AddFurnitureViewModel model)
+        {
+            if (!ModelState.IsValid) return View(model);
+
+            var landlordId = GetCurrentLandlordId();
+
+            if (!await _furnitureService.AddFurnitureAsync(model, landlordId))
+            {
+                ModelState.AddModelError("", "Không có quyền thêm nội thất cho phòng này.");
+                return View(model);
+            }
+
+            TempData["Success"] = "Thêm nội thất thành công.";
+            return RedirectToAction("Details", new { id = model.RoomId });
         }
     }
 }

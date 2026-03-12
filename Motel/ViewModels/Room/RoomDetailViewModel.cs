@@ -49,6 +49,8 @@ namespace Motel.ViewModels.Room
             (WaterUsage * WaterUnitPrice) + 
             InternetFee + 
             TrashFee;
+        
+        public IEnumerable<RoomFurnitureViewModel> Furnitures { get; set; } = Enumerable.Empty<RoomFurnitureViewModel>();
     }
 
     public class TenantViewModel
