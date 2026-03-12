@@ -16,4 +16,6 @@ public partial class StoredFileReference
     public DateTime CreatedAt { get; set; }
 
     public virtual StoredFile StoredFile { get; set; } = null!;
+
+    //public virtual RoomFurniture? RoomFurniture { get; set; }
 }

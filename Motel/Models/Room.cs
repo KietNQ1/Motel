@@ -34,4 +34,6 @@ public partial class Room
     public virtual ICollection<RoomUtilitySetting> RoomUtilitySettings { get; set; } = new List<RoomUtilitySetting>();
 
     public virtual ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
+
+    public virtual ICollection<RoomFurniture> RoomFurnitures { get; set; } = new List<RoomFurniture>();
 }
