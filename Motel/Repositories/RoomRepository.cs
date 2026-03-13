@@ -218,6 +218,8 @@ namespace Motel.Repositories
                             Phone = o.Phone,
                             Email = o.Email,
                             IdentityNo = o.IdentityNo,
+                            DateOfBirth = o.DateOfBirth,
+                            PermanentAddress = o.PermanentAddress,
                             IsDeleted = false,
                             CreatedAt = DateTime.Now
                         };
@@ -228,6 +230,8 @@ namespace Motel.Repositories
                         t.FullName = o.FullName.Trim();
                         t.Phone = o.Phone;
                         t.Email = o.Email;
+                        t.DateOfBirth = o.DateOfBirth;
+                        t.PermanentAddress = o.PermanentAddress;
                     }
                     tenantEntities.Add(t);
                 }

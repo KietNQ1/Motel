@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace Motel.Models;
@@ -12,6 +12,10 @@ public partial class Landlord
     public string DisplayName { get; set; } = null!;
 
     public string? Address { get; set; }
+
+    public string? IdentityNo { get; set; }
+
+    public string? PermanentAddress { get; set; }
 
     public bool IsDeleted { get; set; }
 

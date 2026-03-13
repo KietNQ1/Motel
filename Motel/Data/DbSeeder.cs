@@ -48,8 +48,8 @@ namespace Motel.Data
 
             // --- 3. SEED LANDLORD PROFILES ---
             Console.WriteLine("=> Seeding Landlord Profiles...");
-            var landlord1 = await EnsureLandlordProfileAsync(context, landlordUser1.Id, "Vũ Huy Hoàng", "123 Đường Cộng Hòa, Tân Bình, HCM");
-            var landlord2 = await EnsureLandlordProfileAsync(context, landlordUser2.Id, "Trần Thu Hằng", "456 Đường Nguyễn Trãi, Thanh Xuân, HN");
+            var landlord1 = await EnsureLandlordProfileAsync(context, landlordUser1.Id, "Vũ Huy Hoàng",  "123 Đường Cộng Hòa, Tân Bình, HCM", "012345678901", "45 Nguyễn Trãi, Phường 2, Q5, TP.HCM");
+            var landlord2 = await EnsureLandlordProfileAsync(context, landlordUser2.Id, "Trần Thu Hằng", "456 Đường Nguyễn Trãi, Thanh Xuân, HN",  "098765432109", "23 Lê Lợi, Hoàn Kiếm, Hà Nội");
 
             // --- 4. SEED PROPERTIES ---
             Console.WriteLine("=> Seeding Properties...");
@@ -82,10 +82,10 @@ namespace Motel.Data
 
             // --- 6. SEED TENANTS ---
             Console.WriteLine("=> Seeding Tenants...");
-            var tenant1 = await EnsureTenantAsync(context, landlord1.LandlordId, "011111111111", "Trịnh Xuân T", "0933333333", "tenant1@motel.local"); // P101
-            var tenant2 = await EnsureTenantAsync(context, landlord1.LandlordId, "022222222222", "Lê Văn L", "0944444444", "tenant2@motel.local"); // P103
-            var tenant3 = await EnsureTenantAsync(context, landlord1.LandlordId, "033333333333", "Mai Thị M", "0955555555", "tenant3@motel.local"); // C201
-            var tenant4 = await EnsureTenantAsync(context, landlord2.LandlordId, "044444444444", "Hoàng Anh H", "0966666666", "tenant4@motel.local"); // A1
+            var tenant1 = await EnsureTenantAsync(context, landlord1.LandlordId, "011111111111", "Trịnh Xuân T",  "0933333333", "tenant1@motel.local", new DateOnly(1999, 5, 12),  "12 Trần Phú, Quận 5, TP.HCM");
+            var tenant2 = await EnsureTenantAsync(context, landlord1.LandlordId, "022222222222", "Lê Văn L",    "0944444444", "tenant2@motel.local", new DateOnly(2000, 8, 20),  "78 Lê Văn Việt, Q9, TP.HCM");
+            var tenant3 = await EnsureTenantAsync(context, landlord1.LandlordId, "033333333333", "Mai Thị M",  "0955555555", "tenant3@motel.local", new DateOnly(1998, 3, 15),  "5 Nguyễn Huệ, Q1, TP.HCM");
+            var tenant4 = await EnsureTenantAsync(context, landlord2.LandlordId, "044444444444", "Hoàng Anh H", "0966666666", "tenant4@motel.local", new DateOnly(2001, 11, 7), "99 Trường Chinh, Bình Dương");
 
             var today = DateOnly.FromDateTime(DateTime.Today);
 
@@ -142,12 +142,19 @@ namespace Motel.Data
             return user;
         }
 
-        private static async Task<Landlord> EnsureLandlordProfileAsync(MotelDbContext context, int userId, string displayName, string address)
+        private static async Task<Landlord> EnsureLandlordProfileAsync(
+            MotelDbContext context, int userId, string displayName, string address,
+            string? identityNo = null, string? permanentAddress = null)
         {
             var profile = await context.Landlords.FirstOrDefaultAsync(l => l.UserId == userId && !l.IsDeleted);
             if (profile == null)
             {
-                profile = new Landlord { UserId = userId, DisplayName = displayName, Address = address, IsDeleted = false };
+                profile = new Landlord
+                {
+                    UserId = userId, DisplayName = displayName, Address = address,
+                    IdentityNo = identityNo, PermanentAddress = permanentAddress,
+                    IsDeleted = false
+                };
                 context.Landlords.Add(profile);
                 await context.SaveChangesAsync();
             }
@@ -187,12 +194,20 @@ namespace Motel.Data
             }
         }
 
-        private static async Task<Tenant> EnsureTenantAsync(MotelDbContext context, int landlordId, string identityNo, string name, string phone, string email)
+        private static async Task<Tenant> EnsureTenantAsync(
+            MotelDbContext context, int landlordId, string identityNo, string name, string phone, string email,
+            DateOnly? dateOfBirth = null, string? permanentAddress = null)
         {
             var tenant = await context.Tenants.FirstOrDefaultAsync(t => t.LandlordId == landlordId && t.IdentityNo == identityNo && !t.IsDeleted);
             if (tenant == null)
             {
-                tenant = new Tenant { LandlordId = landlordId, IdentityNo = identityNo, FullName = name, Phone = phone, Email = email, IsDeleted = false };
+                tenant = new Tenant
+                {
+                    LandlordId = landlordId, IdentityNo = identityNo, FullName = name,
+                    Phone = phone, Email = email,
+                    DateOfBirth = dateOfBirth, PermanentAddress = permanentAddress,
+                    IsDeleted = false
+                };
                 context.Tenants.Add(tenant);
                 await context.SaveChangesAsync();
             }

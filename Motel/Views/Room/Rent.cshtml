@@ -66,6 +66,15 @@
                                             <label class="form-label">CMND/CCCD</label>
                                             <input class="form-control" name="Occupants[@i].IdentityNo" value="@Model.Occupants[i].IdentityNo" />
                                         </div>
+                                        <div class="col-md-6 mb-2">
+                                            <label class="form-label">Ngày sinh</label>
+                                            <input class="form-control" type="date" name="Occupants[@i].DateOfBirth"
+                                                   value="@(Model.Occupants[i].DateOfBirth.HasValue ? Model.Occupants[i].DateOfBirth.Value.ToString("yyyy-MM-dd") : "")" />
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <label class="form-label">Nơi ĐKTT</label>
+                                            <input class="form-control" name="Occupants[@i].PermanentAddress" value="@Model.Occupants[i].PermanentAddress" placeholder="Nơi đăng ký thường trú" />
+                                        </div>
                                     </div>
                                 </div>
                             }
@@ -179,6 +188,14 @@
             <div class="col-md-6 mb-2">
               <label class="form-label">CMND/CCCD</label>
               <input class="form-control" name="Occupants[${index}].IdentityNo" />
+            </div>
+            <div class="col-md-6 mb-2">
+              <label class="form-label">Ngày sinh</label>
+              <input class="form-control" type="date" name="Occupants[${index}].DateOfBirth" />
+            </div>
+            <div class="col-md-6 mb-2">
+              <label class="form-label">Nơi ĐKTT</label>
+              <input class="form-control" name="Occupants[${index}].PermanentAddress" placeholder="Nơi đăng ký thường trú" />
             </div>
           </div>
         </div>`;

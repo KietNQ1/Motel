@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Motel.Data;
 using Motel.Models;
 using Motel.Repositories.Interface;
@@ -31,6 +31,13 @@ namespace Motel.Repositories
             await _db.SaveChangesAsync();
             return tenant.TenantId;
         }
+
+        public async Task UpdateTenantAsync(Tenant tenant)
+        {
+            _db.Tenants.Update(tenant);
+            await _db.SaveChangesAsync();
+        }
+
         public async Task<List<TenantListItemViewModel>> GetTenantsByPropertyIdAsync(int landlordId, int propertyId)
         {
             return await _db.RoomOccupancies
