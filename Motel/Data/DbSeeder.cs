@@ -19,6 +19,14 @@ namespace Motel.Data
                 await context.Database.EnsureCreatedAsync();
             }
 
+            // --- 0. SEED FEE TYPES ---
+            Console.WriteLine("=> Seeding Fee Types...");
+            await EnsureFeeTypeAsync(context, "Rent", "tháng", "Tiền phòng", true);
+            await EnsureFeeTypeAsync(context, "Electricity", "kWh", "Tiền điện", true);
+            await EnsureFeeTypeAsync(context, "Water", "khối", "Tiền nước", true);
+            await EnsureFeeTypeAsync(context, "Internet", "tháng", "Tiền mạng", true);
+            await EnsureFeeTypeAsync(context, "Trash", "tháng", "Tiền rác", true);
+
             // --- 1. SEED ROLES ---
             Console.WriteLine("=> Seeding Roles...");
             var roles = new[] { "Admin", "Landlord" };
@@ -211,11 +219,21 @@ namespace Motel.Data
                 context.RoomOccupancies.Add(new RoomOccupancy { RoomId = room.RoomId, TenantId = tenant.TenantId, MoveInDate = startDate, IsPrimary = true, Status = "active" });
 
             // 3. Utility Settings
-            var uSettings = await context.RoomUtilitySettings.FirstOrDefaultAsync(u => u.RoomId == room.RoomId && u.EffectiveTo == null);
-            if (uSettings == null)
+            var feeTypeRent = await context.FeeTypes.FirstOrDefaultAsync(f => f.Name == "Rent");
+            var feeTypeElec = await context.FeeTypes.FirstOrDefaultAsync(f => f.Name == "Electricity");
+            var feeTypeWater = await context.FeeTypes.FirstOrDefaultAsync(f => f.Name == "Water");
+            var feeTypeNet = await context.FeeTypes.FirstOrDefaultAsync(f => f.Name == "Internet");
+            var feeTypeTrash = await context.FeeTypes.FirstOrDefaultAsync(f => f.Name == "Trash");
+
+            if (!await context.FeeSettings.AnyAsync(u => u.RoomId == room.RoomId && u.EffectiveTo == null))
             {
-                uSettings = new RoomUtilitySetting { RoomId = room.RoomId, ElectricUnitPrice = ePrice, WaterUnitPrice = wPrice, InternetFee = iFee, TrashFee = tFee, EffectiveFrom = startDate };
-                context.RoomUtilitySettings.Add(uSettings);
+                context.FeeSettings.AddRange(new List<FeeSetting>
+                {
+                    new FeeSetting { RoomId = room.RoomId, FeeTypeId = feeTypeElec!.FeeTypeId, CalculationMethod = "meter", UnitPrice = ePrice, EffectiveFrom = startDate },
+                    new FeeSetting { RoomId = room.RoomId, FeeTypeId = feeTypeWater!.FeeTypeId, CalculationMethod = "meter", UnitPrice = wPrice, EffectiveFrom = startDate },
+                    new FeeSetting { RoomId = room.RoomId, FeeTypeId = feeTypeNet!.FeeTypeId, CalculationMethod = "per_room", BaseAmount = iFee, EffectiveFrom = startDate },
+                    new FeeSetting { RoomId = room.RoomId, FeeTypeId = feeTypeTrash!.FeeTypeId, CalculationMethod = "per_room", BaseAmount = tFee, EffectiveFrom = startDate }
+                });
             }
 
             await context.SaveChangesAsync(); // Save to generate IDs
@@ -242,14 +260,25 @@ namespace Motel.Data
                 await context.SaveChangesAsync();
 
                 context.InvoiceLines.AddRange(new List<InvoiceLine> {
-                    new InvoiceLine { InvoiceId = invoice.InvoiceId, ItemType = "rent", Description = "Tiền phòng", Quantity = 1, UnitPrice = room.RentPrice },
-                    new InvoiceLine { InvoiceId = invoice.InvoiceId, ItemType = "electric", Description = "Điện", Quantity = (eNew - eOld), UnitPrice = ePrice },
-                    new InvoiceLine { InvoiceId = invoice.InvoiceId, ItemType = "water", Description = "Nước", Quantity = (wNew - wOld), UnitPrice = wPrice },
-                    new InvoiceLine { InvoiceId = invoice.InvoiceId, ItemType = "internet", Description = "Internet", Quantity = 1, UnitPrice = iFee },
-                    new InvoiceLine { InvoiceId = invoice.InvoiceId, ItemType = "trash", Description = "Rác", Quantity = 1, UnitPrice = tFee }
+                    new InvoiceLine { InvoiceId = invoice.InvoiceId, FeeTypeId = feeTypeRent!.FeeTypeId, Description = "Tiền phòng", Quantity = 1, UnitPrice = room.RentPrice },
+                    new InvoiceLine { InvoiceId = invoice.InvoiceId, FeeTypeId = feeTypeElec!.FeeTypeId, Description = "Điện", Quantity = (eNew - eOld), UnitPrice = ePrice },
+                    new InvoiceLine { InvoiceId = invoice.InvoiceId, FeeTypeId = feeTypeWater!.FeeTypeId, Description = "Nước", Quantity = (wNew - wOld), UnitPrice = wPrice },
+                    new InvoiceLine { InvoiceId = invoice.InvoiceId, FeeTypeId = feeTypeNet!.FeeTypeId, Description = "Internet", Quantity = 1, UnitPrice = iFee },
+                    new InvoiceLine { InvoiceId = invoice.InvoiceId, FeeTypeId = feeTypeTrash!.FeeTypeId, Description = "Rác", Quantity = 1, UnitPrice = tFee }
                 });
                 await context.SaveChangesAsync();
             }
+        }
+        private static async Task<FeeType> EnsureFeeTypeAsync(MotelDbContext context, string name, string unit, string desc, bool isSystem)
+        {
+            var f = await context.FeeTypes.FirstOrDefaultAsync(x => x.Name == name);
+            if (f == null)
+            {
+                f = new FeeType { Name = name, Unit = unit, Description = desc, IsSystem = isSystem };
+                context.FeeTypes.Add(f);
+                await context.SaveChangesAsync();
+            }
+            return f;
         }
     }
 }

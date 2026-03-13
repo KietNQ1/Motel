@@ -3,7 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using Motel.Helpers;
 using Motel.Repositories.Interface;
 using Motel.ViewModels.Room;
+using Motel.ViewModels.Room;
 using Motel.Services.Interface;
+using Motel.Models; // For FeeType and FeeSetting
 
 namespace Motel.Controllers
 {
@@ -15,10 +17,19 @@ namespace Motel.Controllers
         private readonly IRoomService _roomService;
         private readonly LandlordHelper _landlordHelper;
         private readonly IRoomFurnitureService _furnitureService;
-       
         private readonly Motel.Data.MotelDbContext _db;
+        private readonly IFeeSettingRepository _feeSettingRepository;
+        private readonly IFeeTypeRepository _feeTypeRepository;
         
-        public RoomController(IRoomRepository roomRepository, IRoomService roomService, ILogger<RoomController> logger, LandlordHelper landlordHelper, IRoomFurnitureService furnitureService, Motel.Data.MotelDbContext db)
+        public RoomController(
+            IRoomRepository roomRepository, 
+            IRoomService roomService, 
+            ILogger<RoomController> logger, 
+            LandlordHelper landlordHelper, 
+            IRoomFurnitureService furnitureService, 
+            Motel.Data.MotelDbContext db,
+            IFeeSettingRepository feeSettingRepository,
+            IFeeTypeRepository feeTypeRepository)
         {
             _roomRepository = roomRepository;
             _roomService = roomService;
@@ -26,6 +37,8 @@ namespace Motel.Controllers
             _landlordHelper = landlordHelper;
             _furnitureService = furnitureService;
             _db = db;
+            _feeSettingRepository = feeSettingRepository;
+            _feeTypeRepository = feeTypeRepository;
         }
 
         // GET: Room/Details/5
@@ -43,14 +56,47 @@ namespace Motel.Controllers
 
                 room.Furnitures = (await _furnitureService.GetFurnituresForRoomAsync(id)).ToList();
 
+                // Use the same effective-fee logic as InvoiceController: room overrides property automatically
+                var now = DateTime.Now;
+                var yyyymm = now.Year * 100 + now.Month;
+                var effectiveFees = await _feeSettingRepository.GetEffectiveForRoomAsync(room.PropertyId, id, yyyymm);
+
+                // Track which feeTypeIds are room-level overrides (for UI badge)
+                var roomFeeTypeIds = effectiveFees
+                    .Where(f => f.RoomId.HasValue)
+                    .Select(f => f.FeeTypeId)
+                    .ToHashSet();
+
+                // Update well-known ViewModel fields for backward compat (EstimatedTotal etc.)
+                foreach (var fee in effectiveFees)
+                {
+                    switch (fee.FeeType?.Name?.ToLower())
+                    {
+                        case "electricity":
+                            room.ElectricUnitPrice = fee.CalculationMethod == "meter" ? fee.UnitPrice : fee.BaseAmount;
+                            break;
+                        case "water":
+                            room.WaterUnitPrice = fee.CalculationMethod == "meter" ? fee.UnitPrice : fee.BaseAmount;
+                            break;
+                        case "internet":
+                            room.InternetFee = fee.BaseAmount > 0 ? fee.BaseAmount : fee.UnitPrice;
+                            break;
+                        case "garbage": case "rác": case "trash":
+                            room.TrashFee = fee.BaseAmount > 0 ? fee.BaseAmount : fee.UnitPrice;
+                            break;
+                    }
+                }
+
+                ViewBag.EffectiveFees = effectiveFees;
+                ViewBag.RoomFeeTypeIds = roomFeeTypeIds;
+                ViewBag.OccupantCount = room.Tenants.Count > 0 ? room.Tenants.Count : 1;
+
                 return View(room);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading room details");
-
                 TempData["Error"] = "Không thể tải thông tin phòng.";
-
                 return RedirectToAction("Index", "Property");
             }
         }
@@ -68,12 +114,42 @@ namespace Motel.Controllers
                     return RedirectToAction("Index", "Property");
                 }
 
+                var propertySettings = await _feeSettingRepository.GetPropertyLevelFeeSettingsAsync(room.PropertyId);
+                var roomSettings = await _feeSettingRepository.GetRoomLevelFeeSettingsAsync(id);
+
+                var feeTypes = await _feeTypeRepository.GetAllAsync();
+                ViewBag.FeeTypes = feeTypes;
+
                 var model = new RoomEditViewModel
                 {
                     RoomId = room.RoomId,
                     RoomName = room.RoomName,
                     RentPrice = room.RentPrice,
-                    MaxOccupants = room.MaxOccupants
+                    MaxOccupants = room.MaxOccupants,
+                    PropertyId = room.PropertyId,
+                    PropertyName = room.Property?.Name ?? "Nhà trọ", // Use navigation property or fallback
+                    PropertyLevelFeeSettings = propertySettings.Select(f => new Motel.ViewModels.Property.PropertyFeeSettingItemViewModel
+                    {
+                        FeeSettingId = f.FeeSettingId,
+                        FeeTypeId = f.FeeTypeId,
+                        FeeTypeName = f.FeeType?.Name ?? "Unknown",
+                        CalculationMethod = f.CalculationMethod,
+                        UnitPrice = f.UnitPrice,
+                        BaseAmount = f.BaseAmount,
+                        EffectiveFrom = f.EffectiveFrom,
+                        EffectiveTo = f.EffectiveTo
+                    }).ToList(),
+                    RoomLevelFeeSettings = roomSettings.Select(f => new Motel.ViewModels.Property.PropertyFeeSettingItemViewModel
+                    {
+                        FeeSettingId = f.FeeSettingId,
+                        FeeTypeId = f.FeeTypeId,
+                        FeeTypeName = f.FeeType?.Name ?? "Unknown",
+                        CalculationMethod = f.CalculationMethod,
+                        UnitPrice = f.UnitPrice,
+                        BaseAmount = f.BaseAmount,
+                        EffectiveFrom = f.EffectiveFrom,
+                        EffectiveTo = f.EffectiveTo
+                    }).ToList()
                 };
 
                 return View(model);
@@ -115,20 +191,127 @@ namespace Motel.Controllers
                 if (success)
                 {
                     TempData["Success"] = "Cập nhật thông tin phòng thành công!";
-                    return RedirectToAction(nameof(Details), new { id = model.RoomId });
+                    return RedirectToAction(nameof(Edit), new { id = model.RoomId });
                 }
                 else
                 {
-                    ModelState.AddModelError("", "Có lỗi xảy ra khi cập nhật. Vui lòng thử lại.");
-                    return View(model);
+                    TempData["Error"] = "Không có thay đổi nào được lưu.";
+                    return RedirectToAction(nameof(Edit), new { id = model.RoomId });
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating room");
-                ModelState.AddModelError("", "Có lỗi xảy ra khi cập nhật. Vui lòng thử lại.");
-                return View(model);
+                TempData["Error"] = "Đã xảy ra lỗi khi cập nhật.";
+                return RedirectToAction(nameof(Edit), new { id = model.RoomId });
             }
+        }
+
+        // POST: Room/AddFeeSetting
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddFeeSetting(int roomId, int propertyId, int feeTypeId, string newFeeTypeName, string calculationMethod, decimal unitPrice, decimal baseAmount)
+        {
+            try
+            {
+                int actualFeeTypeId = feeTypeId;
+                if (feeTypeId == 0 && !string.IsNullOrWhiteSpace(newFeeTypeName))
+                {
+                    var newFeeType = new FeeType
+                    {
+                        Name = newFeeTypeName,
+                        Unit = "tháng",
+                        Description = "Phí tự định nghĩa",
+                        IsSystem = false
+                    };
+                    await _feeTypeRepository.AddAsync(newFeeType);
+                    actualFeeTypeId = newFeeType.FeeTypeId;
+                }
+
+                // CHECK CONSTRAINT: room-level fee must have PropertyId=NULL, RoomId=roomId
+                var feeSetting = new FeeSetting
+                {
+                    PropertyId = null,   // MUST be null for room-level fee
+                    RoomId = roomId,
+                    FeeTypeId = actualFeeTypeId,
+                    CalculationMethod = calculationMethod,
+                    UnitPrice = (calculationMethod == "meter" || calculationMethod == "per_person") ? unitPrice : 0,
+                    BaseAmount = (calculationMethod == "per_room" || calculationMethod == "per_person" || calculationMethod == "fixed") ? baseAmount : 0,
+                    EffectiveFrom = DateOnly.FromDateTime(DateTime.Today),
+                    CreatedAt = DateTime.Now
+                };
+
+                await _feeSettingRepository.AddAsync(feeSetting);
+                TempData["Success"] = "Thêm phụ phí cho phòng thành công!";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error adding room fee setting");
+                TempData["Error"] = "Lỗi khi thêm phụ phí: " + ex.Message;
+            }
+
+            return RedirectToAction(nameof(Edit), new { id = roomId });
+        }
+
+        // POST: Room/EditFeeSetting
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditFeeSetting(int feeSettingId, int roomId, int propertyId, int feeTypeId, string calculationMethod, decimal unitPrice, decimal baseAmount)
+        {
+            try
+            {
+                var today = DateOnly.FromDateTime(DateTime.Today);
+
+                // Invalidate the old setting (Case 2: room already has override)
+                // Case 1: room has no override yet => feeSettingId == 0, just create new
+                if (feeSettingId > 0)
+                {
+                    await _feeSettingRepository.InvalidateFeeSettingAsync(feeSettingId, today);
+                }
+
+                // CHECK CONSTRAINT: room-level fee must have PropertyId=NULL, RoomId=roomId
+                var feeSetting = new FeeSetting
+                {
+                    PropertyId = null,   // MUST be null for room-level fee
+                    RoomId = roomId,
+                    FeeTypeId = feeTypeId,
+                    CalculationMethod = calculationMethod,
+                    UnitPrice = (calculationMethod == "meter" || calculationMethod == "per_person") ? unitPrice : 0,
+                    BaseAmount = (calculationMethod == "per_room" || calculationMethod == "per_person" || calculationMethod == "fixed") ? baseAmount : 0,
+                    EffectiveFrom = today,
+                    CreatedAt = DateTime.Now
+                };
+
+                await _feeSettingRepository.AddAsync(feeSetting);
+                TempData["Success"] = "Cập nhật phụ phí phòng thành công!";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error editing room fee setting");
+                TempData["Error"] = "Lỗi khi cập nhật phụ phí: " + ex.Message;
+            }
+
+            return RedirectToAction(nameof(Edit), new { id = roomId });
+        }
+
+        // POST: Room/DeleteFeeSetting
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteFeeSetting(int feeSettingId, int roomId)
+        {
+            try
+            {
+                var today = DateOnly.FromDateTime(DateTime.Today);
+                await _feeSettingRepository.InvalidateFeeSettingAsync(feeSettingId, today);
+                TempData["Success"] = "Xóa phụ phí phòng thành công!";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting room fee setting");
+                TempData["Error"] = "Lỗi khi xóa phụ phí.";
+            }
+
+            return RedirectToAction(nameof(Edit), new { id = roomId });
         }
 
         // POST: Room/Delete/5
@@ -260,14 +443,7 @@ namespace Motel.Controllers
                     return RedirectToAction("Index", "Property");
                 }
 
-                // 2. Fetch default settings from the first room of the property (as fallback)
-                var firstRoomSetting = await _db.RoomUtilitySettings
-                    .Include(s => s.Room)
-                    .Where(s => s.Room.PropertyId == model.PropertyId)
-                    .OrderByDescending(s => s.EffectiveFrom)
-                    .FirstOrDefaultAsync();
-
-                // 3. Create the Room
+                // 2. Create the Room
                 var newRoom = new Motel.Models.Room
                 {
                     PropertyId = model.PropertyId,
@@ -279,21 +455,6 @@ namespace Motel.Controllers
                 };
 
                 _db.Rooms.Add(newRoom);
-                await _db.SaveChangesAsync();
-
-                // 4. Create the utility settings for the room
-                var setting = new Motel.Models.RoomUtilitySetting
-                {
-                    RoomId = newRoom.RoomId,
-                    ElectricUnitPrice = firstRoomSetting?.ElectricUnitPrice ?? 0,
-                    WaterUnitPrice = firstRoomSetting?.WaterUnitPrice ?? 0,
-                    InternetFee = firstRoomSetting?.InternetFee ?? 0,
-                    TrashFee = firstRoomSetting?.TrashFee ?? 0,
-                    EffectiveFrom = DateOnly.FromDateTime(DateTime.Now),
-                    EffectiveTo = null
-                };
-
-                _db.RoomUtilitySettings.Add(setting);
                 await _db.SaveChangesAsync();
 
                 TempData["Success"] = $"Thêm phòng '{model.RoomName}' thành công!";

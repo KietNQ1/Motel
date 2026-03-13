@@ -214,3 +214,29 @@ WHERE i.Status != 'cancelled'
   AND r.IsDeleted = 0
   AND p.IsDeleted = 0;
 GO
+
+------------------------------------------------------------
+-- 5) CONSTRAINTS & INDEXES: FeeSettings
+------------------------------------------------------------
+IF NOT EXISTS (SELECT 1 FROM sys.check_constraints WHERE name = 'CK_FeeSettings_PropertyOrRoom')
+BEGIN
+    ALTER TABLE dbo.FeeSettings
+    ADD CONSTRAINT CK_FeeSettings_PropertyOrRoom CHECK (
+        (PropertyId IS NOT NULL AND RoomId IS NULL)
+        OR
+        (PropertyId IS NULL AND RoomId IS NOT NULL)
+    );
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_FeeSettings_Property' AND object_id = OBJECT_ID('dbo.FeeSettings'))
+BEGIN
+    CREATE INDEX IX_FeeSettings_Property ON dbo.FeeSettings(PropertyId);
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_FeeSettings_Room' AND object_id = OBJECT_ID('dbo.FeeSettings'))
+BEGIN
+    CREATE INDEX IX_FeeSettings_Room ON dbo.FeeSettings(RoomId);
+END
+GO

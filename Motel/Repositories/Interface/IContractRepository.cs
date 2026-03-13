@@ -1,4 +1,4 @@
-﻿using Motel.Models;
+using Motel.Models;
 
 namespace Motel.Repositories.Interface;
 
@@ -7,6 +7,7 @@ public interface IContractRepository
     // ===== Existing (giữ nguyên) =====
     Task<Contract?> GetByIdAsync(int contractId, CancellationToken ct = default);
     Task<Contract?> GetActiveByIdAsync(int contractId, CancellationToken ct = default);
+    Task<Contract?> GetActiveContractByRoomIdAsync(int roomId, CancellationToken ct = default);
 
 
     // Room + Property để check landlord sở hữu phòng

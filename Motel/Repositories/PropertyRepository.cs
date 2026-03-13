@@ -15,6 +15,12 @@ namespace Motel.Repositories
             _context = context;
         }
 
+        public async Task<bool> UpdatePropertyAsync(Property property)
+        {
+            _context.Properties.Update(property);
+            return await _context.SaveChangesAsync() > 0;
+        }
+
         public async Task<List<PropertyListViewModel>> GetPropertiesByLandlordIdAsync(int landlordId)
         {
             return await _context.Properties
@@ -113,13 +119,9 @@ namespace Motel.Repositories
             return property.PropertyId;
         }
 
-        public async Task<bool> CreateRoomsWithUtilitiesAsync(
+        public async Task<bool> CreateRoomsAsync(
             int propertyId, 
-            List<(string RoomName, decimal RentPrice, int MaxOccupants)> rooms, 
-            decimal electricPrice, 
-            decimal waterPrice, 
-            decimal internetFee, 
-            decimal trashFee)
+            List<(string RoomName, decimal RentPrice, int MaxOccupants)> rooms)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
@@ -139,22 +141,10 @@ namespace Motel.Repositories
                         IsDeleted = false
                     };
 
+                    // Fee settings logic is generally handled at property level, so we don't need to create room-specific settings
+                    // Only create room if needed
                     _context.Rooms.Add(room);
                     await _context.SaveChangesAsync(); // Save to get RoomId
-
-                    // Create utility settings for this room
-                    var utilitySetting = new RoomUtilitySetting
-                    {
-                        RoomId = room.RoomId,
-                        ElectricUnitPrice = electricPrice,
-                        WaterUnitPrice = waterPrice,
-                        InternetFee = internetFee,
-                        TrashFee = trashFee,
-                        EffectiveFrom = today,
-                        EffectiveTo = null // Active indefinitely
-                    };
-
-                    _context.RoomUtilitySettings.Add(utilitySetting);
                 }
 
                 await _context.SaveChangesAsync();

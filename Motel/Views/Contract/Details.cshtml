@@ -16,10 +16,17 @@
     var startDate = Model.StartDate.ToString("yyyy-MM-dd");
     var endDate = Model.EndDate.ToString("yyyy-MM-dd");
     
-    var currentUtility = Model.Room?.RoomUtilitySettings?.OrderByDescending(x => x.EffectiveFrom).FirstOrDefault();
-    var electricPrice = (int)(currentUtility?.ElectricUnitPrice ?? 3500);
-    var waterPrice = (int)(currentUtility?.WaterUnitPrice ?? 15000);
-    var serviceFee = (int)((currentUtility?.InternetFee ?? 0) + (currentUtility?.TrashFee ?? 0));
+    var feeSettings = ViewBag.FeeSettings as List<Motel.Models.FeeSetting> ?? new();
+    
+    var electricSetting = feeSettings.FirstOrDefault(x => x.FeeType?.Name == "Electricity");
+    var waterSetting = feeSettings.FirstOrDefault(x => x.FeeType?.Name == "Water");
+    
+    var electricPrice = (int)(electricSetting?.UnitPrice ?? 3500);
+    var waterPrice = (int)(waterSetting?.UnitPrice ?? 15000);
+    
+    var serviceFee = (int)feeSettings
+        .Where(x => x.FeeType?.Name != "Electricity" && x.FeeType?.Name != "Water" && x.FeeType?.Name != "Rent")
+        .Sum(x => x.BaseAmount);
 }
 
 <script src="https://cdn.tailwindcss.com"></script>

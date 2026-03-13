@@ -25,6 +25,14 @@ public sealed class ContractRepository : IContractRepository
                 x.Status == "active" &&
                 x.IsDeleted == false, ct);
 
+    public Task<Contract?> GetActiveContractByRoomIdAsync(int roomId, CancellationToken ct = default)
+        => _db.Contracts
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x =>
+                x.RoomId == roomId &&
+                x.Status == "active" &&
+                x.IsDeleted == false, ct);
+
     // ===== New =====
 
     public Task<Room?> GetRoomWithPropertyAsync(int roomId, CancellationToken ct = default)
@@ -88,7 +96,6 @@ public sealed class ContractRepository : IContractRepository
     public Task<Contract?> GetContractDetailsAsync(int contractId, int landlordId, CancellationToken ct = default)
         => _db.Contracts
             .Include(c => c.Room).ThenInclude(r => r.Property).ThenInclude(p => p.Landlord).ThenInclude(l => l.User)
-            .Include(c => c.Room).ThenInclude(r => r.RoomUtilitySettings)
             .Include(c => c.Tenant)
             .FirstOrDefaultAsync(c =>
                 c.ContractId == contractId &&

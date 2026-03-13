@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Motel.Helpers;
 using Motel.Services.Interfaces;
 using Motel.ViewModels.Contract;
@@ -66,7 +66,7 @@ namespace Motel.Controllers
         [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
-            var (contract, occ) = await _service.GetContractDetailsAsync(await _landlordHelper.GetCurrentLandlordIdAsync(User), id);
+            var (contract, occ, feeSettings) = await _service.GetContractDetailsAsync(await _landlordHelper.GetCurrentLandlordIdAsync(User), id);
             if (contract == null)
             {
                 TempData["Error"] = "Không tìm thấy hợp đồng.";
@@ -74,6 +74,7 @@ namespace Motel.Controllers
             }
 
             ViewBag.Occupants = occ;
+            ViewBag.FeeSettings = feeSettings;
             return View(contract);
         }
 
