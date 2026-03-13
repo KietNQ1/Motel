@@ -5,6 +5,9 @@ namespace Motel.ViewModels.Room
     public class RoomEditViewModel
     {
         public int RoomId { get; set; }
+
+        [Required(ErrorMessage = "Tên phòng là bắt buộc")]
+        [Display(Name = "Tên phòng")]
         public string RoomName { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Giá thuê là bắt buộc")]

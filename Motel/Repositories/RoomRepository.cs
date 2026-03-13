@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Motel.Data;
 using Motel.Models;
 using Motel.Repositories.Interface;
@@ -120,6 +120,45 @@ namespace Motel.Repositories
         }
 
         // =========================
+        // DELETE ROOM (SOFT)
+        // =========================
+        public async Task<bool> DeleteRoomAsync(int roomId, CancellationToken ct = default)
+        {
+            try
+            {
+                var room = await _db.Rooms.FindAsync(new object[] { roomId }, ct);
+                if (room == null || room.IsDeleted) return false;
+
+                room.IsDeleted = true;
+                _db.Rooms.Update(room);
+                await _db.SaveChangesAsync(ct);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> RestoreRoomAsync(int roomId)
+        {
+            try
+            {
+                var room = await _db.Rooms.FirstOrDefaultAsync(r => r.RoomId == roomId);
+                if (room == null || !room.IsDeleted) return false;
+
+                room.IsDeleted = false;
+                _db.Rooms.Update(room);
+                await _db.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        // =========================
         // RENT ROOM
         // =========================
         public async Task<bool> RentRoomAsync(
@@ -156,24 +195,39 @@ namespace Motel.Repositories
                 if (primaryIndex < 0 || primaryIndex >= occupants.Count) return false;
                 if (room.MaxOccupants > 0 && occupants.Count > room.MaxOccupants) return false;
 
-                // 1) tạo tenants
+                // 1) tạo hoặc lấy lại tenants theo CCCD
                 var tenantEntities = new List<Tenant>();
                 foreach (var o in occupants)
                 {
-                    var t = new Tenant
+                    Tenant t = null;
+                    if (!string.IsNullOrWhiteSpace(o.IdentityNo))
                     {
-                        LandlordId = landlordId,
-                        FullName = o.FullName.Trim(),
-                        Phone = o.Phone,
-                        Email = o.Email,
-                        IdentityNo = o.IdentityNo,
-                        IsDeleted = false,
-                        CreatedAt = DateTime.Now
-                    };
+                        t = await _db.Tenants.FirstOrDefaultAsync(x => x.LandlordId == landlordId && x.IdentityNo == o.IdentityNo && !x.IsDeleted, ct);
+                    }
+                    
+                    if (t == null)
+                    {
+                        t = new Tenant
+                        {
+                            LandlordId = landlordId,
+                            FullName = o.FullName.Trim(),
+                            Phone = o.Phone,
+                            Email = o.Email,
+                            IdentityNo = o.IdentityNo,
+                            IsDeleted = false,
+                            CreatedAt = DateTime.Now
+                        };
+                        _db.Tenants.Add(t);
+                    }
+                    else
+                    {
+                        t.FullName = o.FullName.Trim();
+                        t.Phone = o.Phone;
+                        t.Email = o.Email;
+                    }
                     tenantEntities.Add(t);
                 }
 
-                _db.Tenants.AddRange(tenantEntities);
                 await _db.SaveChangesAsync(ct);
 
                 // 2) tạo contract với tenant chính
