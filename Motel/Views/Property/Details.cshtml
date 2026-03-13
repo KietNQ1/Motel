@@ -40,17 +40,22 @@
         @foreach (var floor in Model.RoomsByFloor.OrderByDescending(f => f.Key))
         {
             <div class="card mb-4 shadow-sm">
-                <div class="card-header bg-primary text-white">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">
                         <i class="bi bi-layers"></i> Tầng @floor.Key
                         <span class="badge bg-light text-dark ms-2">@floor.Value.Count phòng</span>
                     </h5>
+                    <a asp-controller="Room" asp-action="CreateSingleRoom" asp-route-propertyId="@Model.PropertyId" asp-route-floor="@floor.Key" class="btn btn-sm bg-white text-dark shadow-sm fw-bold border" style="color: #ea580c !important;">
+                        <i class="bi bi-plus-lg"></i> Thêm phòng
+                    </a>
                 </div>
                 <div class="card-body">
                     <div class="row g-3">
                         @foreach (var room in floor.Value)
                         {
-                            var statusClass = room.Status switch
+                            var isDeleted = room.IsDeleted;
+
+                            var statusClass = isDeleted ? "border-secondary" : room.Status switch
                             {
                                 "occupied" => "border-success",
                                 "available" => "border-info",
@@ -58,7 +63,7 @@
                                 _ => "border-secondary"
                             };
 
-                            var statusBadge = room.Status switch
+                            var statusBadge = isDeleted ? "bg-secondary" : room.Status switch
                             {
                                 "occupied" => "bg-success",
                                 "available" => "bg-info",
@@ -66,7 +71,7 @@
                                 _ => "bg-secondary"
                             };
 
-                            var statusText = room.Status switch
+                            var statusText = isDeleted ? "Ngừng sử dụng" : room.Status switch
                             {
                                 "occupied" => "Đã thuê",
                                 "available" => "Còn trống",
@@ -74,8 +79,10 @@
                                 _ => room.Status
                             };
 
+                            var opacityStyle = isDeleted ? "opacity: 0.6;" : "";
+
                             <div class="col-md-3 col-sm-6">
-                                <div class="card h-100 @statusClass" style="border-width: 2px;">
+                                <div class="card h-100 @statusClass" style="border-width: 2px; @opacityStyle">
                                     <div class="card-body text-center">
                                         <h5 class="card-title">
                                             <i class="bi bi-door-closed"></i> @room.RoomName
@@ -87,7 +94,11 @@
                                             <strong>@room.RentPrice.ToString("N0") VNĐ</strong>/tháng
                                         </p>
 
-                                        @if (room.HasTenant)
+                                        @if (isDeleted)
+                                        {
+                                            <small class="text-danger d-block mt-2">Đã xóa mềm</small>
+                                        }
+                                        else if (room.HasTenant)
                                         {
                                             <small class="text-muted d-block">
                                                 <i class="bi bi-person"></i> @room.TenantName
@@ -101,7 +112,7 @@
                                         }
 
                                         <!-- ✅ Buttons: Contract + Occupants -->
-                                        @if (room.HasTenant && room.ActiveContractId != null)
+                                        @if (!isDeleted && room.HasTenant && room.ActiveContractId != null)
                                         {
                                             <div class="d-flex justify-content-center gap-2 mt-2">
                                                 <a class="btn btn-sm btn-outline-primary"
@@ -117,12 +128,25 @@
                                         }   
                                     </div>
 
-                                    <!-- ✅ Optional: nút xem chi tiết phòng -->
+                                    <!-- ✅ Action Buttons on Footer -->
                                     <div class="card-footer bg-white text-center">
-                                        <a class="btn btn-sm btn-outline-dark w-100"
-                                           asp-controller="Room" asp-action="Details" asp-route-id="@room.RoomId">
-                                            Xem chi tiết phòng
-                                        </a>
+                                        @if (isDeleted)
+                                        {
+                                            <form asp-controller="Room" asp-action="Restore" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn khôi phục phòng này?');">
+                                                <input type="hidden" name="id" value="@room.RoomId" />
+                                                <input type="hidden" name="propertyId" value="@Model.PropertyId" />
+                                                <button type="submit" class="btn btn-sm btn-outline-success w-100">
+                                                    <i class="bi bi-arrow-counterclockwise"></i> Khôi phục
+                                                </button>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <a class="btn btn-sm btn-outline-dark w-100"
+                                               asp-controller="Room" asp-action="Details" asp-route-id="@room.RoomId">
+                                                Xem chi tiết phòng
+                                            </a>
+                                        }
                                     </div>
                                 </div>
                             </div>
@@ -158,4 +182,9 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
     </style>
+}
+
+@section Scripts {
+    <!-- Thêm Bootstrap JS để Dropdowns hoạt động -->
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 }

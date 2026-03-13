@@ -111,30 +111,97 @@
          Phát sinh (tạm thời đơn giản)
          ====================== -->
     <div class="card mb-4">
-        <div class="card-header fw-bold">
-            Phát sinh (nếu có)
+        <div class="card-header fw-bold d-flex justify-content-between align-items-center">
+            <span>Phí phát sinh (Dịch vụ thêm, Sửa chữa, v.v...)</span>
+            <button type="button" class="btn btn-sm btn-outline-primary" id="addExtraChargeBtn">
+                <i class="bi bi-plus-circle"></i> Thêm phí
+            </button>
         </div>
-        <div class="card-body">
-            <p class="text-muted">
-                Hiện tại chưa có UI thêm nhiều dòng. Bạn có thể mở rộng sau.
-            </p>
+        <div class="card-body p-0">
+            <table class="table table-borderless table-striped mb-0" id="extraChargesTable">
+                <thead class="table-light">
+                    <tr>
+                        <th width="30%">Loại phí</th>
+                        <th width="40%">Mô tả</th>
+                        <th width="20%">Số tiền</th>
+                        <th width="10%"></th>
+                    </tr>
+                </thead>
+                <tbody id="extraChargesBody">
+                    <!-- Dynamic rows here -->
+                </tbody>
+            </table>
         </div>
     </div>
 
     <!-- ======================
          Actions
          ====================== -->
-    <div class="d-flex gap-2">
+    <div class="d-flex gap-2 mb-5">
         <button type="submit" class="btn btn-primary">
-            Tạo hóa đơn
+            <i class="bi bi-check-circle"></i> Tạo hóa đơn
         </button>
 
-        <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">
-            Hủy
+        <a asp-action="Details" asp-controller="Room" asp-route-id="@Model.ContractId" class="btn btn-secondary">
+            <i class="bi bi-x-circle"></i> Hủy
         </a>
     </div>
 </form>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function () {
+            let chargeIndex = 0;
+
+            $('#addExtraChargeBtn').click(function () {
+                const rowHtml = `
+                    <tr id="charge-row-${chargeIndex}">
+                        <td>
+                            <select name="ExtraCharges[${chargeIndex}].ItemType" class="form-select">
+                                <option value="other">Khác</option>
+                                <option value="service">Dịch vụ</option>
+                                <option value="repair">Sửa chữa</option>
+                                <option value="penalty">Phạt</option>
+                            </select>
+                        </td>
+                        <td>
+                            <input type="text" name="ExtraCharges[${chargeIndex}].Description" class="form-control" placeholder="Nhập mô tả..." />
+                        </td>
+                        <td>
+                            <input type="number" name="ExtraCharges[${chargeIndex}].Amount" class="form-control" value="0" min="0" />
+                        </td>
+                        <td class="text-end">
+                            <button type="button" class="btn btn-outline-danger btn-sm remove-charge-btn" data-id="${chargeIndex}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                $('#extraChargesBody').append(rowHtml);
+                chargeIndex++;
+            });
+
+            $(document).on('click', '.remove-charge-btn', function () {
+                const id = $(this).data('id');
+                $(`#charge-row-${id}`).remove();
+                
+                // Re-index remaining rows to ensure model binding works
+                $('#extraChargesBody tr').each(function(index) {
+                    $(this).find('select, input').each(function() {
+                        const name = $(this).attr('name');
+                        if (name) {
+                            const newName = name.replace(/\[\d+\]/, '[' + index + ']');
+                            $(this).attr('name', newName);
+                        }
+                    });
+                    
+                    // Update button data-id AND row id so removal continues to work correctly
+                    $(this).find('.remove-charge-btn').data('id', index);
+                    $(this).attr('id', 'charge-row-' + index);
+                });
+                chargeIndex = $('#extraChargesBody tr').length;
+            });
+        });
+    </script>
 }

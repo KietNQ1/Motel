@@ -43,6 +43,13 @@
                     <i class="bi bi-receipt"></i> Tạm tính
                 </a>
             }
+            <form asp-action="Delete" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa phòng này?');">
+                <input type="hidden" name="id" value="@Model.RoomId" />
+                <input type="hidden" name="propertyId" value="@Model.PropertyId" />
+                <button type="submit" class="btn btn-outline-danger ms-1">
+                    <i class="bi bi-trash"></i> Xóa
+                </button>
+            </form>
         </div>
     </div>
 

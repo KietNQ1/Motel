@@ -1,5 +1,5 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Motel.Helpers;
 using Motel.Repositories.Interface;
 using Motel.ViewModels.Room;
@@ -16,14 +16,16 @@ namespace Motel.Controllers
         private readonly LandlordHelper _landlordHelper;
         private readonly IRoomFurnitureService _furnitureService;
        
+        private readonly Motel.Data.MotelDbContext _db;
         
-        public RoomController(IRoomRepository roomRepository, IRoomService roomService, ILogger<RoomController> logger, LandlordHelper landlordHelper, IRoomFurnitureService furnitureService)
+        public RoomController(IRoomRepository roomRepository, IRoomService roomService, ILogger<RoomController> logger, LandlordHelper landlordHelper, IRoomFurnitureService furnitureService, Motel.Data.MotelDbContext db)
         {
             _roomRepository = roomRepository;
             _roomService = roomService;
             _logger = logger;
             _landlordHelper = landlordHelper;
             _furnitureService = furnitureService;
+            _db = db;
         }
 
         // GET: Room/Details/5
@@ -104,6 +106,7 @@ namespace Motel.Controllers
                     return RedirectToAction("Index", "Property");
                 }
 
+                room.RoomName = model.RoomName;
                 room.RentPrice = model.RentPrice;
                 room.MaxOccupants = model.MaxOccupants;
 
@@ -125,6 +128,182 @@ namespace Motel.Controllers
                 _logger.LogError(ex, "Error updating room");
                 ModelState.AddModelError("", "Có lỗi xảy ra khi cập nhật. Vui lòng thử lại.");
                 return View(model);
+            }
+        }
+
+        // POST: Room/Delete/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id, int propertyId)
+        {
+            try
+            {
+                var success = await _roomRepository.DeleteRoomAsync(id);
+                if (success)
+                {
+                    TempData["Success"] = "Xóa phòng thành công!";
+                    return RedirectToAction("Details", "Property", new { id = propertyId });
+                }
+                
+                TempData["Error"] = "Có lỗi xảy ra khi xóa phòng.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting room");
+                TempData["Error"] = "Có lỗi xảy ra khi xóa phòng.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+        }
+
+        // POST: Room/Restore/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Restore(int id, int propertyId)
+        {
+            try
+            {
+                var success = await _roomRepository.RestoreRoomAsync(id);
+                if (success)
+                {
+                    TempData["Success"] = "Khôi phục phòng thành công!";
+                }
+                else
+                {
+                    TempData["Error"] = "Có lỗi xảy ra khi khôi phục phòng.";
+                }
+                return RedirectToAction("Details", "Property", new { id = propertyId });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error restoring room");
+                TempData["Error"] = "Có lỗi xảy ra khi khôi phục phòng.";
+                return RedirectToAction("Details", "Property", new { id = propertyId });
+            }
+        }
+
+        // GET: Room/CreateSingleRoom
+        [HttpGet]
+        public async Task<IActionResult> CreateSingleRoom(int propertyId, int floor)
+        {
+            var landlordId = await _landlordHelper.GetCurrentLandlordIdAsync(User);
+            
+            // Check ownership
+            var isOwner = await _db.Properties.AnyAsync(p => p.PropertyId == propertyId && p.LandlordId == landlordId && !p.IsDeleted);
+            if (!isOwner)
+            {
+                TempData["Error"] = "Không tìm thấy nhà trọ hoặc bạn không có quyền.";
+                return RedirectToAction("Index", "Property");
+            }
+
+            // Calculate suggested room name
+            string suggestedName = $"{floor}01";
+            var existingRoomsOnFloor = await _db.Rooms
+                .Where(r => r.PropertyId == propertyId && r.RoomName.StartsWith(floor.ToString()))
+                .Select(r => r.RoomName)
+                .ToListAsync();
+
+            if (existingRoomsOnFloor.Any())
+            {
+                int maxNum = 0;
+                string floorPrefix = floor.ToString();
+
+                foreach (var name in existingRoomsOnFloor)
+                {
+                    if (name.StartsWith(floorPrefix))
+                    {
+                        var numPart = name.Substring(floorPrefix.Length);
+                        if (int.TryParse(numPart, out int parsed))
+                        {
+                            if (parsed > maxNum) maxNum = parsed;
+                        }
+                    }
+                }
+
+                int nextNum = maxNum + 1;
+                suggestedName = floorPrefix + (nextNum < 10 ? "0" : "") + nextNum;
+            }
+
+            ViewBag.SuggestedRoomName = suggestedName;
+
+            var model = new RoomCreateViewModel
+            {
+                PropertyId = propertyId,
+                Floor = floor,
+                RoomName = suggestedName, // Pre-fill it
+                RentPrice = 2500000,      // Default basic rent if no others
+                MaxOccupants = 2
+            };
+
+            return View(model);
+        }
+
+        // POST: Room/CreateSingleRoom
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateSingleRoom(RoomCreateViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model); // Stay on the same dedicated page
+            }
+
+            try
+            {
+                var landlordId = await _landlordHelper.GetCurrentLandlordIdAsync(User);
+                
+                // 1. Check ownership
+                var isOwner = await _db.Properties.AnyAsync(p => p.PropertyId == model.PropertyId && p.LandlordId == landlordId && !p.IsDeleted);
+                if (!isOwner)
+                {
+                    TempData["Error"] = "Không tìm thấy nhà trọ hoặc bạn không có quyền.";
+                    return RedirectToAction("Index", "Property");
+                }
+
+                // 2. Fetch default settings from the first room of the property (as fallback)
+                var firstRoomSetting = await _db.RoomUtilitySettings
+                    .Include(s => s.Room)
+                    .Where(s => s.Room.PropertyId == model.PropertyId)
+                    .OrderByDescending(s => s.EffectiveFrom)
+                    .FirstOrDefaultAsync();
+
+                // 3. Create the Room
+                var newRoom = new Motel.Models.Room
+                {
+                    PropertyId = model.PropertyId,
+                    RoomName = model.RoomName,
+                    RentPrice = model.RentPrice,
+                    Status = "available",
+                    MaxOccupants = model.MaxOccupants,
+                    IsDeleted = false
+                };
+
+                _db.Rooms.Add(newRoom);
+                await _db.SaveChangesAsync();
+
+                // 4. Create the utility settings for the room
+                var setting = new Motel.Models.RoomUtilitySetting
+                {
+                    RoomId = newRoom.RoomId,
+                    ElectricUnitPrice = firstRoomSetting?.ElectricUnitPrice ?? 0,
+                    WaterUnitPrice = firstRoomSetting?.WaterUnitPrice ?? 0,
+                    InternetFee = firstRoomSetting?.InternetFee ?? 0,
+                    TrashFee = firstRoomSetting?.TrashFee ?? 0,
+                    EffectiveFrom = DateOnly.FromDateTime(DateTime.Now),
+                    EffectiveTo = null
+                };
+
+                _db.RoomUtilitySettings.Add(setting);
+                await _db.SaveChangesAsync();
+
+                TempData["Success"] = $"Thêm phòng '{model.RoomName}' thành công!";
+                return RedirectToAction("Details", "Property", new { id = model.PropertyId });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating single room");
+                ModelState.AddModelError("", "Có lỗi xảy ra khi thêm phòng. Vui lòng thử lại.");
+                return View(model); // Stay if error occurs
             }
         }
 
@@ -152,6 +331,8 @@ namespace Motel.Controllers
                 PropertyName = roomDetail.PropertyName,
                 MaxOccupants = roomDetail.MaxOccupants,
                 DepositAmount = roomDetail.RentPrice * 2,
+                InitialElectricReading = roomDetail.CurrentElectricNew,
+                InitialWaterReading = roomDetail.CurrentWaterNew,
                 Occupants = new List<TenantInputViewModel>
         {
             new TenantInputViewModel() // 1 dòng mặc định

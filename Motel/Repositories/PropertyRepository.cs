@@ -44,9 +44,9 @@ namespace Motel.Repositories
         {
             var property = await _context.Properties
                 .Where(p => p.PropertyId == propertyId && !p.IsDeleted)
-                .Include(p => p.Rooms.Where(r => !r.IsDeleted))
-                    .ThenInclude(r => r.Contracts) // load all contracts (or only active, xem note o duoi)
-                .Include(p => p.Rooms.Where(r => !r.IsDeleted))
+                .Include(p => p.Rooms) // Include all rooms including deleted
+                    .ThenInclude(r => r.Contracts) 
+                .Include(p => p.Rooms)
                     .ThenInclude(r => r.RoomOccupancies)
                         .ThenInclude(o => o.Tenant)
                 .FirstOrDefaultAsync();
@@ -93,7 +93,8 @@ namespace Motel.Repositories
                         HasTenant = activeContract != null,
                         OccupantsCount = activeOccupants.Count,
                         PrimaryTenantId = primary?.TenantId,
-                        TenantName = primary?.Tenant?.FullName
+                        TenantName = primary?.Tenant?.FullName,
+                        IsDeleted = r.IsDeleted
                     };
                 })
                 .OrderBy(x => x.RoomName)
