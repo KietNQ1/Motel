@@ -85,9 +85,9 @@ public partial class MotelDbContext : IdentityDbContext<ApplicationUser, Identit
         {
             entity.HasIndex(e => e.RoomId, "IX_Contracts_RoomId").HasFilter("([IsDeleted]=(0))");
 
-            entity.HasIndex(e => e.RoomId, "UX_Contracts_RoomId_ActiveOnly")
-                .IsUnique()
-                .HasFilter("([IsDeleted]=(0) AND [Status]='active')");
+            entity.HasIndex(e => new { e.RoomId, e.TenantId }, "UX_Contracts_Room_Tenant_Active")
+    .IsUnique()
+    .HasFilter("([IsDeleted]=(0) AND [Status]='active')");
 
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysdatetime())");
             entity.Property(e => e.DepositAmount).HasColumnType("decimal(18, 2)");

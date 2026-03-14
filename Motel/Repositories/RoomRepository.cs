@@ -58,7 +58,11 @@ namespace Motel.Repositories
                     FullName = ro.Tenant.FullName,
                     Phone = ro.Tenant.Phone,
                     Email = ro.Tenant.Email,
-                    IsPrimary = ro.IsPrimary
+                    IsPrimary = ro.IsPrimary,
+                    ContractId = ro.Tenant.Contracts
+                        .Where(c => c.RoomId == roomId && !c.IsDeleted && c.Status == "active")
+                        .Select(c => (int?)c.ContractId)
+                        .FirstOrDefault()
                 }).OrderByDescending(t => t.IsPrimary).ThenBy(t => t.FullName).ToList()
             };
 
@@ -188,7 +192,7 @@ namespace Motel.Repositories
                 if (room == null) return false;
                 if (room.Status != "available") return false;
 
-                // chặn nếu đã có contract active (phòng có thể bị lệch status)
+                // chặn nếu tenant này đã có contract active trong phòng này
                 var hasActiveContract = await _db.Contracts
                     .AnyAsync(c => c.RoomId == roomId && !c.IsDeleted && c.Status == "active", ct);
 
@@ -238,23 +242,21 @@ namespace Motel.Repositories
 
                 await _db.SaveChangesAsync(ct);
 
-                // 2) tạo contract với tenant chính
-                var primaryTenant = tenantEntities[primaryIndex];
-
-                var contract = new Contract
+                // 2) tạo contract cho TỪNG tenant
+                var contracts = tenantEntities.Select(t => new Contract
                 {
                     RoomId = roomId,
-                    TenantId = primaryTenant.TenantId,
+                    TenantId = t.TenantId,
                     DepositAmount = depositAmount,
                     StartDate = startDate,
                     EndDate = endDate,
                     Status = "active",
                     IsDeleted = false,
                     CreatedAt = DateTime.Now
-                };
-                _db.Contracts.Add(contract);
+                }).ToList();
+                _db.Contracts.AddRange(contracts);
 
-                // 3) tạo occupancies (tenant chính bắt buộc nằm trong danh sách)
+                // 3) tạo occupancies
                 var occupancies = tenantEntities.Select((t, idx) => new RoomOccupancy
                 {
                     RoomId = roomId,
