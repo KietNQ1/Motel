@@ -1,4 +1,4 @@
-﻿using Motel.Models;
+using Motel.Models;
 using Motel.Repositories.Interface;
 using Motel.Services.Interfaces;
 using Motel.ViewModels.Tenant;
@@ -24,6 +24,8 @@ namespace Motel.Services
                 Phone = vm.Phone?.Trim(),
                 Email = vm.Email?.Trim(),
                 IdentityNo = vm.IdentityNo?.Trim(),
+                DateOfBirth = vm.DateOfBirth,
+                PermanentAddress = vm.PermanentAddress?.Trim(),
                 IsDeleted = false,
                 CreatedAt = DateTime.Now
             };
@@ -48,5 +50,38 @@ namespace Motel.Services
                 Tenants = tenants
             };
         }
+
+        public async Task<TenantEditViewModel?> BuildEditViewModelAsync(int landlordId, int tenantId)
+        {
+            var tenant = await _repo.GetTenantByIdAsync(tenantId, landlordId);
+            if (tenant == null) return null;
+
+            return new TenantEditViewModel
+            {
+                TenantId = tenant.TenantId,
+                FullName = tenant.FullName,
+                Phone = tenant.Phone,
+                Email = tenant.Email,
+                IdentityNo = tenant.IdentityNo,
+                DateOfBirth = tenant.DateOfBirth,
+                PermanentAddress = tenant.PermanentAddress
+            };
+        }
+
+        public async Task<bool> UpdateTenantAsync(int landlordId, TenantEditViewModel vm)
+        {
+            var tenant = await _repo.GetTenantByIdAsync(vm.TenantId, landlordId);
+            if (tenant == null) return false;
+
+            tenant.FullName           = vm.FullName.Trim();
+            tenant.Phone              = vm.Phone?.Trim();
+            tenant.Email              = vm.Email?.Trim();
+            tenant.IdentityNo         = vm.IdentityNo?.Trim();
+            tenant.DateOfBirth        = vm.DateOfBirth;
+            tenant.PermanentAddress   = vm.PermanentAddress?.Trim();
+
+            await _repo.UpdateTenantAsync(tenant);
+            return true;
+        }
     }
-}
+}

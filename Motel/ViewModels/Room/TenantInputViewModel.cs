@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace Motel.ViewModels.Room
 {
@@ -20,5 +20,13 @@ namespace Motel.ViewModels.Room
         [StringLength(20)]
         [Display(Name = "CMND/CCCD")]
         public string? IdentityNo { get; set; }
+
+        [DataType(DataType.Date)]
+        [Display(Name = "Ngày sinh")]
+        public DateOnly? DateOfBirth { get; set; }
+
+        [StringLength(500)]
+        [Display(Name = "Nơi ĐKTT")]
+        public string? PermanentAddress { get; set; }
     }
 }

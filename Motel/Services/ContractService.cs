@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Motel.Models;
 using Motel.Repositories.Interface;
 using Motel.Services.Interfaces;
@@ -9,8 +9,13 @@ namespace Motel.Services
     public class ContractService : IContractService
     {
         private readonly IContractRepository _repo;
+        private readonly IFeeSettingRepository _feeRepo;
 
-        public ContractService(IContractRepository repo) => _repo = repo;
+        public ContractService(IContractRepository repo, IFeeSettingRepository feeRepo)
+        {
+            _repo = repo;
+            _feeRepo = feeRepo;
+        }
 
         public async Task<ContractCreateViewModel?> BuildCreateViewModelAsync(int landlordId, int roomId)
         {
@@ -83,13 +88,18 @@ namespace Motel.Services
             return await _repo.CreateContractWithOccupanciesAsync(contract, occupancies, setRoomOccupied: true);
         }
 
-        public async Task<(Contract? Contract, List<RoomOccupancy> Occupants)> GetContractDetailsAsync(int landlordId, int contractId)
+        public async Task<(Contract? Contract, List<RoomOccupancy> Occupants, List<FeeSetting> FeeSettings)> GetContractDetailsAsync(int landlordId, int contractId)
         {
             var contract = await _repo.GetContractDetailsAsync(contractId, landlordId);
-            if (contract == null) return (null, new());
+            if (contract == null) return (null, new(), new());
 
             var occ = await _repo.GetActiveOccupanciesAsync(contract.RoomId);
-            return (contract, occ);
+            
+            var now = DateTime.Now;
+            var yyyymm = now.Year * 100 + now.Month;
+            var feeSettings = await _feeRepo.GetEffectiveForRoomAsync(contract.Room.PropertyId, contract.RoomId, yyyymm);
+
+            return (contract, occ, feeSettings);
         }
 
         public Task<bool> EndContractAsync(int landlordId, int contractId)

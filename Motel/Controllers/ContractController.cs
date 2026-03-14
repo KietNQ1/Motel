@@ -1,5 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Motel.Helpers;
+using Motel.Services.Interface;
 using Motel.Services.Interfaces;
 using Motel.ViewModels.Contract;
 
@@ -10,15 +11,18 @@ namespace Motel.Controllers
         private readonly IContractService _service;
         private readonly ILogger<ContractController> _logger;
         private readonly LandlordHelper _landlordHelper;
+        private readonly IRoomFurnitureService _furnitureService;
 
         public ContractController(
-            IContractService service, 
+            IContractService service,
             ILogger<ContractController> logger,
-            LandlordHelper landlordHelper)
+            LandlordHelper landlordHelper,
+            IRoomFurnitureService furnitureService)
         {
             _service = service;
             _logger = logger;
             _landlordHelper = landlordHelper;
+            _furnitureService = furnitureService;
         }
 
 [HttpGet]
@@ -66,14 +70,19 @@ namespace Motel.Controllers
         [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
-            var (contract, occ) = await _service.GetContractDetailsAsync(await _landlordHelper.GetCurrentLandlordIdAsync(User), id);
+            var (contract, occ, feeSettings) = await _service.GetContractDetailsAsync(await _landlordHelper.GetCurrentLandlordIdAsync(User), id);
             if (contract == null)
             {
                 TempData["Error"] = "Không tìm thấy hợp đồng.";
                 return RedirectToAction("Index", "Property");
             }
 
+            // Fetch furniture for the contracted room
+            var furnitures = await _furnitureService.GetFurnituresForRoomAsync(contract.RoomId);
+
             ViewBag.Occupants = occ;
+            ViewBag.FeeSettings = feeSettings;
+            ViewBag.Furnitures = furnitures;
             return View(contract);
         }
 

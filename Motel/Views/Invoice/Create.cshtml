@@ -17,6 +17,7 @@
     <div asp-validation-summary="All" class="text-danger mb-3"></div>
 
     <!-- Hidden -->
+    <input type="hidden" asp-for="RoomId" />
     <input type="hidden" asp-for="ContractId" />
 
     <!-- ======================
@@ -47,63 +48,65 @@
     </div>
 
     <!-- ======================
-         Điện / nước
+         Chi tiết phí (Fee Items)
          ====================== -->
     <div class="card mb-3">
         <div class="card-header fw-bold">
-            Chỉ số điện – nước
-            <span class="text-muted fw-normal">(có thể bỏ trống để lấy từ hệ thống)</span>
+            Chi tiết các loại phí
         </div>
-
         <div class="card-body">
-            <div class="row mb-3">
-                <div class="col-md-3">
-                    <label asp-for="ElectricOld" class="form-label"></label>
-                    <input asp-for="ElectricOld" class="form-control" />
-                </div>
-                <div class="col-md-3">
-                    <label asp-for="ElectricNew" class="form-label"></label>
-                    <input asp-for="ElectricNew" class="form-control" />
-                </div>
+            @for (int i = 0; i < Model.FeeItems.Count; i++)
+            {
+                <input type="hidden" asp-for="FeeItems[i].FeeTypeId" />
+                <input type="hidden" asp-for="FeeItems[i].FeeTypeName" />
+                <input type="hidden" asp-for="FeeItems[i].CalculationMethod" />
+                <input type="hidden" asp-for="FeeItems[i].UnitPrice" />
+                <input type="hidden" asp-for="FeeItems[i].BaseAmount" />
 
-                <div class="col-md-3">
-                    <label asp-for="WaterOld" class="form-label"></label>
-                    <input asp-for="WaterOld" class="form-control" />
+                <div class="mb-3 border-bottom pb-3">
+                    <h6 class="fw-bold text-primary">@Model.FeeItems[i].FeeTypeName</h6>
+                    
+                    @if (Model.FeeItems[i].CalculationMethod == "meter")
+                    {
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label asp-for="FeeItems[i].PreviousReading" class="form-label">Chỉ số đầu</label>
+                                <input asp-for="FeeItems[i].PreviousReading" class="form-control" />
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="FeeItems[i].CurrentReading" class="form-label">Chỉ số cuối</label>
+                                <input asp-for="FeeItems[i].CurrentReading" class="form-control" />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Đơn giá</label>
+                                <input class="form-control" value="@Model.FeeItems[i].UnitPrice.ToString("N0")" disabled />
+                            </div>
+                        </div>
+                    }
+                    else if (Model.FeeItems[i].CalculationMethod == "per_person")
+                    {
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label asp-for="FeeItems[i].Quantity" class="form-label">Số người</label>
+                                <input asp-for="FeeItems[i].Quantity" class="form-control" value="@(Model.FeeItems[i].Quantity ?? 1)" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Đơn giá (VNĐ/người)</label>
+                                <input class="form-control" value="@Model.FeeItems[i].BaseAmount.ToString("N0")" disabled />
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="row">
+                            <div class="col-md-12">
+                                <label class="form-label">Chi phí thu cố định (VNĐ)</label>
+                                <input class="form-control" value="@Model.FeeItems[i].BaseAmount.ToString("N0")" disabled />
+                            </div>
+                        </div>
+                    }
                 </div>
-                <div class="col-md-3">
-                    <label asp-for="WaterNew" class="form-label"></label>
-                    <input asp-for="WaterNew" class="form-control" />
-                </div>
-            </div>
-
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label asp-for="ElectricUnitPrice" class="form-label">Đơn giá điện</label>
-                    <input asp-for="ElectricUnitPrice" class="form-control" />
-                </div>
-                <div class="col-md-6">
-                    <label asp-for="WaterUnitPrice" class="form-label">Đơn giá nước</label>
-                    <input asp-for="WaterUnitPrice" class="form-control" />
-                </div>
-            </div>
-
-            <hr />
-
-            <div class="row">
-                <div class="col-md-3">
-                    <label asp-for="WaterPeopleCount" class="form-label"></label>
-                    <input asp-for="WaterPeopleCount" class="form-control" />
-                </div>
-
-                <div class="col-md-3">
-                    <label asp-for="WaterPricePerPerson" class="form-label"></label>
-                    <input asp-for="WaterPricePerPerson" class="form-control" />
-                </div>
-            </div>
-
-            <small class="text-muted d-block mt-2">
-                Nếu nhập số người + giá/người thì hệ thống sẽ tính nước theo người, không theo đồng hồ.
-            </small>
+            }
         </div>
     </div>
 
@@ -142,7 +145,7 @@
             <i class="bi bi-check-circle"></i> Tạo hóa đơn
         </button>
 
-        <a asp-action="Details" asp-controller="Room" asp-route-id="@Model.ContractId" class="btn btn-secondary">
+        <a asp-action="Details" asp-controller="Room" asp-route-id="@Model.RoomId" class="btn btn-secondary">
             <i class="bi bi-x-circle"></i> Hủy
         </a>
     </div>

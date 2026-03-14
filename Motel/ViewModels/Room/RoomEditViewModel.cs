@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Motel.ViewModels.Property; // For PropertyFeeSettingItemViewModel
 
 namespace Motel.ViewModels.Room
 {
@@ -18,5 +19,14 @@ namespace Motel.ViewModels.Room
         [Range(1, 20, ErrorMessage = "Số người tối đa phải từ 1 đến 20")]
         [Display(Name = "Số người tối đa")]
         public int MaxOccupants { get; set; }
+
+        public int PropertyId { get; set; }
+        public string PropertyName { get; set; } = string.Empty;
+
+        // Settings applied at property level
+        public List<PropertyFeeSettingItemViewModel> PropertyLevelFeeSettings { get; set; } = new();
+
+        // Settings applied at room level (overrides property level)
+        public List<PropertyFeeSettingItemViewModel> RoomLevelFeeSettings { get; set; } = new();
     }
 }

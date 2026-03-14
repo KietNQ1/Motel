@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace Motel.Models;
@@ -9,7 +9,7 @@ public partial class InvoiceLine
 
     public int InvoiceId { get; set; }
 
-    public string ItemType { get; set; } = null!;
+    public int FeeTypeId { get; set; }
 
     public string? Description { get; set; }
 
@@ -20,4 +20,6 @@ public partial class InvoiceLine
     public decimal? LineTotal { get; set; }
 
     public virtual Invoice Invoice { get; set; } = null!;
+
+    public virtual FeeType FeeType { get; set; } = null!;
 }

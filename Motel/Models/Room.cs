@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace Motel.Models;
@@ -31,7 +31,7 @@ public partial class Room
 
     public virtual ICollection<RoomOccupancy> RoomOccupancies { get; set; } = new List<RoomOccupancy>();
 
-    public virtual ICollection<RoomUtilitySetting> RoomUtilitySettings { get; set; } = new List<RoomUtilitySetting>();
+    public virtual ICollection<FeeSetting> FeeSettings { get; set; } = new List<FeeSetting>();
 
     public virtual ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
 

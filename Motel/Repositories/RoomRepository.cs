@@ -27,7 +27,6 @@ namespace Motel.Repositories
                 // lấy danh sách người đang ở
                 .Include(r => r.RoomOccupancies.Where(ro => ro.Status == "active"))
                     .ThenInclude(ro => ro.Tenant)
-                .Include(r => r.RoomUtilitySettings)
                 .Include(r => r.MeterReadings.OrderByDescending(m => m.PeriodMonth).Take(2))
                 .FirstOrDefaultAsync(r => r.RoomId == roomId && !r.IsDeleted, ct);
 
@@ -64,18 +63,23 @@ namespace Motel.Repositories
             };
 
             var today = DateOnly.FromDateTime(DateTime.Today);
-            var currentSetting = room.RoomUtilitySettings
-                .Where(s => s.EffectiveFrom <= today && (s.EffectiveTo == null || s.EffectiveTo >= today))
-                .OrderByDescending(s => s.EffectiveFrom)
-                .FirstOrDefault();
+            var applicableSettings = await _db.FeeSettings
+                .Include(s => s.FeeType)
+                .AsNoTracking()
+                .Where(s => (s.RoomId == roomId) || (s.PropertyId == room.Property.PropertyId && s.RoomId == null))
+                .Where(s => s.EffectiveFrom <= today)
+                .Where(s => s.EffectiveTo == null || s.EffectiveTo >= today)
+                .ToListAsync(ct);
 
-            if (currentSetting != null)
-            {
-                viewModel.ElectricUnitPrice = currentSetting.ElectricUnitPrice;
-                viewModel.WaterUnitPrice = currentSetting.WaterUnitPrice;
-                viewModel.InternetFee = currentSetting.InternetFee;
-                viewModel.TrashFee = currentSetting.TrashFee;
-            }
+            var effectiveSettings = applicableSettings
+                .GroupBy(s => s.FeeTypeId)
+                .Select(g => g.OrderByDescending(s => s.RoomId.HasValue).ThenByDescending(s => s.EffectiveFrom).First())
+                .ToList();
+
+            viewModel.ElectricUnitPrice = effectiveSettings.FirstOrDefault(s => s.FeeType?.Name == "Electricity")?.UnitPrice ?? 0;
+            viewModel.WaterUnitPrice = effectiveSettings.FirstOrDefault(s => s.FeeType?.Name == "Water")?.UnitPrice ?? 0;
+            viewModel.InternetFee = effectiveSettings.FirstOrDefault(s => s.FeeType?.Name == "Internet")?.BaseAmount ?? 0;
+            viewModel.TrashFee = effectiveSettings.FirstOrDefault(s => s.FeeType?.Name == "Trash")?.BaseAmount ?? 0;
 
             var readings = room.MeterReadings.OrderByDescending(m => m.PeriodMonth).Take(2).ToList();
 
@@ -214,6 +218,8 @@ namespace Motel.Repositories
                             Phone = o.Phone,
                             Email = o.Email,
                             IdentityNo = o.IdentityNo,
+                            DateOfBirth = o.DateOfBirth,
+                            PermanentAddress = o.PermanentAddress,
                             IsDeleted = false,
                             CreatedAt = DateTime.Now
                         };
@@ -224,6 +230,8 @@ namespace Motel.Repositories
                         t.FullName = o.FullName.Trim();
                         t.Phone = o.Phone;
                         t.Email = o.Email;
+                        t.DateOfBirth = o.DateOfBirth;
+                        t.PermanentAddress = o.PermanentAddress;
                     }
                     tenantEntities.Add(t);
                 }
