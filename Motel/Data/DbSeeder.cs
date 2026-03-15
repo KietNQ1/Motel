@@ -280,6 +280,33 @@ namespace Motel.Data
                 context.TaxRules.Add(taxRule);
                 await context.SaveChangesAsync();
             }
+
+            if (!context.FurnitureCatalogs.Any())
+            {
+                context.FurnitureCatalogs.AddRange(
+                    new FurnitureCatalog { Name = "Giường" },
+                    new FurnitureCatalog { Name = "Tủ quần áo" },
+                    new FurnitureCatalog { Name = "Bàn" },
+                    new FurnitureCatalog { Name = "Ghế" },
+                    new FurnitureCatalog { Name = "Điều hòa" },
+                    new FurnitureCatalog { Name = "Máy giặt" },
+                    new FurnitureCatalog { Name = "Tủ lạnh" },
+                    new FurnitureCatalog { Name = "Quạt" }
+                );
+
+                await context.SaveChangesAsync();
+            }
+
+            if (!context.FurnitureStatuses.Any())
+            {
+                context.FurnitureStatuses.AddRange(
+                    new FurnitureStatus { Name = "Tốt" },
+                    new FurnitureStatus { Name = "Hỏng" },
+                    new FurnitureStatus { Name = "Bảo trì" }
+                );
+
+                await context.SaveChangesAsync();
+            }
         }
     }
 }

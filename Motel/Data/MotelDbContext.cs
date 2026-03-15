@@ -55,6 +55,8 @@ public partial class MotelDbContext : IdentityDbContext<ApplicationUser, Identit
     public virtual DbSet<Tenant> Tenants { get; set; }
 
     public virtual DbSet<Transaction> Transactions { get; set; }
+    public virtual DbSet<FurnitureCatalog> FurnitureCatalogs { get; set; }
+    public DbSet<FurnitureStatus> FurnitureStatuses { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -486,9 +488,9 @@ public partial class MotelDbContext : IdentityDbContext<ApplicationUser, Identit
         {
             entity.HasKey(e => e.FurnitureId);
 
-            entity.Property(e => e.Name)
-                .IsRequired()
-                .HasMaxLength(100);
+            entity.HasOne(e => e.FurnitureStatus)
+              .WithMany()
+              .HasForeignKey(e => e.FurnitureStatusId);
 
             entity.Property(e => e.Description)
                 .HasMaxLength(500);
@@ -502,8 +504,12 @@ public partial class MotelDbContext : IdentityDbContext<ApplicationUser, Identit
             entity.HasOne(e => e.Room)
                 .WithMany(r => r.RoomFurnitures)
                 .HasForeignKey(e => e.RoomId)
-                .OnDelete(DeleteBehavior.Cascade)
-                .HasConstraintName("FK_RoomFurnitures_Rooms");
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.FurnitureCatalog)
+                .WithMany(c => c.RoomFurnitures)
+                .HasForeignKey(e => e.FurnitureCatalogId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         OnModelCreatingPartial(modelBuilder);

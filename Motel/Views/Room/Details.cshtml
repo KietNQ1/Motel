@@ -306,10 +306,14 @@
 </div>
 <div class="row mt-4">
     <div class="col-md-12">
+
         <div class="card shadow-sm">
+
             <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">
-                    <i class="bi bi-house-gear"></i> Cơ sở vật chất trong phòng
+                    <a href="@Url.Action("DetailFurniture", "Room", new { id = Model.RoomId })" class="text-white text-decoration-none">
+                        <i class="bi bi-house-gear"></i> Cơ sở vật chất trong phòng
+                    </a>
                 </h5>
 
                 <a asp-action="AddFurniture"
@@ -320,58 +324,94 @@
             </div>
 
             <div class="card-body">
-
-                @if (Model.Furnitures != null && Model.Furnitures.Any())
-                {
-                    <div class="row">
-                        @foreach (var f in Model.Furnitures)
-                        {
-                            <div class="col-md-4 mb-4">
-                                <div class="card h-100 border">
-
-                                    <div class="card-body">
-                                        <h5 class="card-title">
-                                            <i class="bi bi-box"></i> @f.Name
-                                        </h5>
-
-                                        <p class="mb-1">
-                                            <strong>Số lượng:</strong> @f.Quantity
-                                        </p>
-
-                                        @if (!string.IsNullOrEmpty(f.Description))
-                                        {
-                                            <p class="text-muted">@f.Description</p>
-                                        }
-
-                                        @if (f.ImageUrls != null && f.ImageUrls.Any())
-                                        {
-                                            <div class="mt-2">
-                                                @foreach (var img in f.ImageUrls)
-                                                {
-                                                    <img src="@img"
-                                                         class="img-thumbnail me-2 mb-2"
-                                                         style="width:80px;height:80px;object-fit:cover;" />
-                                                }
-                                            </div>
-                                        }
-                                    </div>
-
-                                </div>
-                            </div>
-                        }
-                    </div>
-                }
-                else
-                {
-                    <div class="alert alert-light">
-                        Chưa có nội thất nào trong phòng.
-                    </div>
-                }
-
+                <div class="text-center py-4">
+                    <p class="mb-2">
+                        Để xem chi tiết từng nội thất (số lượng, trạng thái, ảnh), vui lòng nhấn nút bên dưới.
+                    </p>
+                    <a asp-action="DetailFurniture" asp-route-id="@Model.RoomId" class="btn btn-primary">
+                        <i class="bi bi-info-circle"></i> Xem chi tiết nội thất
+                    </a>
+                </div>
             </div>
+
         </div>
+
     </div>
 </div>
+<div class="modal fade" id="imageGalleryModal">
+
+<div class="modal-dialog modal-lg modal-dialog-centered">
+
+<div class="modal-content">
+
+<div class="modal-body text-center">
+
+<img id="galleryImage"
+     class="img-fluid rounded shadow" />
+
+</div>
+
+<div class="modal-footer justify-content-between">
+
+<button class="btn btn-secondary" id="prevImage">
+<i class="bi bi-arrow-left"></i>
+</button>
+
+<button class="btn btn-secondary" id="nextImage">
+<i class="bi bi-arrow-right"></i>
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+@section Scripts {
+
+<script>
+
+let images = [];
+let currentIndex = 0;
+
+document.querySelectorAll(".furniture-preview").forEach(img => {
+
+    img.addEventListener("click", function () {
+
+        images = JSON.parse(this.dataset.images);
+
+        currentIndex = 0;
+
+        document.getElementById("galleryImage").src = images[currentIndex];
+
+        new bootstrap.Modal(document.getElementById("imageGalleryModal")).show();
+
+    });
+
+});
+
+document.getElementById("nextImage").onclick = function () {
+
+    if (currentIndex < images.length - 1)
+        currentIndex++;
+
+    document.getElementById("galleryImage").src = images[currentIndex];
+
+};
+
+document.getElementById("prevImage").onclick = function () {
+
+    if (currentIndex > 0)
+        currentIndex--;
+
+    document.getElementById("galleryImage").src = images[currentIndex];
+
+};
+
+</script>
+
+}
 @section Styles {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 }
