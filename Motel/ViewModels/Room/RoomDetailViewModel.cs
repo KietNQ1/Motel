@@ -60,5 +60,6 @@ namespace Motel.ViewModels.Room
         public string? Phone { get; set; }
         public string? Email { get; set; }
         public bool IsPrimary { get; set; }
+        public int? ContractId { get; set; }  // contract for this specific tenant
     }
 }
