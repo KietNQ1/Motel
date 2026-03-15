@@ -21,6 +21,7 @@ namespace Motel.ViewModels.Property
         public int MaxOccupants { get; set; }
 
         public bool HasTenant { get; set; }
+        public bool IsDeleted { get; set; }
 
         // NEW
         public int? ActiveContractId { get; set; }

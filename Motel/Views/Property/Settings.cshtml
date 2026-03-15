@@ -1,6 +1,6 @@
-@model Motel.ViewModels.Room.RoomEditViewModel
+@model Motel.ViewModels.Property.PropertySettingsViewModel
 @{
-    ViewData["Title"] = "Chỉnh sửa phòng - " + Model.RoomName;
+    ViewData["Title"] = "Cài đặt - " + Model.Name;
     var feeTypes = ViewBag.FeeTypes as List<Motel.Models.FeeType> ?? new List<Motel.Models.FeeType>();
 }
 
@@ -9,22 +9,20 @@
     <!-- Breadcrumb -->
     <nav class="settings-breadcrumb" aria-label="breadcrumb">
         <ol>
-            <li><a asp-action="Index" asp-controller="Property">Nhà trọ của tôi</a></li>
+            <li><a asp-action="Index">Nhà trọ của tôi</a></li>
             <li><span>›</span></li>
-            <li><a asp-action="Details" asp-controller="Property" asp-route-id="@Model.PropertyId">@Model.PropertyName</a></li>
+            <li><a asp-action="Details" asp-route-id="@Model.PropertyId">@Model.Name</a></li>
             <li><span>›</span></li>
-            <li><a asp-action="Details" asp-route-id="@Model.RoomId">Phòng @Model.RoomName</a></li>
-            <li><span>›</span></li>
-            <li class="active">Chỉnh sửa</li>
+            <li class="active">Cài đặt</li>
         </ol>
     </nav>
 
     <!-- Back link -->
-    <a asp-action="Details" asp-route-id="@Model.RoomId" class="back-link">
+    <a asp-action="Details" asp-route-id="@Model.PropertyId" class="back-link">
         <i class="bi bi-arrow-left"></i> Quay lại
     </a>
 
-    <h1 class="settings-title">Chỉnh sửa phòng @Model.RoomName</h1>
+    <h1 class="settings-title">Cài đặt nhà trọ</h1>
 
     @if (TempData["Success"] != null)
     {
@@ -42,31 +40,28 @@
     <!-- Card: Thông tin cơ bản -->
     <div class="settings-card">
         <div class="settings-section-title">
-            <i class="bi bi-info-circle-fill text-primary"></i> Thông tin cơ bản
+            <i class="bi bi-info-circle-fill text-warning"></i> Thông tin cơ bản
         </div>
 
-        <form asp-action="Edit" method="post" class="basic-info-form">
-            <input type="hidden" asp-for="RoomId" />
+        <form asp-action="UpdateSettings" method="post" class="basic-info-form">
             <input type="hidden" asp-for="PropertyId" />
-            <input type="hidden" asp-for="PropertyName" />
 
             <div class="row-fields">
                 <div class="field-group">
-                    <label>Tên phòng <span class="required">*</span></label>
-                    <input asp-for="RoomName" type="text" placeholder="101" />
-                    <span asp-validation-for="RoomName" class="field-error"></span>
+                    <label>Tên nhà trọ <span class="required">*</span></label>
+                    <input asp-for="Name" type="text" placeholder="Nhà trọ Bình Minh" />
+                    <span asp-validation-for="Name" class="field-error"></span>
                 </div>
                 <div class="field-group">
-                    <label>Giá thuê (VNĐ/tháng) <span class="required">*</span></label>
-                    <input asp-for="RentPrice" type="number" step="100000" />
-                    <span asp-validation-for="RentPrice" class="field-error"></span>
+                    <label>Địa chỉ <span class="required">*</span></label>
+                    <input asp-for="Address" type="text" placeholder="123 Đường ABC, Phường 4, Quận 5, TP.HCM" />
+                    <span asp-validation-for="Address" class="field-error"></span>
                 </div>
             </div>
 
             <div class="field-group mt-3">
-                <label>Số người tối đa <span class="required">*</span></label>
-                <input asp-for="MaxOccupants" type="number" min="1" max="20" />
-                <span asp-validation-for="MaxOccupants" class="field-error"></span>
+                <label>Mô tả thêm</label>
+                <textarea asp-for="Description" rows="4" placeholder="Thông tin giới thiệu về nhà trọ..."></textarea>
             </div>
 
             <div class="form-action-right">
@@ -77,25 +72,25 @@
         </form>
     </div>
 
-    <!-- Card: Phụ phí riêng rẽ cho phòng -->
+    <!-- Card: Phụ phí mặc định -->
     <div class="settings-card mt-4">
         <div class="fee-card-header">
             <div>
                 <div class="settings-section-title">
-                    <i class="bi bi-cash-coin text-warning"></i> Phụ phí phòng (Ghi đè)
+                    <i class="bi bi-cash-coin text-warning"></i> Phụ phí mặc định
                 </div>
-                <p class="fee-subtitle">Cấu hình các loại phí áp dụng riêng cho phòng này. Sẽ ghi đè phụ phí mặc định của nhà trọ.</p>
+                <p class="fee-subtitle">Các phụ phí này sẽ được tự động áp dụng khi tạo phòng mới trong nhà trọ này.</p>
             </div>
             <button type="button" class="btn-orange-outline" data-bs-toggle="modal" data-bs-target="#addFeeModal">
-                <i class="bi bi-plus-circle"></i> Thêm phụ phí phòng
+                <i class="bi bi-plus-circle"></i> Thêm phụ phí
             </button>
         </div>
 
-        @if (Model.RoomLevelFeeSettings == null || !Model.RoomLevelFeeSettings.Any())
+        @if (Model.FeeSettings == null || !Model.FeeSettings.Any())
         {
             <div class="empty-state">
                 <i class="bi bi-inbox"></i>
-                <p>Chưa có phụ phí riêng nào. Phòng đang lấy cấu hình tự động từ nhà trọ.</p>
+                <p>Chưa có phụ phí nào được thiết lập.</p>
             </div>
         }
         else
@@ -110,7 +105,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var fee in Model.RoomLevelFeeSettings)
+                    @foreach (var fee in Model.FeeSettings)
                     {
                         string methodLabel = fee.CalculationMethod switch
                         {
@@ -140,67 +135,13 @@
                                     <i class="bi bi-pencil"></i>
                                 </button>
                                 <form asp-action="DeleteFeeSetting" method="post" class="d-inline"
-                                      onsubmit="return confirm('Xóa phụ phí này khỏi phòng?');">
+                                      onsubmit="return confirm('Ngưng áp dụng phụ phí này?');">
                                     <input type="hidden" name="feeSettingId" value="@fee.FeeSettingId" />
-                                    <input type="hidden" name="roomId" value="@Model.RoomId" />
+                                    <input type="hidden" name="propertyId" value="@Model.PropertyId" />
                                     <button type="submit" class="icon-btn delete" title="Xóa">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        }
-
-        <!-- Phụ phí mặc định của Property (đang kế thừa, có thể ghi đè) -->
-        @if (Model.PropertyLevelFeeSettings.Any())
-        {
-            <h5 class="mt-5 mb-3" style="font-size: 0.95rem; font-weight: 600; color: #555;">Các loại phí đang kế thừa từ nhà trọ (có thể ghi đè):</h5>
-            <table class="fee-table" style="opacity: 0.85;">
-                <thead>
-                    <tr>
-                        <th>Loại phí</th>
-                        <th>Cách tính</th>
-                        <th>Mức giá (Nhà trọ)</th>
-                        <th>Thao tác</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var fee in Model.PropertyLevelFeeSettings)
-                    {
-                        // Skip if already overridden at room level
-                        if (Model.RoomLevelFeeSettings.Any(r => r.FeeTypeId == fee.FeeTypeId)) continue;
-
-                        string methodLabel = fee.CalculationMethod switch
-                        {
-                            "meter" => "Theo số",
-                            "per_person" => "Theo người",
-                            "per_room" => "Theo phòng",
-                            _ => "Cố định"
-                        };
-                        string priceDisplay = fee.CalculationMethod == "meter"
-                            ? fee.UnitPrice.ToString("N0") + " VNĐ"
-                            : fee.BaseAmount.ToString("N0") + " VNĐ";
-
-                        <tr>
-                            <td class="fee-name">@fee.FeeTypeName</td>
-                            <td class="fee-method">@methodLabel</td>
-                            <td class="fee-price">@priceDisplay</td>
-                            <td class="fee-actions">
-                                <!-- Case 1: no room override yet, settingId=0 creates new room-level fee -->
-                                <button class="icon-btn edit"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#editFeeModal"
-                                        data-setting-id="0"
-                                        data-type-id="@fee.FeeTypeId"
-                                        data-method="@fee.CalculationMethod"
-                                        data-unit-price="@fee.UnitPrice"
-                                        data-base-amount="@fee.BaseAmount"
-                                        title="Ghi đè giá cho phòng này">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
                             </td>
                         </tr>
                     }
@@ -215,15 +156,15 @@
 <div class="modal fade" id="addFeeModal" tabindex="-1">
     <div class="modal-dialog">
         <form asp-action="AddFeeSetting" method="post" class="modal-content settings-modal">
-            <input type="hidden" name="roomId" value="@Model.RoomId" />
             <input type="hidden" name="propertyId" value="@Model.PropertyId" />
-            <input type="hidden" name="feeTypeId" id="addFeeTypeId" value="0" />
 
             <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-plus-circle text-warning"></i> Thêm phụ phí phòng</h5>
+                <h5 class="modal-title"><i class="bi bi-plus-circle text-warning"></i> Thêm phụ phí mới</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i></button>
             </div>
             <div class="modal-body">
+                <input type="hidden" name="feeTypeId" value="0" />
+
                 <div class="field-group mb-3" id="addCustomFeeNameDiv">
                     <label>Tên phí mới <span class="required">*</span></label>
                     <input type="text" name="newFeeTypeName" id="addCustomFeeInput" class="form-control" placeholder="VD: Phí gửi xe, Phí vệ sinh..." required />
@@ -260,7 +201,6 @@
 <div class="modal fade" id="editFeeModal" tabindex="-1">
     <div class="modal-dialog">
         <form asp-action="EditFeeSetting" method="post" class="modal-content settings-modal">
-            <input type="hidden" name="roomId" value="@Model.RoomId" />
             <input type="hidden" name="propertyId" value="@Model.PropertyId" />
             <input type="hidden" name="feeSettingId" id="editFeeSettingId" />
             <input type="hidden" name="feeTypeId" id="editFeeTypeId" />
@@ -272,7 +212,7 @@
             <div class="modal-body">
                 <div class="alert alert-light border small py-2 mb-3">
                     <i class="bi bi-clock-history text-muted"></i>
-                    Mức giá mới sẽ áp dụng cho phòng này từ hôm nay.
+                    Mức giá mới sẽ áp dụng từ hôm nay. Hoá đơn tháng trước <strong>không bị ảnh hưởng</strong>.
                 </div>
 
                 <div class="field-group mb-3">

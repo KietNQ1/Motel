@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Motel.Repositories.Interface;
 using Motel.Services;
@@ -165,8 +165,8 @@ public class PaymentController : Controller
             // ✅ thêm lines (điện/nước/internet/rác/phát sinh…)
             Lines = invoice.InvoiceLines.Select(l => new ReceiptLineVm
             {
-                ItemType = l.ItemType,
-                Description = l.Description ?? l.ItemType,
+                ItemType = l.FeeType?.Name ?? "",
+                Description = string.IsNullOrEmpty(l.Description) ? (l.FeeType?.Name ?? "") : l.Description,
                 Quantity = l.Quantity,
                 UnitPrice = l.UnitPrice,
                 LineTotal = l.LineTotal ?? (l.Quantity * l.UnitPrice)

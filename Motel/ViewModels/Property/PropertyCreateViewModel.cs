@@ -17,35 +17,29 @@ namespace Motel.ViewModels.Property
         [Display(Name = "Mô tả")]
         public string? Description { get; set; }
 
-        // Utility Settings - Default values for all rooms
-        [Required(ErrorMessage = "Giá điện là bắt buộc")]
-        [Range(0, 999999, ErrorMessage = "Giá điện phải từ 0 đến 999,999")]
-        [Display(Name = "Giá điện (VNĐ/số)")]
-        public decimal ElectricUnitPrice { get; set; } = 3500;
-
-        [Required(ErrorMessage = "Giá nước là bắt buộc")]
-        [Range(0, 999999, ErrorMessage = "Giá nước phải từ 0 đến 999,999")]
-        [Display(Name = "Giá nước (VNĐ/số hoặc VNĐ/người)")]
-        public decimal WaterUnitPrice { get; set; } = 15000;
-
-        [Display(Name = "Cách tính tiền nước")]
-        public WaterChargeType WaterChargeType { get; set; } = WaterChargeType.PerUnit;
-
-        [Range(0, 999999, ErrorMessage = "Phí Internet phải từ 0 đến 999,999")]
-        [Display(Name = "Phí Internet (VNĐ/tháng)")]
-        public decimal InternetFee { get; set; } = 100000;
-
-        [Range(0, 999999, ErrorMessage = "Phí rác phải từ 0 đến 999,999")]
-        [Display(Name = "Phí rác (VNĐ/tháng)")]
-        public decimal TrashFee { get; set; } = 30000;
+        public List<PropertyFeeSettingViewModel> FeeSettings { get; set; } = new List<PropertyFeeSettingViewModel>();
     }
 
-    public enum WaterChargeType
+    public class PropertyFeeSettingViewModel
     {
-        [Display(Name = "Theo số nước (đồng hồ)")]
-        PerUnit = 0,
+        public int FeeTypeId { get; set; }
         
-        [Display(Name = "Theo đầu người")]
-        PerPerson = 1
+        [Display(Name = "Tên phí")]
+        [Required(ErrorMessage = "Tên phí là bắt buộc")]
+        public string FeeTypeName { get; set; } = string.Empty;
+        
+        [Display(Name = "Cách tính")]
+        public string CalculationMethod { get; set; } = "fixed";
+        
+        [Display(Name = "Đơn giá")]
+        public decimal UnitPrice { get; set; }
+        
+        [Display(Name = "Khối lượng/Mức phí cơ bản")]
+        public decimal BaseAmount { get; set; } = 1;
+        
+        public bool IsSelected { get; set; }
+
+        [Display(Name = "Đơn vị tính")]
+        public string Unit { get; set; } = "tháng";
     }
 }

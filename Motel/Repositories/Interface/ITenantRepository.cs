@@ -1,4 +1,4 @@
-﻿using Motel.Models;
+using Motel.Models;
 using Motel.ViewModels.Tenant;
 
 namespace Motel.Repositories.Interface
@@ -8,6 +8,7 @@ namespace Motel.Repositories.Interface
         Task<List<Tenant>> GetTenantsByLandlordAsync(int landlordId);
         Task<Tenant?> GetTenantByIdAsync(int tenantId, int landlordId);
         Task<int> CreateTenantAsync(Tenant tenant);
+        Task UpdateTenantAsync(Tenant tenant);
         Task<List<TenantListItemViewModel>> GetTenantsByPropertyIdAsync(int landlordId, int propertyId);
     }
 }

@@ -11,7 +11,8 @@ public sealed class InvoiceService : IInvoiceService
 {
     private readonly IContractRepository _contractRepo;
     private readonly IRoomRepository _roomRepo;
-    private readonly IRoomUtilitySettingRepository _settingRepo;
+    private readonly IFeeTypeRepository _feeTypeRepo;
+    private readonly IFeeSettingRepository _feeSettingRepo;
     private readonly IMeterReadingRepository _meterRepo;
     private readonly IInvoiceRepository _invoiceRepo;
     private readonly IInvoiceLineRepository _lineRepo;
@@ -21,7 +22,8 @@ public sealed class InvoiceService : IInvoiceService
     public InvoiceService(
         IContractRepository contractRepo,
         IRoomRepository roomRepo,
-        IRoomUtilitySettingRepository settingRepo,
+        IFeeTypeRepository feeTypeRepo,
+        IFeeSettingRepository feeSettingRepo,
         IMeterReadingRepository meterRepo,
         IInvoiceRepository invoiceRepo,
         IInvoiceLineRepository lineRepo,
@@ -30,7 +32,8 @@ public sealed class InvoiceService : IInvoiceService
     {
         _contractRepo = contractRepo;
         _roomRepo = roomRepo;
-        _settingRepo = settingRepo;
+        _feeTypeRepo = feeTypeRepo;
+        _feeSettingRepo = feeSettingRepo;
         _meterRepo = meterRepo;
         _invoiceRepo = invoiceRepo;
         _lineRepo = lineRepo;
@@ -43,87 +46,64 @@ public sealed class InvoiceService : IInvoiceService
         ValidatePeriodMonth(vm.PeriodMonth);
 
         // 1) Contract active?
-        var contract = await _contractRepo.GetActiveByIdAsync(vm.ContractId, ct)
-                      ?? throw new InvalidOperationException("Contract không tồn tại hoặc không còn active.");
+        var contract = await _contractRepo.GetActiveContractByRoomIdAsync(vm.RoomId, ct)
+                      ?? throw new InvalidOperationException("Phòng này không có hợp đồng đang hoạt động.");
 
         // 2) Room tồn tại?
-        var room = await _roomRepo.GetRoomByIdAsync(contract.RoomId, ct)
+        var room = await _roomRepo.GetRoomByIdAsync(vm.RoomId, ct)
                    ?? throw new InvalidOperationException("Room không tồn tại.");
 
-        // 3) Chặn tạo trùng (ContractId + PeriodMonth)
-        if (await _invoiceRepo.ExistsAsync(vm.ContractId, vm.PeriodMonth, ct))
+        if (await _invoiceRepo.ExistsAsync(contract.ContractId, vm.PeriodMonth, ct))
             throw new InvalidOperationException("Hoá đơn kỳ này đã tồn tại cho hợp đồng này.");
 
-        // 4) Load utility settings theo kỳ; nếu chưa có thì dùng mặc định (0) để vẫn tạo được hóa đơn
-        var setting = await _settingRepo.GetEffectiveAsync(room.RoomId, vm.PeriodMonth, ct)
-                      ?? new RoomUtilitySetting
-                      {
-                          ElectricUnitPrice = 0,
-                          WaterUnitPrice = 0,
-                          InternetFee = 0,
-                          TrashFee = 0
-                      };
+        var feeTypes = await _feeTypeRepo.GetAllAsync(ct);
+        var rentFeeType = feeTypes.FirstOrDefault(f => f.Name == "Rent") ?? throw new InvalidOperationException("System missing Rent FeeType.");
+        var otherFeeType = feeTypes.FirstOrDefault(f => f.Name == "Other");
 
-        // 5) Meter readings: ưu tiên vm, không có thì lấy DB
-        var (eOld, eNew, wOld, wNew) = await ResolveMeterAsync(vm, room.RoomId, ct);
+        if (otherFeeType == null) {
+            // Fallback just in case
+            otherFeeType = rentFeeType;
+        }
 
-        var electricUsed = Math.Max(0, eNew - eOld);
-        var waterUsed = Math.Max(0, wNew - wOld);
-
-        // 6) Build lines
         var lines = new List<InvoiceLine>();
 
         // rent
-        lines.Add(NewLine("rent", "Tiền phòng", 1m, room.RentPrice));
+        lines.Add(NewLine(rentFeeType.FeeTypeId, "Tiền phòng", 1m, room.RentPrice));
 
-        // electric
-        if (electricUsed > 0)
+        foreach (var item in vm.FeeItems)
         {
-            lines.Add(NewLine(
-                "electric",
-                $"Tiền điện ({eOld} → {eNew})",
-                electricUsed,
-                vm.ElectricUnitPrice ?? setting.ElectricUnitPrice
-            ));
-        }
-
-        // water: theo người nếu có, không thì theo đồng hồ
-        if (vm.WaterPeopleCount.HasValue && vm.WaterPricePerPerson.HasValue
-            && vm.WaterPeopleCount.Value > 0 && vm.WaterPricePerPerson.Value > 0)
-        {
-            lines.Add(NewLine(
-                "water",
-                $"Tiền nước theo người (x{vm.WaterPeopleCount.Value})",
-                vm.WaterPeopleCount.Value,
-                vm.WaterPricePerPerson.Value
-            ));
-        }
-        else
-        {
-            if (waterUsed > 0)
+            decimal qty = 1;
+            decimal price = item.BaseAmount;
+            
+            if (item.CalculationMethod == "meter")
             {
-                lines.Add(NewLine(
-                    "water",
-                    $"Tiền nước ({wOld} → {wNew})",
-                    waterUsed,
-                    vm.WaterUnitPrice ?? setting.WaterUnitPrice
-                ));
+                var oldR = item.PreviousReading ?? 0;
+                var newR = item.CurrentReading ?? 0;
+                qty = Math.Max(0, newR - oldR);
+                price = item.UnitPrice;
+            }
+            else if (item.CalculationMethod == "per_person")
+            {
+                qty = item.Quantity ?? 1;
+                price = item.BaseAmount;
+            }
+            else if (item.CalculationMethod == "per_room" || item.CalculationMethod == "fixed")
+            {
+                qty = 1;
+                price = item.BaseAmount;
+            }
+
+            if (qty > 0 || price > 0)
+            {
+                lines.Add(NewLine(item.FeeTypeId, $"{item.FeeTypeName}", qty, price));
             }
         }
-
-        // internet / trash (đúng schema sample của bạn)
-        if (setting.InternetFee > 0)
-            lines.Add(NewLine("internet", "Internet", 1m, setting.InternetFee));
-
-        if (setting.TrashFee > 0)
-            lines.Add(NewLine("trash", "Rác", 1m, setting.TrashFee));
 
         // extra
         foreach (var x in vm.ExtraCharges.Where(x => x.Amount != 0))
         {
-            var type = string.IsNullOrWhiteSpace(x.ItemType) ? "other" : x.ItemType.Trim();
             var desc = string.IsNullOrWhiteSpace(x.Description) ? "Phát sinh" : x.Description.Trim();
-            lines.Add(NewLine(type, desc, 1m, x.Amount));
+            lines.Add(NewLine(otherFeeType.FeeTypeId, desc, 1m, x.Amount));
         }
 
         var total = lines.Sum(x => x.LineTotal ?? 0m);
@@ -135,7 +115,7 @@ public sealed class InvoiceService : IInvoiceService
         {
             var invoice = new Invoice
             {
-                ContractId = vm.ContractId,
+                ContractId = contract.ContractId,
                 RoomId = room.RoomId,
                 PeriodMonth = vm.PeriodMonth,
                 TotalAmount = total,
@@ -157,20 +137,23 @@ public sealed class InvoiceService : IInvoiceService
         }, ct);
 
         // 8) Lưu chỉ số điện/nước vào MeterReadings (UPSERT qua stored procedure)
-        //    Chỉ lưu khi user nhập đủ 4 giá trị chỉ số
-        if (vm.ElectricOld.HasValue && vm.ElectricNew.HasValue
-            && vm.WaterOld.HasValue && vm.WaterNew.HasValue)
+        var elecItem = vm.FeeItems.FirstOrDefault(f => f.FeeTypeName == "Electricity");
+        var waterItem = vm.FeeItems.FirstOrDefault(f => f.FeeTypeName == "Water");
+
+        if (elecItem != null && waterItem != null &&
+            elecItem.PreviousReading.HasValue && elecItem.CurrentReading.HasValue &&
+            waterItem.PreviousReading.HasValue && waterItem.CurrentReading.HasValue)
         {
-            var contract2 = await _contractRepo.GetActiveByIdAsync(vm.ContractId, ct);
+            var contract2 = await _contractRepo.GetActiveContractByRoomIdAsync(vm.RoomId, ct);
             if (contract2 != null)
             {
                 await _meterRepo.SaveMeterReadingAsync(
                     roomId:           contract2.RoomId,
                     periodMonth:      vm.PeriodMonth,
-                    electricOld:      vm.ElectricOld.Value,
-                    electricNew:      vm.ElectricNew.Value,
-                    waterOld:         vm.WaterOld.Value,
-                    waterNew:         vm.WaterNew.Value,
+                    electricOld:      elecItem.PreviousReading.Value,
+                    electricNew:      elecItem.CurrentReading.Value,
+                    waterOld:         waterItem.PreviousReading.Value,
+                    waterNew:         waterItem.CurrentReading.Value,
                     recordedByUserId: 1,  // TODO: lấy từ claims sau khi có auth
                     ct:               ct
                 );
@@ -251,27 +234,17 @@ public sealed class InvoiceService : IInvoiceService
             throw new ArgumentException("PeriodMonth không hợp lệ (YYYYMM).");
     }
 
-    private async Task<(int eOld, int eNew, int wOld, int wNew)> ResolveMeterAsync(
-        CreateInvoiceViewModel vm, int roomId, CancellationToken ct)
-    {
-        if (vm.ElectricOld.HasValue && vm.ElectricNew.HasValue && vm.WaterOld.HasValue && vm.WaterNew.HasValue)
-            return (vm.ElectricOld.Value, vm.ElectricNew.Value, vm.WaterOld.Value, vm.WaterNew.Value);
+    // private async Task<(int eOld, int eNew, int wOld, int wNew)> ResolveMeterAsync ...
+    // Removed because UI dynamically builds MeterReadings
 
-        var mr = await _meterRepo.GetByRoomAndPeriodAsync(roomId, vm.PeriodMonth, ct);
-        if (mr is null)
-            throw new InvalidOperationException("Chưa có MeterReadings cho phòng/kỳ này (hoặc bạn chưa nhập chỉ số).");
-
-        return (mr.ElectricOld, mr.ElectricNew, mr.WaterOld, mr.WaterNew);
-    }
-
-    private static InvoiceLine NewLine(string itemType, string desc, decimal qty, decimal unitPrice)
+    private static InvoiceLine NewLine(int feeTypeId, string desc, decimal qty, decimal unitPrice)
     {
         if (qty < 0) qty = 0;
         if (unitPrice < 0) unitPrice = 0;
 
         return new InvoiceLine
         {
-            ItemType = itemType,
+            FeeTypeId = feeTypeId,
             Description = desc,
             Quantity = qty,
             UnitPrice = unitPrice,
