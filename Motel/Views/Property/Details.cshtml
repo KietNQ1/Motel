@@ -1,192 +1,538 @@
 @model Motel.ViewModels.Property.PropertyDetailsViewModel
 
 @{
-    ViewData["Title"] = Model.Name;
+    ViewData["Title"] = "Chi tiết nhà trọ - " + Model.Name;
+
+    int totalRooms = Model.RoomsByFloor.Sum(f => f.Value.Count);
+    int rentedRooms = Model.RoomsByFloor.SelectMany(f => f.Value).Count(r => r.Status == "occupied");
+    int availableRooms = Model.RoomsByFloor.SelectMany(f => f.Value).Count(r => r.Status == "available");
+    int maintRooms = Model.RoomsByFloor.SelectMany(f => f.Value).Count(r => r.Status == "maintenance" || r.IsDeleted);
+    int totalFloors = Model.RoomsByFloor.Count;
 }
 
-<div class="container-fluid py-4">
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <h2 class="mb-0">
-                <i class="bi bi-building"></i> @Model.Name
-            </h2>
-            <p class="text-muted mb-0">
-                <i class="bi bi-geo-alt"></i> @Model.Address
-            </p>
-            @if (!string.IsNullOrEmpty(Model.Description))
-            {
-                <p class="mt-2">@Model.Description</p>
-            }
+<style>
+    /* Scope Reset */
+    .details-container * {
+        box-sizing: border-box;
+    }
+    .details-container {
+        font-family: inherit;
+        padding: 24px 0;
+        max-width: 1400px;
+        color: #334155;
+    }
+    
+    /* Top Header Row */
+    .top-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    .breadcrumb-nav {
+        font-size: 14px;
+        color: #64748b;
+    }
+    .breadcrumb-nav a {
+        color: #64748b;
+        text-decoration: none;
+    }
+    .breadcrumb-nav a:hover {
+        color: #3b82f6;
+    }
+    .breadcrumb-nav .separator {
+        margin: 0 8px;
+        color: #cbd5e1;
+    }
+    .breadcrumb-nav .active {
+        color: #0f172a;
+        font-weight: 600;
+    }
+    
+    .action-group {
+        display: flex;
+        gap: 12px;
+    }
+    .btn-custom {
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+        border: 1px solid transparent;
+        cursor: pointer;
+    }
+    .btn-back {
+        background: #ffffff;
+        color: #475569;
+        border-color: #e2e8f0;
+    }
+    .btn-back:hover {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+    }
+    .btn-settings {
+        background: #ea580c;
+        color: #ffffff;
+    }
+    .btn-settings:hover {
+        background: #c2410c;
+    }
+
+    /* Property Info Card */
+    .info-card {
+        background: #ffffff;
+        border: 1px solid #f1f5f9;
+        border-radius: 12px;
+        padding: 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 24px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        flex-wrap: wrap;
+        gap: 24px;
+    }
+    .info-left {
+        flex: 1;
+        min-width: 300px;
+    }
+    .property-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0 0 8px 0;
+    }
+    .property-address {
+        font-size: 14px;
+        color: #64748b;
+        margin: 0 0 16px 0;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .badges-row {
+        display: flex;
+        gap: 8px;
+    }
+    .badge-capsule {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 500;
+    }
+    .badge-active-bg { background: #dcfce7; color: #166534; }
+    .badge-floor-bg { background: #f1f5f9; color: #475569; }
+
+    /* Stats Grid */
+    .stats-container {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+    .stat-box {
+        border-radius: 8px;
+        padding: 12px 16px;
+        min-width: 110px;
+        border: 1px solid transparent;
+    }
+    .stat-total { background: #f8fafc; border-color: #e2e8f0; }
+    .stat-rented { background: #eff6ff; border-color: #bfdbfe; }
+    .stat-empty { background: #f0fdf4; border-color: #bbf7d0; }
+    .stat-maint { background: #fff7ed; border-color: #fed7aa; }
+
+    .stat-label {
+        font-size: 12px;
+        margin-bottom: 4px;
+        font-weight: 500;
+    }
+    .stat-total .stat-label { color: #64748b; }
+    .stat-rented .stat-label { color: #3b82f6; }
+    .stat-empty .stat-label { color: #10b981; }
+    .stat-maint .stat-label { color: #f59e0b; }
+
+    .stat-val {
+        font-size: 20px;
+        font-weight: 700;
+        margin: 0;
+    }
+    .stat-total .stat-val { color: #0f172a; }
+    .stat-rented .stat-val { color: #1d4ed8; }
+    .stat-empty .stat-val { color: #047857; }
+    .stat-maint .stat-val { color: #b45309; }
+
+    /* Tabs & Legend */
+    .tab-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    .nav-pills-custom {
+        display: flex;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 4px;
+        overflow: hidden;
+    }
+    .nav-tab-custom {
+        padding: 6px 16px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        border-radius: 6px;
+        color: #64748b;
+    }
+    .nav-tab-custom.active {
+        background: #f1f5f9;
+        color: #0f172a;
+    }
+    
+    .legend-list {
+        display: flex;
+        gap: 16px;
+        font-size: 13px;
+        color: #475569;
+    }
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+    .dot-empty { background: #3b82f6; }
+    .dot-rented { background: #10b981; }
+    .dot-maint { background: #f59e0b; }
+    .dot-overdue { background: #ef4444; }
+
+    /* Floor Plan Layout */
+    .floor-block {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        margin-bottom: 16px;
+        display: flex;
+        overflow: hidden;
+    }
+    .floor-sidebar {
+        width: 60px;
+        background: #f8fafc;
+        border-right: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px 0;
+    }
+    .floor-title-vert {
+        transform: rotate(-90deg);
+        color: #94a3b8;
+        font-weight: 600;
+        font-size: 14px;
+        letter-spacing: 2px;
+        white-space: nowrap;
+    }
+    .floor-content {
+        flex: 1;
+        padding: 24px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 20px;
+    }
+
+    /* Room Cards */
+    .room-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 16px;
+        background: #ffffff;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.2s, box-shadow 0.2s;
+        text-decoration: none;
+        color: inherit;
+        position: relative;
+    }
+    .room-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    /* Room Card States */
+    .rc-rented { border-top: 3px solid #bfdbfe; }
+    .rc-empty { border-top: 3px solid #bbf7d0; border-style: dashed; border-width: 1px; border-top-width: 3px; border-top-style: solid; }
+    .rc-maint { border-top: 3px solid #fed7aa; }
+    .rc-deleted { opacity: 0.6; filter: grayscale(1); }
+
+    .rc-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 12px;
+    }
+    .room-number {
+        font-size: 18px;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0;
+    }
+    .rc-badge {
+        font-size: 10px;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 4px;
+        text-transform: uppercase;
+    }
+    .bb-rented { background: #eff6ff; color: #3b82f6; }
+    .bb-empty { background: #f0fdf4; color: #10b981; }
+    .bb-maint { background: #fff7ed; color: #f59e0b; }
+
+    .rc-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        min-height: 60px;
+    }
+    .tenant-name {
+        font-size: 14px;
+        color: #334155;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 4px;
+    }
+    .rc-meta {
+        font-size: 12px;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .rc-meta .success-text { color: #10b981; font-weight: 500; }
+    
+    .empty-message {
+        text-align: center;
+        color: #10b981;
+        font-size: 13px;
+        font-weight: 500;
+    }
+    .maint-message {
+        text-align: center;
+        color: #f59e0b;
+        font-size: 13px;
+        font-weight: 500;
+    }
+
+    .rc-footer {
+        margin-top: 16px;
+        padding-top: 12px;
+        border-top: 1px solid #f1f5f9;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 12px;
+    }
+    .room-type { color: #94a3b8; }
+    .room-price {
+        font-weight: 700;
+        color: #0f172a;
+    }
+    .room-price .unit {
+        font-weight: 400;
+        color: #64748b;
+    }
+    
+    @@media(max-width: 768px) {
+        .floor-block { flex-direction: column; }
+        .floor-sidebar { 
+            width: 100%; 
+            border-right: none; 
+            border-bottom: 1px solid #e2e8f0; 
+            padding: 12px;
+        }
+        .floor-title-vert { transform: none; }
+        .floor-content { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="details-container">
+    <!-- Breadcrumb & Top Actions -->
+    <div class="top-header">
+        <div class="breadcrumb-nav">
+            <a asp-action="Index">Danh sách nhà trọ</a>
+            <span class="separator"><i class="bi bi-chevron-right" style="font-size: 10px;"></i></span>
+            <span class="active">Chi tiết nhà trọ</span>
         </div>
-            <a asp-action="Settings" asp-route-id="@Model.PropertyId" class="btn btn-outline-success mb-2 mb-md-0 me-md-2">
-                <i class="bi bi-gear"></i> Cấu hình
-            </a>
-            <a asp-controller="Tenant" asp-action="Index" asp-route-propertyId="@Model.PropertyId" class="btn btn-outline-primary mb-2 mb-md-0 me-md-2">
-                <i class="bi bi-people"></i> Người thuê
-            </a>
-            <a asp-action="Index" class="btn btn-outline-secondary">
+        <div class="action-group">
+            <a asp-action="Index" class="btn-custom btn-back">
                 <i class="bi bi-arrow-left"></i> Quay lại
             </a>
+            <a asp-action="Settings" asp-route-id="@Model.PropertyId" class="btn-custom btn-settings">
+                <i class="bi bi-gear"></i> Cài đặt nhà trọ
+            </a>
+            <a asp-controller="Tenant" asp-action="Index" asp-route-propertyId="@Model.PropertyId" class="btn-custom btn-back">
+                <i class="bi bi-people"></i> Người thuê
+            </a>
+        </div>
+    </div>
+
+    <!-- Header Card -->
+    <div class="info-card">
+        <div class="info-left">
+            <h2 class="property-title">@Model.Name</h2>
+            <p class="property-address"><i class="bi bi-geo-alt"></i> @Model.Address</p>
+            <div class="badges-row">
+                <div class="badge-capsule badge-active-bg">Đang hoạt động</div>
+                <div class="badge-capsule badge-floor-bg">@totalFloors Tầng</div>
+            </div>
+            
+            @if (!string.IsNullOrEmpty(Model.Description))
+            {
+                <p class="mt-3 text-muted" style="font-size: 14px; margin-bottom: 0;">@Model.Description</p>
+            }
+        </div>
+        
+        <div class="stats-container">
+            <div class="stat-box stat-total">
+                <div class="stat-label">Tổng số phòng</div>
+                <div class="stat-val">@totalRooms</div>
+            </div>
+            <div class="stat-box stat-rented">
+                <div class="stat-label">Đang thuê</div>
+                <div class="stat-val">@rentedRooms</div>
+            </div>
+            <div class="stat-box stat-empty">
+                <div class="stat-label">Trống</div>
+                <div class="stat-val">@availableRooms</div>
+            </div>
+            <div class="stat-box stat-maint">
+                <div class="stat-label">Đang sửa chữa</div>
+                <div class="stat-val">@maintRooms</div>
+            </div>
         </div>
     </div>
 
     @if (!Model.RoomsByFloor.Any())
     {
-        <div class="alert alert-warning">
-            <i class="bi bi-exclamation-triangle"></i>
-            Nhà trọ này chưa có phòng nào. <a asp-action="ConfigureRooms" asp-route-id="@Model.PropertyId" class="alert-link">Cấu hình phòng ngay</a>
+        <div class="alert custom-alert" style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px; text-align: center; padding: 40px;">
+            <i class="bi bi-exclamation-triangle text-amber-500 fs-1 mb-3"></i>
+            <h6 class="fw-bold">Nhà trọ này chưa có phòng nào</h6>
+            <a asp-action="ConfigureRooms" asp-route-id="@Model.PropertyId" class="btn btn-primary mt-2">Thiết lập phòng ngay</a>
         </div>
     }
     else
     {
-        @foreach (var floor in Model.RoomsByFloor.OrderByDescending(f => f.Key))
-        {
-            <div class="card mb-4 shadow-sm">
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">
-                        <i class="bi bi-layers"></i> Tầng @floor.Key
-                        <span class="badge bg-light text-dark ms-2">@floor.Value.Count phòng</span>
-                    </h5>
-                    <a asp-controller="Room" asp-action="CreateSingleRoom" asp-route-propertyId="@Model.PropertyId" asp-route-floor="@floor.Key" class="btn btn-sm bg-white text-dark shadow-sm fw-bold border" style="color: #ea580c !important;">
-                        <i class="bi bi-plus-lg"></i> Thêm phòng
-                    </a>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
+        <!-- Tab Row & Legend -->
+        <div class="tab-row">
+            <div class="nav-pills-custom">
+                <div class="nav-tab-custom active">Sơ đồ tầng</div>
+                <div class="nav-tab-custom">Danh sách</div>
+            </div>
+            <div class="legend-list">
+                <div class="legend-item"><div class="dot dot-empty"></div> Trống</div>
+                <div class="legend-item"><div class="dot dot-rented"></div> Đang thuê</div>
+                <div class="legend-item"><div class="dot dot-maint"></div> Đang sửa chữa</div>
+                <div class="legend-item"><div class="dot dot-overdue"></div> Đã xóa</div>
+            </div>
+        </div>
+
+        <!-- Floors Grid -->
+        <div class="floors-wrapper">
+            @foreach (var floor in Model.RoomsByFloor.OrderByDescending(f => f.Key))
+            {
+                <div class="floor-block">
+                    <div class="floor-sidebar">
+                        <div class="floor-title-vert">TẦNG @floor.Key</div>
+                    </div>
+                    <div class="floor-content">
                         @foreach (var room in floor.Value)
                         {
                             var isDeleted = room.IsDeleted;
-
-                            var statusClass = isDeleted ? "border-secondary" : room.Status switch
+                            var rState = isDeleted ? "deleted" : room.Status switch
                             {
-                                "occupied" => "border-success",
-                                "available" => "border-info",
-                                "maintenance" => "border-warning",
-                                _ => "border-secondary"
+                                "occupied" => "rented",
+                                "available" => "empty",
+                                "maintenance" => "maint",
+                                _ => "empty"
                             };
 
-                            var statusBadge = isDeleted ? "bg-secondary" : room.Status switch
-                            {
-                                "occupied" => "bg-success",
-                                "available" => "bg-info",
-                                "maintenance" => "bg-warning",
-                                _ => "bg-secondary"
+                            var rcClass = $"rc-{rState}";
+                            var bbClass = $"bb-{rState}";
+                            
+                            var statusText = isDeleted ? "ĐÃ XÓA" : room.Status switch {
+                                "occupied" => "ĐANG THUÊ",
+                                "available" => "TRỐNG",
+                                "maintenance" => "ĐANG SỬA CHỮA",
+                                _ => "KHÔNG RÕ"
                             };
 
-                            var statusText = isDeleted ? "Ngừng sử dụng" : room.Status switch
-                            {
-                                "occupied" => "Đã thuê",
-                                "available" => "Còn trống",
-                                "maintenance" => "Bảo trì",
-                                _ => room.Status
-                            };
+                            var formattedPrice = (room.RentPrice / 1000000).ToString("0.0"); // e.g. 8.0 or 4.5
 
-                            var opacityStyle = isDeleted ? "opacity: 0.6;" : "";
-
-                            <div class="col-md-3 col-sm-6">
-                                <div class="card h-100 @statusClass" style="border-width: 2px; @opacityStyle">
-                                    <div class="card-body text-center">
-                                        <h5 class="card-title">
-                                            <i class="bi bi-door-closed"></i> @room.RoomName
-                                        </h5>
-
-                                        <span class="badge @statusBadge mb-2">@statusText</span>
-
-                                        <p class="card-text mb-1">
-                                            <strong>@room.RentPrice.ToString("N0") VNĐ</strong>/tháng
-                                        </p>
-
-                                        @if (isDeleted)
-                                        {
-                                            <small class="text-danger d-block mt-2">Đã xóa mềm</small>
-                                        }
-                                        else if (room.HasTenant)
-                                        {
-                                            <small class="text-muted d-block">
-                                                <i class="bi bi-person"></i> @room.TenantName
-                                            </small>
-                                        }
-                                        else
-                                        {
-                                            <small class="text-muted d-block">
-                                                <i class="bi bi-people"></i> Tối đa @room.MaxOccupants người
-                                            </small>
-                                        }
-
-                                        <!-- ✅ Buttons: Contract + Occupants -->
-                                        @if (!isDeleted && room.HasTenant && room.ActiveContractId != null)
-                                        {
-                                            <div class="d-flex justify-content-center gap-2 mt-2">
-                                                <a class="btn btn-sm btn-outline-primary"
-                                                   asp-controller="Contract" asp-action="Details" asp-route-id="@room.ActiveContractId">
-                                                    Hợp đồng
-                                                </a>
-
-                                                <a class="btn btn-sm btn-outline-secondary"
-                                                   asp-controller="Room" asp-action="Details" asp-route-id="@room.RoomId">
-                                                    Người ở: @room.OccupantsCount
-                                                </a>
-                                            </div>
-                                        }   
-                                    </div>
-
-                                    <!-- ✅ Action Buttons on Footer -->
-                                    <div class="card-footer bg-white text-center">
-                                        @if (isDeleted)
-                                        {
-                                            <form asp-controller="Room" asp-action="Restore" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn khôi phục phòng này?');">
-                                                <input type="hidden" name="id" value="@room.RoomId" />
-                                                <input type="hidden" name="propertyId" value="@Model.PropertyId" />
-                                                <button type="submit" class="btn btn-sm btn-outline-success w-100">
-                                                    <i class="bi bi-arrow-counterclockwise"></i> Khôi phục
-                                                </button>
-                                            </form>
-                                        }
-                                        else
-                                        {
-                                            <a class="btn btn-sm btn-outline-dark w-100"
-                                               asp-controller="Room" asp-action="Details" asp-route-id="@room.RoomId">
-                                                Xem chi tiết phòng
-                                            </a>
-                                        }
-                                    </div>
+                            <a asp-controller="Room" asp-action="Details" asp-route-id="@room.RoomId" class="room-card @rcClass">
+                                <div class="rc-header">
+                                    <h5 class="room-number">@room.RoomName</h5>
+                                    <span class="rc-badge @bbClass">@statusText</span>
                                 </div>
-                            </div>
+                                
+                                <div class="rc-body">
+                                    @if (isDeleted)
+                                    {
+                                        <div class="maint-message text-danger">Phòng đã ngừng sử dụng</div>
+                                    }
+                                    else if (room.Status == "available")
+                                    {
+                                        <div class="empty-message">Sẵn sàng cho thuê</div>
+                                    }
+                                    else if (room.Status == "maintenance")
+                                    {
+                                        <div class="tenant-name" style="color: #ea580c;">
+                                            <i class="bi bi-tools"></i> Đang thi công / bảo trì
+                                        </div>
+                                    }
+                                    else if (room.Status == "occupied")
+                                    {
+                                        <div class="tenant-name">
+                                            <i class="bi bi-person"></i> @(string.IsNullOrEmpty(room.TenantName) ? "Chưa cập nhật tên" : room.TenantName)
+                                        </div>
+                                        <div class="rc-meta">
+                                            <i class="bi bi-people"></i> Người ở: @room.OccupantsCount
+                                        </div>
+                                    }
+                                </div>
+
+                                <div class="rc-footer">
+                                    <div class="room-type">Phòng Tối đa @room.MaxOccupants Ng.</div>
+                                    @if(room.Status != "maintenance" && !isDeleted)
+                                    {
+                                        <div class="room-price">@formattedPrice<span class="unit">tr /tháng</span></div>
+                                    }
+                                    else
+                                    {
+                                        <div class="room-price" style="color: #cbd5e1;">--</div>
+                                    }
+                                </div>
+                            </a>
                         }
                     </div>
                 </div>
-            </div>
-        }
-
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-body">
-                        <h6 class="card-title">Chú thích trạng thái phòng:</h6>
-                        <div class="d-flex gap-3 flex-wrap">
-                            <span><span class="badge bg-info">Còn trống</span> - Phòng chưa có người thuê</span>
-                            <span><span class="badge bg-success">Đã thuê</span> - Phòng đang có người thuê</span>
-                            <span><span class="badge bg-warning">Bảo trì</span> - Phòng đang bảo trì</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            }
         </div>
     }
 </div>
 
 @section Styles {
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <style>
-        .card:hover {
-            transform: translateY(-2px);
-            transition: transform 0.2s;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-    </style>
-}
-
-@section Scripts {
-    <!-- Thêm Bootstrap JS để Dropdowns hoạt động -->
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 }
