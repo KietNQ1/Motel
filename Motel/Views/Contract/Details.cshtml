@@ -57,8 +57,17 @@
 </style>
 
 <div class="bg-slate-100 text-slate-800 p-4 md:p-8 rounded" style="font-family: 'Inter', sans-serif;">
-  <div class="max-w-7xl mx-auto grid grid-cols-1 xl:grid-cols-3 gap-6">
+  <div class="max-w-7xl mx-auto">
+    <!-- Nút điều hướng (đặt ngoài thẻ nội dung, không dính với form) -->
+    <div class="no-print flex flex-wrap items-center gap-2 mb-4">
+      <a asp-controller="Contract" asp-action="Index"
+         class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:border-primary hover:bg-primary/5 hover:text-primary dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-primary dark:hover:bg-primary/10">
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+        Danh sách hợp đồng
+      </a>
+    </div>
 
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
     <!-- ── Left panel (no-print) ── -->
     <section class="no-print xl:col-span-1 bg-white rounded-2xl shadow-sm border border-slate-200 p-5 h-fit">
       <div class="mb-5 flex items-center justify-between">
@@ -320,6 +329,7 @@
         </div>
       </div>
     </section>
+    </div>
   </div>
 </div>
 

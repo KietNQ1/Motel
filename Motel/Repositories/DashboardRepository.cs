@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Motel.Data;
+using Motel.ViewModels.Contract;
 using Motel.ViewModels.Dashboard;
+using Motel.ViewModels.Invoice;
 
 namespace Motel.Repositories
 {
@@ -48,9 +50,11 @@ namespace Motel.Repositories
             };
         }
 
-        public async Task<FinancialStatisticsViewModel> GetFinancialStatisticsAsync(int landlordId, int? propertyId = null)
+        public async Task<FinancialStatisticsViewModel> GetFinancialStatisticsAsync(int landlordId, int? propertyId = null, int? year = null, int? month = null)
         {
-            var currentMonth = DateTime.Now.Year * 100 + DateTime.Now.Month;
+            var y = year ?? DateTime.Now.Year;
+            var m = month ?? DateTime.Now.Month;
+            var currentMonth = y * 100 + m;
 
             var query = _context.Invoices
                 .Include(i => i.Room)
@@ -150,12 +154,14 @@ namespace Motel.Repositories
             return contracts;
         }
 
-        public async Task<MonthlyRevenueChartViewModel> GetMonthlyRevenueDataAsync(int landlordId, int monthCount, int? propertyId = null)
+        public async Task<MonthlyRevenueChartViewModel> GetMonthlyRevenueDataAsync(int landlordId, int monthCount, int? propertyId = null, int? year = null)
         {
             var months = new List<string>();
             var revenues = new List<decimal>();
 
-            var currentDate = DateTime.Now;
+            var refYear = year ?? DateTime.Now.Year;
+            var refMonth = DateTime.Now.Month;
+            var currentDate = new DateTime(refYear, refMonth, 1);
 
             for (int i = monthCount - 1; i >= 0; i--)
             {
@@ -202,6 +208,76 @@ namespace Motel.Repositories
                 .ToListAsync();
 
             return properties;
+        }
+
+        public async Task<List<InvoiceListViewModel>> GetInvoiceListAsync(int landlordId, int? propertyId = null, string? status = null, int? periodMonth = null)
+        {
+            var query = _context.Invoices
+                .Include(i => i.Room).ThenInclude(r => r.Property)
+                .Include(i => i.Contract).ThenInclude(c => c.Tenant)
+                .Where(i => i.Room.Property.LandlordId == landlordId);
+
+            if (propertyId.HasValue)
+                query = query.Where(i => i.Room.PropertyId == propertyId.Value);
+            if (!string.IsNullOrEmpty(status))
+                query = query.Where(i => i.Status == status);
+            if (periodMonth.HasValue)
+                query = query.Where(i => i.PeriodMonth == periodMonth.Value);
+
+            var list = await query
+                .OrderByDescending(i => i.PeriodMonth)
+                .ThenByDescending(i => i.CreatedAt)
+                .Select(i => new InvoiceListViewModel
+                {
+                    InvoiceId = i.InvoiceId,
+                    RoomName = i.Room.RoomName,
+                    PropertyName = i.Room.Property.Name,
+                    TenantEmail = i.Contract.Tenant.Email,
+                    TenantName = i.Contract.Tenant.FullName,
+                    PeriodMonth = i.PeriodMonth,
+                    TotalAmount = i.TotalAmount,
+                    Status = i.Status,
+                    DueDate = i.DueDate,
+                    CreatedAt = i.CreatedAt
+                })
+                .ToListAsync();
+
+            return list;
+        }
+
+        public async Task<List<ContractListViewModel>> GetContractListAsync(int landlordId, int? propertyId = null, bool expiringOnly = false)
+        {
+            var today = DateOnly.FromDateTime(DateTime.Today);
+            var future = today.AddDays(30);
+
+            var query = _context.Contracts
+                .Include(c => c.Room).ThenInclude(r => r.Property)
+                .Include(c => c.Tenant)
+                .Where(c => c.Room.Property.LandlordId == landlordId && !c.IsDeleted);
+
+            if (propertyId.HasValue)
+                query = query.Where(c => c.Room.PropertyId == propertyId.Value);
+            if (expiringOnly)
+                query = query.Where(c => c.Status == "active" && c.EndDate >= today && c.EndDate <= future);
+            else
+                query = query.Where(c => c.Status == "active");
+
+            var list = await query
+                .OrderBy(c => c.EndDate)
+                .Select(c => new ContractListViewModel
+                {
+                    ContractId = c.ContractId,
+                    RoomName = c.Room.RoomName,
+                    PropertyName = c.Room.Property.Name,
+                    TenantName = c.Tenant.FullName,
+                    StartDate = c.StartDate,
+                    EndDate = c.EndDate,
+                    Status = c.Status,
+                    DaysRemaining = c.EndDate.DayNumber - today.DayNumber
+                })
+                .ToListAsync();
+
+            return list;
         }
     }
 }

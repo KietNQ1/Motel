@@ -23,27 +23,28 @@ namespace Motel.Controllers
         }
 
         /// <summary>
-        /// Dashboard Index - Trang chủ với tất cả metrics
+        /// Dashboard Index - Trang chủ với tất cả metrics (lọc theo tòa nhà, tháng, năm)
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> Index(int? propertyId = null)
+        public async Task<IActionResult> Index(int? propertyId = null, int? year = null, int? month = null)
         {
             try
             {
                 var landlordId = await _landlordHelper.GetCurrentLandlordIdAsync(User);
-                
+
                 if (landlordId == 0)
                 {
                     _logger.LogWarning("User {Email} attempted to access dashboard but has no landlord profile", User.Identity?.Name);
                     TempData["Error"] = "Bạn không có quyền truy cập trang này. Chỉ chủ trọ mới có thể xem dashboard.";
                     return RedirectToAction("Index", "Home");
                 }
-                
-                var viewModel = await _dashboardService.GetDashboardDataAsync(landlordId, propertyId);
-                
-                // Store selected propertyId to preserve dropdown selection
+
+                var viewModel = await _dashboardService.GetDashboardDataAsync(landlordId, propertyId, year, month);
+
                 ViewBag.SelectedPropertyId = propertyId;
-                
+                ViewBag.SelectedYear = year ?? DateTime.Now.Year;
+                ViewBag.SelectedMonth = month ?? DateTime.Now.Month;
+
                 return View(viewModel);
             }
             catch (Exception ex)

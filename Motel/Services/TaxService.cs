@@ -21,8 +21,9 @@ public class TaxService : ITaxService
     /// Các điểm quan trọng trong Business Logic:
     /// 
     /// 1. Cách tính Doanh thu:
-    ///    - Dựa trên GIÁ THUÊ TRONG HỢP ĐỒNG (Room.RentPrice), KHÔNG phải tiền thực tế đã thu
-    ///    - Chỉ tính TIỀN THUÊ, không tính tiền điện nước (chỉ thu hộ)
+    ///    - Dựa trên GIÁ THUÊ TRONG HỢP ĐỒNG (Room.RentPrice) + các PHÍ DỊCH VỤ cố định theo phòng
+    ///      (FeeSettings có CalculationMethod khác "meter", ví dụ Internet, Rác), KHÔNG phải tiền thực tế đã thu
+    ///    - KHÔNG tính các khoản THU HỘ theo chỉ số (điện, nước, ... – FeeSettings có CalculationMethod = "meter")
     ///    - Tính theo số tháng đầy đủ overlap với năm dương lịch, không tính theo ngày
     ///    - Ví dụ: 02/03/2024 → 31/10/2024 = 8 tháng (Tháng 3, 4, 5, 6, 7, 8, 9, 10)
     /// 
@@ -119,7 +120,7 @@ public class TaxService : ITaxService
     /// Calculate total rental revenue for a specific calendar year
     /// 
     /// Điểm quan trọng / Key Points:
-    /// - Chỉ tính tiền thuê phòng, không tính điện nước (Only counts rent, not utilities)
+    /// - Chỉ tính tiền thuê phòng + phí dịch vụ cố định, không tính điện nước theo chỉ số (Only counts rent + fixed service fees, not metered utilities)
     /// - Tính theo số tháng đầy đủ, không tính theo ngày (Counts complete months, not prorated by days)
     /// - Xử lý hợp đồng bắt đầu/kết thúc giữa năm (Handles mid-year contracts)
     /// - Xử lý hợp đồng kéo dài nhiều năm (Handles multi-year contracts)
@@ -151,6 +152,21 @@ public class TaxService : ITaxService
             // Lấy giá thuê tháng từ Room
             var monthlyRent = contract.Room?.RentPrice ?? 0;
 
+            // Lấy các phí dịch vụ cố định theo phòng (không phải phí thu hộ theo chỉ số)
+            // Rule:
+            // - FeeSetting.CalculationMethod != "meter" => tính vào doanh thu (ví dụ: Internet, Rác, dịch vụ vệ sinh...)
+            // - FeeSetting.CalculationMethod == "meter" => coi là phí thu hộ (Electricity, Water...), KHÔNG tính vào doanh thu chịu thuế
+            // - Chỉ lấy các FeeSetting còn hiệu lực hiện tại (EffectiveTo == null) để đơn giản hóa ước tính
+            decimal monthlyServiceFee = 0;
+            var feeSettings = contract.Room?.FeeSettings
+                ?.Where(fs => fs.EffectiveTo == null && !string.Equals(fs.CalculationMethod, "meter", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            if (feeSettings != null && feeSettings.Count > 0)
+            {
+                monthlyServiceFee = feeSettings.Sum(fs => fs.BaseAmount);
+            }
+
             // Tính số tháng đầy đủ trong khoảng overlap
             // Công thức: (EndYear - StartYear) × 12 + (EndMonth - StartMonth) + 1
             // Ví dụ: 02/03/2024 → 31/10/2024 = (2024-2024)×12 + (10-3) + 1 = 8 tháng
@@ -162,8 +178,8 @@ public class TaxService : ITaxService
             int numberOfMonths = (endYear - startYear) * 12 + (endMonth - startMonth) + 1;
 
             // Tính doanh thu theo số tháng đầy đủ
-            // Công thức: Tiền thuê tháng × Số tháng
-            var revenue = monthlyRent * numberOfMonths;
+            // Công thức: (Tiền thuê tháng + Phí dịch vụ cố định) × Số tháng
+            var revenue = (monthlyRent + monthlyServiceFee) * numberOfMonths;
 
             totalRevenue += revenue;
         }

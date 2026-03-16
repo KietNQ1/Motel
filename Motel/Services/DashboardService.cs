@@ -20,20 +20,17 @@ namespace Motel.Services
             _logger = logger;
         }
 
-        public async Task<DashboardIndexViewModel> GetDashboardDataAsync(int landlordId, int? propertyId = null)
+        public async Task<DashboardIndexViewModel> GetDashboardDataAsync(int landlordId, int? propertyId = null, int? year = null, int? month = null)
         {
             try
             {
-                // Load data tuần tự để tránh DbContext concurrency issues
-                // Lấy tất cả properties để hiển thị trong dropdown
                 var properties = await _repository.GetPropertiesAsync(landlordId);
-                
-                // Nếu có propertyId, filter data theo property đó
                 var roomStats = await _repository.GetRoomStatisticsAsync(landlordId, propertyId);
-                var financialStats = await _repository.GetFinancialStatisticsAsync(landlordId, propertyId);
+                var financialStats = await _repository.GetFinancialStatisticsAsync(landlordId, propertyId, year, month);
                 var recentInvoices = await _repository.GetRecentInvoicesAsync(landlordId, 5, propertyId);
                 var expiringContracts = await _repository.GetExpiringContractsAsync(landlordId, 30, propertyId);
-                var revenueChart = await _repository.GetMonthlyRevenueDataAsync(landlordId, 12, propertyId);
+                var chartYear = year ?? DateTime.Now.Year;
+                var revenueChart = await _repository.GetMonthlyRevenueDataAsync(landlordId, 12, propertyId, chartYear);
 
                 return new DashboardIndexViewModel
                 {

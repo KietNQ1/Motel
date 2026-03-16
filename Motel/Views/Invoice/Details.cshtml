@@ -18,6 +18,9 @@
     var lines = Model.InvoiceLines ?? new List<Motel.Models.InvoiceLine>();
 }
 
+<p class="mb-2">
+    <a asp-controller="Invoice" asp-action="Index" class="text-primary hover:underline">← Danh sách hóa đơn</a>
+</p>
 <div class="d-flex align-items-center justify-content-between mb-3">
     <h2 class="mb-0">Hóa đơn #@Model.InvoiceId</h2>
 

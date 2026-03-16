@@ -1,0 +1,173 @@
+@model List<Motel.ViewModels.Invoice.InvoiceListViewModel>
+@{
+    ViewData["Title"] = "Hóa đơn";
+    Layout = "_Layout";
+    var properties = ViewBag.Properties as List<Motel.ViewModels.Dashboard.PropertyOptionViewModel> ?? new();
+    var selectedPropertyId = ViewBag.SelectedPropertyId as int?;
+    var selectedStatus = ViewBag.SelectedStatus as string ?? "";
+    var selectedMonth = ViewBag.SelectedMonth as int?;
+    var selectedYear = ViewBag.SelectedYear as int?;
+    var unpaidList = Model.Where(x => x.Status == "unpaid").ToList();
+}
+
+<div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Hóa đơn</h1>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Xem tất cả hóa đơn và gửi nhắc thanh toán</p>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="mb-6 rounded-2xl border border-[#e7d9cf] dark:border-gray-700 bg-white dark:bg-gray-800/50 p-4">
+    <form method="get" asp-action="Index" class="flex flex-wrap items-end gap-3">
+        <div>
+            <label class="mb-1 block text-xs font-medium text-gray-500">Tòa nhà</label>
+            <select name="propertyId" class="rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm">
+                <option value="">Tất cả</option>
+                @foreach (var p in properties)
+                {
+                    <option value="@p.PropertyId" selected="@(selectedPropertyId == p.PropertyId)">@p.Name</option>
+                }
+            </select>
+        </div>
+        <div>
+            <label class="mb-1 block text-xs font-medium text-gray-500">Trạng thái</label>
+            <select name="status" class="rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm">
+                <option value="" selected="@(selectedStatus == "")">Tất cả</option>
+                <option value="unpaid" selected="@(selectedStatus == "unpaid")">Chưa thanh toán</option>
+                <option value="paid" selected="@(selectedStatus == "paid")">Đã thanh toán</option>
+                <option value="cancelled" selected="@(selectedStatus == "cancelled")">Đã hủy</option>
+            </select>
+        </div>
+        <div>
+            <label class="mb-1 block text-xs font-medium text-gray-500">Tháng</label>
+            <select name="month" class="rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm">
+                <option value="">Tất cả</option>
+                @for (var m = 1; m <= 12; m++)
+                {
+                    <option value="@m" selected="@(selectedMonth == m)">Tháng @m</option>
+                }
+            </select>
+        </div>
+        <div>
+            <label class="mb-1 block text-xs font-medium text-gray-500">Năm</label>
+            <select name="year" class="rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm">
+                <option value="">Tất cả</option>
+                @for (var y = DateTime.Now.Year; y >= DateTime.Now.Year - 5; y--)
+                {
+                    <option value="@y" selected="@(selectedYear == y)">@y</option>
+                }
+            </select>
+        </div>
+        <button type="submit" class="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-dark">
+            Lọc
+        </button>
+    </form>
+</div>
+
+<!-- Bulk reminder (UI only, backend phát triển sau) + Table -->
+<form method="post" asp-action="SendBulkReminder" id="frmBulkReminder">
+    @Html.AntiForgeryToken()
+    @if (unpaidList.Any())
+    {
+        <div class="mb-6 rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-900/20 p-4 flex flex-wrap items-center justify-between gap-3">
+            <p class="text-sm font-medium text-amber-800 dark:text-amber-200">
+                Có <strong>@unpaidList.Count</strong> hóa đơn chưa thanh toán. Chọn bên dưới và nhấn "Gửi nhắc thanh toán hàng loạt".
+            </p>
+            <button type="submit" class="rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700">
+                Gửi nhắc thanh toán hàng loạt
+            </button>
+        </div>
+    }
+
+<!-- Table -->
+<div class="overflow-hidden rounded-2xl border border-[#e7d9cf] dark:border-gray-700 bg-white dark:bg-gray-800/50 shadow-sm">
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-900/50">
+                <tr>
+                    @if (unpaidList.Any())
+                    {
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-600 dark:text-gray-400 w-10">
+                            <input type="checkbox" id="checkAllUnpaid" class="rounded border-gray-400" />
+                        </th>
+                    }
+                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-600 dark:text-gray-400">Phòng · Tòa nhà</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-600 dark:text-gray-400">Người thuê</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-600 dark:text-gray-400">Kỳ</th>
+                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase text-gray-600 dark:text-gray-400">Tổng tiền</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-600 dark:text-gray-400">Hạn TT</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-600 dark:text-gray-400">Trạng thái</th>
+                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase text-gray-600 dark:text-gray-400">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="@(unpaidList.Any() ? 8 : 7)" class="px-4 py-12 text-center text-sm text-gray-500">Chưa có hóa đơn nào.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var inv in Model)
+                    {
+                        <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-700/30">
+                            @if (unpaidList.Any())
+                            {
+                                <td class="px-4 py-3">
+                                    @if (inv.Status == "unpaid")
+                                    {
+                                        <input type="checkbox" name="invoiceIds" value="@inv.InvoiceId" class="cb-unpaid rounded border-gray-400" />
+                                    }
+                                </td>
+                            }
+                            <td class="px-4 py-3">
+                                <span class="font-medium text-gray-900 dark:text-white">@inv.RoomName</span>
+                                <span class="text-gray-500 dark:text-gray-400"> · @inv.PropertyName</span>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">@(inv.TenantName ?? "—")</td>
+                            <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">@inv.PeriodFormatted</td>
+                            <td class="px-4 py-3 text-right font-semibold text-gray-900 dark:text-white">@inv.AmountFormatted</td>
+                            <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">@inv.DueDateFormatted</td>
+                            <td class="px-4 py-3">
+                                <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold @inv.StatusBadgeClass">@inv.StatusText</span>
+                            </td>
+                            <td class="px-4 py-3 text-right">
+                                <a asp-action="Details" asp-route-id="@inv.InvoiceId" class="inline-flex items-center gap-1 rounded-lg bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/20">
+                                    Chi tiết
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+</form>
+
+@section Scripts {
+<script>
+    (function() {
+        var checkAll = document.getElementById('checkAllUnpaid');
+        var cbs = document.querySelectorAll('.cb-unpaid');
+        if (checkAll && cbs.length) {
+            checkAll.addEventListener('change', function() {
+                cbs.forEach(function(cb) { cb.checked = checkAll.checked; });
+            });
+        }
+        var frm = document.getElementById('frmBulkReminder');
+        if (frm) {
+            frm.addEventListener('submit', function(e) {
+                var checked = document.querySelectorAll('.cb-unpaid:checked');
+                if (checked.length === 0) {
+                    e.preventDefault();
+                    alert('Vui lòng chọn ít nhất một hóa đơn để gửi nhắc.');
+                }
+            });
+        }
+    })();
+</script>
+}

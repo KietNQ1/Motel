@@ -1,0 +1,119 @@
+@model List<Motel.ViewModels.Contract.ContractListViewModel>
+@{
+    ViewData["Title"] = "Hợp đồng";
+    Layout = "_Layout";
+    var properties = ViewBag.Properties as List<Motel.ViewModels.Dashboard.PropertyOptionViewModel> ?? new();
+    var selectedPropertyId = ViewBag.SelectedPropertyId as int?;
+    var expiringOnly = ViewBag.ExpiringOnly as bool? ?? false;
+}
+
+<div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Hợp đồng</h1>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">@(expiringOnly ? "Hợp đồng sắp hết hạn trong 30 ngày" : "Tất cả hợp đồng đang hiệu lực")</p>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="mb-6 rounded-2xl border border-[#e7d9cf] dark:border-gray-700 bg-white dark:bg-gray-800/50 p-4">
+    <form method="get" asp-action="Index" class="flex flex-wrap items-end gap-3">
+        <div>
+            <label class="mb-1 block text-xs font-medium text-gray-500">Tòa nhà</label>
+            <select name="propertyId" class="rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm">
+                <option value="">Tất cả</option>
+                @foreach (var p in properties)
+                {
+                    <option value="@p.PropertyId" selected="@(selectedPropertyId == p.PropertyId)">@p.Name</option>
+                }
+            </select>
+        </div>
+        <div class="flex items-center gap-2">
+            <label class="flex items-center gap-2 text-sm">
+                <input type="checkbox" name="expiringOnly" value="true" @(expiringOnly ? "checked" : "") onchange="this.form.submit()" class="rounded border-gray-400" />
+                Chỉ sắp hết hạn (30 ngày)
+            </label>
+        </div>
+        <button type="submit" class="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-dark">Lọc</button>
+    </form>
+</div>
+
+<!-- Quick link to expiring -->
+@if (!expiringOnly)
+{
+    <div class="mb-4">
+        <a asp-action="Index" asp-route-expiringOnly="true" asp-route-propertyId="@selectedPropertyId"
+           class="inline-flex items-center gap-2 rounded-xl border border-amber-200 dark:border-amber-700 bg-amber-50/50 dark:bg-amber-900/20 px-4 py-2 text-sm font-medium text-amber-800 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-900/30">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Xem hợp đồng sắp hết hạn
+        </a>
+    </div>
+}
+
+<!-- Table -->
+<div class="overflow-hidden rounded-2xl border border-[#e7d9cf] dark:border-gray-700 bg-white dark:bg-gray-800/50 shadow-sm">
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-900/50">
+                <tr>
+                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-600 dark:text-gray-400">Phòng · Tòa nhà</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-600 dark:text-gray-400">Người thuê</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-600 dark:text-gray-400">Bắt đầu</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-600 dark:text-gray-400">Kết thúc</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-600 dark:text-gray-400">Còn lại</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-600 dark:text-gray-400">Trạng thái</th>
+                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase text-gray-600 dark:text-gray-400">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="7" class="px-4 py-12 text-center text-sm text-gray-500">
+                            @(expiringOnly ? "Không có hợp đồng nào sắp hết hạn trong 30 ngày." : "Chưa có hợp đồng nào.")
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var c in Model)
+                    {
+                        <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-700/30">
+                            <td class="px-4 py-3">
+                                <span class="font-medium text-gray-900 dark:text-white">@c.RoomName</span>
+                                <span class="text-gray-500 dark:text-gray-400"> · @c.PropertyName</span>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">@c.TenantName</td>
+                            <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">@c.StartDateFormatted</td>
+                            <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">@c.EndDateFormatted</td>
+                            <td class="px-4 py-3">
+                                @if (c.DaysRemaining.HasValue)
+                                {
+                                    <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold @c.UrgencyBadgeClass">@c.DaysRemainingText</span>
+                                }
+                                else
+                                {
+                                    <span class="text-gray-400">—</span>
+                                }
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold @c.StatusBadgeClass">@c.StatusText</span>
+                            </td>
+                            <td class="px-4 py-3 text-right">
+                                <a asp-action="Details" asp-route-id="@c.ContractId" class="inline-flex items-center gap-1 rounded-lg bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/20">
+                                    Chi tiết
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                </a>
+                                @if (c.Status == "active" && c.DaysRemaining.HasValue && c.DaysRemaining <= 30)
+                                {
+                                    <button type="button" class="ml-2 inline-flex items-center gap-1 rounded-lg bg-amber-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-700" title="Tính năng đang phát triển">
+                                        Gia hạn
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -104,6 +104,16 @@ namespace Motel.Data
             // Tenant 4 -> A1
             await SetupFullRentalFlow(context, p3r1, tenant4, landlordUser2.Id, today.AddMonths(-3), 1500000, 3000, 12000, 0, 10000, 20, 50, 5, 12);
 
+            // Một hợp đồng sắp hết hạn trong 25 ngày (P101 - để test mục "sắp hết hạn")
+            var contractExpiring = await context.Contracts
+                .Include(c => c.Room)
+                .FirstOrDefaultAsync(c => c.Room.RoomName == "P101" && c.Status == "active");
+            if (contractExpiring != null)
+            {
+                contractExpiring.EndDate = today.AddDays(25);
+                await context.SaveChangesAsync();
+            }
+
             // --- 8. SEED TAX RULES ---
             Console.WriteLine("=> Seeding TaxRules...");
             var ruleName = "Thông tư 40/2021/TT-BTC";

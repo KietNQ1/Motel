@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Motel.Data;
 using Motel.Models;
 using Motel.Repositories.Interface;
@@ -19,7 +19,8 @@ public sealed class InvoiceRepository : IInvoiceRepository
     public Task<Invoice?> GetByIdWithLinesAsync(int invoiceId, CancellationToken ct = default)
         => _db.Invoices
             .AsNoTracking()
-            .Include(i => i.InvoiceLines) // nếu navigation tên khác thì sửa lại
+            .Include(i => i.InvoiceLines!).ThenInclude(l => l.FeeType)
+            .Include(i => i.Room).ThenInclude(r => r.Property)
             .FirstOrDefaultAsync(i => i.InvoiceId == invoiceId, ct);
 
     public async Task AddAsync(Invoice invoice, CancellationToken ct = default)
