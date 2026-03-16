@@ -17,6 +17,8 @@ public class RoomFurnitureRepository : IRoomFurnitureRepository
     public async Task<IEnumerable<RoomFurniture>> GetFurnituresByRoomIdAsync(int roomId)
     {
         return await _db.RoomFurnitures
+            .Include(f => f.FurnitureCatalog)
+            .Include(f => f.FurnitureStatus)
             .Where(f => f.RoomId == roomId && !f.IsDeleted)
             .ToListAsync();
     }
@@ -27,26 +29,31 @@ public class RoomFurnitureRepository : IRoomFurnitureRepository
             .FirstOrDefaultAsync(f => f.FurnitureId == furnitureId && !f.IsDeleted);
     }
 
-    public async Task AddFurnitureAsync(RoomFurniture furniture)
+    //public async Task<RoomFurniture?> GetFurnitureByNameAsync(int roomId, string name)
+    //{
+    //    return await _db.RoomFurnitures
+    //        .FirstOrDefaultAsync(f =>
+    //            f.RoomId == roomId &&
+    //            f.FurnitureCatalog.Name == name &&
+    //            !f.IsDeleted);
+    //}
+
+    public Task AddFurnitureAsync(RoomFurniture furniture)
     {
         _db.RoomFurnitures.Add(furniture);
-        await _db.SaveChangesAsync();
+        return Task.CompletedTask;
     }
 
-    public async Task UpdateFurnitureAsync(RoomFurniture furniture)
+    public Task UpdateFurnitureAsync(RoomFurniture furniture)
     {
         _db.RoomFurnitures.Update(furniture);
-        await _db.SaveChangesAsync();
+        return Task.CompletedTask;
     }
 
-    public async Task DeleteFurnitureAsync(int furnitureId)
+    public Task DeleteFurnitureAsync(RoomFurniture furniture)
     {
-        var furniture = await GetFurnitureByIdAsync(furnitureId);
-        if (furniture != null)
-        {
-            furniture.IsDeleted = true;
-            await _db.SaveChangesAsync();
-        }
+        furniture.IsDeleted = true;
+        return Task.CompletedTask;
     }
 
     public async Task<bool> IsRoomOwnedByLandlordAsync(int roomId, int landlordId)
@@ -55,17 +62,32 @@ public class RoomFurnitureRepository : IRoomFurnitureRepository
             .Include(r => r.Property)
             .AnyAsync(r => r.RoomId == roomId && r.Property.LandlordId == landlordId);
     }
+    public async Task<RoomFurniture?> GetFurnitureByCatalogAsync(int roomId, int catalogId)
+    {
+        return await _db.RoomFurnitures
+            .FirstOrDefaultAsync(f =>
+                f.RoomId == roomId &&
+                f.FurnitureCatalogId == catalogId &&
+                !f.IsDeleted);
+    }
+    public async Task DeleteImagesAsync(List<int> imageIds)
+    {
+        var images = await _db.StoredFileReferences
+            .Where(x => imageIds.Contains(x.StoredFileId))
+            .ToListAsync();
 
-    public async Task AddStoredFileAsync(StoredFile storedFile)
+        _db.StoredFileReferences.RemoveRange(images);
+    }
+    public Task AddStoredFileAsync(StoredFile storedFile)
     {
         _db.StoredFiles.Add(storedFile);
-        await Task.CompletedTask;
+        return Task.CompletedTask;
     }
 
-    public async Task AddStoredFileReferenceAsync(StoredFileReference reference)
+    public Task AddStoredFileReferenceAsync(StoredFileReference reference)
     {
         _db.StoredFileReferences.Add(reference);
-        await Task.CompletedTask;
+        return Task.CompletedTask;
     }
 
     public async Task SaveChangesAsync()

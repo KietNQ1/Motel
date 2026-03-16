@@ -1,4 +1,4 @@
-using Motel.Repositories.Interface;
+﻿using Motel.Repositories.Interface;
 using Motel.Services.Interface;
 using Motel.ViewModels.Room;
 using Motel.Models;
@@ -33,14 +33,16 @@ public class RoomFurnitureService : IRoomFurnitureService
             var imageUrls = await _context.StoredFileReferences
                 .Where(sfr => sfr.RefType == "roomfurniture" && sfr.RefId == f.FurnitureId)
                 .Include(sfr => sfr.StoredFile)
-                .Select(sfr => sfr.StoredFile.StoragePath)
+                .Where(sfr => sfr.StoredFile != null)
+                .Select(sfr => sfr.StoredFile!.StoragePath)
                 .ToListAsync();
 
             result.Add(new RoomFurnitureViewModel
             {
                 FurnitureId = f.FurnitureId,
-                Name = f.Name,
+                Name = f.FurnitureCatalog.Name,
                 Quantity = f.Quantity,
+                Status = f.FurnitureStatus?.Name ?? string.Empty,
                 Description = f.Description,
                 ImageUrls = imageUrls
             });
@@ -49,67 +51,49 @@ public class RoomFurnitureService : IRoomFurnitureService
         return result;
     }
 
-    public async Task<bool> AddFurnitureAsync(AddFurnitureViewModel model, int landlordId)
+    public async Task<bool> AddFurnitureAsync(FurnitureRowVM model, int roomId, int landlordId)
     {
-        if (!await _repo.IsRoomOwnedByLandlordAsync(model.RoomId, landlordId))
-            return false;
+        //if (!await _repo.IsRoomOwnedByLandlordAsync(model.RoomId, landlordId))
+        //    return false;
 
-        var furniture = new RoomFurniture
+        // tìm nội thất trùng
+        var existingFurniture = await _repo.GetFurnitureByCatalogAsync(roomId, model.FurnitureCatalogId);
+
+        RoomFurniture furniture;
+
+        if (existingFurniture != null)
         {
-            RoomId = model.RoomId,
-            Name = model.Name,
-            Quantity = model.Quantity,
-            Description = model.Description,
-            IsDeleted = false,
-            CreatedAt = DateTime.Now
-        };
+            // cộng số lượng nếu trùng
+            existingFurniture.Quantity += model.Quantity;
 
-        await _repo.AddFurnitureAsync(furniture);
+            await _repo.UpdateFurnitureAsync(existingFurniture);
 
-        if (model.Images != null && model.Images.Any())
+            furniture = existingFurniture;
+        }
+        else
         {
-            var uploadFolder = Path.Combine(_env.WebRootPath, "uploads");
-
-            if (!Directory.Exists(uploadFolder))
-                Directory.CreateDirectory(uploadFolder);
-
-            foreach (var image in model.Images)
+            furniture = new RoomFurniture
             {
-                var fileName = Guid.NewGuid() + Path.GetExtension(image.FileName);
-                var physicalPath = Path.Combine(uploadFolder, fileName);
+                RoomId = roomId,
+                FurnitureCatalogId = model.FurnitureCatalogId,
+                Quantity = model.Quantity,
+                FurnitureStatusId = model.FurnitureStatusId,
+                IsDeleted = false,
+                CreatedAt = DateTime.Now
+            };
 
-                using (var stream = new FileStream(physicalPath, FileMode.Create))
-                {
-                    await image.CopyToAsync(stream);
-                }
-
-                var storedFile = new StoredFile
-                {
-                    FileName = image.FileName,
-                    StoragePath = $"/uploads/{fileName}",
-                    MimeType = image.ContentType,
-                    LandlordId = landlordId,
-                    UploadedByUserId = 1
-                };
-
-                await _repo.AddStoredFileAsync(storedFile);
-                await _repo.SaveChangesAsync();
-
-                var fileRef = new StoredFileReference
-                {
-                    StoredFileId = storedFile.StoredFileId,
-                    RefType = "roomfurniture",
-                    RefId = furniture.FurnitureId,
-                    CreatedAt = DateTime.Now
-                };
-
-                await _repo.AddStoredFileReferenceAsync(fileRef);
-            }
-
+            await _repo.AddFurnitureAsync(furniture);
             await _repo.SaveChangesAsync();
         }
 
+        // upload ảnh
+        if (model.Images != null && model.Images.Any())
+        {
+            await UploadImagesAsync(model.Images, furniture.FurnitureId, landlordId);
+        }
+
         return true;
+   
     }
 
     public async Task<bool> UpdateFurnitureAsync(UpdateFurnitureViewModel model, int landlordId)
@@ -119,14 +103,26 @@ public class RoomFurnitureService : IRoomFurnitureService
         if (furniture == null)
             return false;
 
-        if (!await _repo.IsRoomOwnedByLandlordAsync(furniture.RoomId, landlordId))
-            return false;
-
-        furniture.Name = model.Name;
+        furniture.FurnitureCatalogId = model.FurnitureCatalogId;
         furniture.Quantity = model.Quantity;
         furniture.Description = model.Description;
+        furniture.FurnitureStatusId = model.FurnitureStatusId;
 
         await _repo.UpdateFurnitureAsync(furniture);
+        await _repo.SaveChangesAsync();
+
+        // xóa ảnh
+        if (model.DeleteImageIds != null && model.DeleteImageIds.Any())
+        {
+            await _repo.DeleteImagesAsync(model.DeleteImageIds);
+            await _repo.SaveChangesAsync();
+        }
+
+        // upload ảnh mới
+        if (model.Images != null && model.Images.Any())
+        {
+            await UploadImagesAsync(model.Images, furniture.FurnitureId, landlordId);
+        }
 
         return true;
     }
@@ -138,11 +134,54 @@ public class RoomFurnitureService : IRoomFurnitureService
         if (furniture == null)
             return false;
 
-        if (!await _repo.IsRoomOwnedByLandlordAsync(furniture.RoomId, landlordId))
-            return false;
+        //if (!await _repo.IsRoomOwnedByLandlordAsync(furniture.RoomId, landlordId))
+        //    return false;
 
-        await _repo.DeleteFurnitureAsync(furnitureId);
+        await _repo.DeleteFurnitureAsync(furniture);
+        await _repo.SaveChangesAsync();
 
         return true;
+    }
+
+    private async Task UploadImagesAsync(List<IFormFile> images, int furnitureId, int landlordId)
+    {
+        var uploadFolder = Path.Combine(_env.WebRootPath, "uploads");
+
+        if (!Directory.Exists(uploadFolder))
+            Directory.CreateDirectory(uploadFolder);
+
+        foreach (var image in images)
+        {
+            var fileName = Guid.NewGuid() + Path.GetExtension(image.FileName);
+            var physicalPath = Path.Combine(uploadFolder, fileName);
+
+            using (var stream = new FileStream(physicalPath, FileMode.Create))
+            {
+                await image.CopyToAsync(stream);
+            }
+
+            var storedFile = new StoredFile
+            {
+                FileName = image.FileName,
+                StoragePath = "/uploads/" + fileName,
+                MimeType = image.ContentType,
+                LandlordId = landlordId,
+                UploadedByUserId = 1
+            };
+
+            await _repo.AddStoredFileAsync(storedFile);
+
+            var fileRef = new StoredFileReference
+            {
+                StoredFile = storedFile,
+                RefType = "roomfurniture",
+                RefId = furnitureId,
+                CreatedAt = DateTime.Now
+            };
+
+            await _repo.AddStoredFileReferenceAsync(fileRef);
+        }
+
+        await _repo.SaveChangesAsync();
     }
 }

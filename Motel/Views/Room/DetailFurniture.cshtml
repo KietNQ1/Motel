@@ -1,0 +1,82 @@
+@model Motel.ViewModels.Room.DetailFurnitureViewModel
+
+@{
+    ViewData["Title"] = $"Chi tiết nội thất - {Model.RoomName}";
+}
+
+<div class="container mx-auto p-6">
+    <!-- Breadcrumb -->
+    <nav class="text-sm text-gray-500 mb-4">
+        <a href="@Url.Action("Index", "Property")" class="hover:text-gray-700">Nhà trọ</a> /
+        <a href="@Url.Action("Details", "Room", new { id = Model.RoomId })" class="hover:text-gray-700">@Model.RoomName</a> /
+        <span class="text-gray-700">Chi tiết nội thất</span>
+    </nav>
+
+    <!-- Title -->
+    <h1 class="text-2xl font-semibold text-gray-800 mb-6">
+        Chi tiết nội thất trong phòng: @Model.RoomName
+    </h1>
+
+    @if (Model.Furnitures.Any())
+    {
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            @foreach (var f in Model.Furnitures)
+            {
+                <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <div class="p-4">
+                        <h3 class="text-lg font-medium text-gray-800 mb-2">@f.Name</h3>
+                        <p class="text-sm text-gray-600 mb-1"><strong>Số lượng:</strong> @f.Quantity</p>
+                        <p class="text-sm text-gray-600 mb-1"><strong>Tình trạng:</strong> @f.Status</p>
+                        @if (!string.IsNullOrEmpty(f.Description))
+                        {
+                            <p class="text-sm text-gray-600 mb-2"><strong>Mô tả:</strong> @f.Description</p>
+                        }
+                        @if (f.ImageUrls.Any())
+                        {
+                            <div class="flex flex-wrap gap-2 mt-2">
+                                @foreach (var img in f.ImageUrls)
+                                {
+                                    <img src="@img" alt="@f.Name" class="w-16 h-16 object-cover rounded border">
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-sm text-gray-500">Không có hình ảnh</p>
+                        }
+                        <div class="mt-3 flex gap-2">
+                            <a asp-action="EditFurniture" asp-route-id="@f.FurnitureId" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil"></i> Sửa
+                            </a>
+                            <form asp-action="DeleteFurniture" method="post" class="d-inline">
+                                <input type="hidden" name="furnitureId" value="@f.FurnitureId" />
+                                <input type="hidden" name="roomId" value="@Model.RoomId" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Bạn có chắc muốn xóa nội thất này?')">
+                                    <i class="bi bi-trash"></i> Xóa
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-12">
+            <i class="bi bi-house-gear text-6xl text-gray-300 mb-4"></i>
+            <h3 class="text-xl font-medium text-gray-600 mb-2">Phòng chưa có nội thất</h3>
+            <p class="text-gray-500">Chưa có thông tin về nội thất trong phòng này.</p>
+            <a asp-action="AddFurniture" asp-route-roomId="@Model.RoomId" class="btn btn-primary mt-4">
+                <i class="bi bi-plus-circle"></i> Thêm nội thất
+            </a>
+        </div>
+    }
+
+    <!-- Back Button -->
+    <div class="mt-6 text-center">
+        <a asp-action="Details" asp-route-id="@Model.RoomId" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Quay lại chi tiết phòng
+        </a>
+    </div>
+</div>
