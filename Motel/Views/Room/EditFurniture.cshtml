@@ -1,0 +1,190 @@
+﻿@model Motel.ViewModels.Room.UpdateFurnitureViewModel
+
+@{
+ViewData["Title"] = "Edit Furniture";
+}
+
+<form asp-action="EditFurniture" method="post" enctype="multipart/form-data" id="furnitureForm">
+
+```
+@Html.AntiForgeryToken()
+
+<input type="hidden" asp-for="FurnitureId" />
+<input type="hidden" asp-for="RoomId" />
+
+<div class="mb-3">
+    <label class="form-label">Tên nội thất</label>
+
+    <select asp-for="FurnitureCatalogId" class="form-select" required>
+
+        <option value="">-- Chọn nội thất --</option>
+
+        @foreach (var item in Model.Catalogs)
+        {
+            <option value="@item.FurnitureCatalogId">
+                @item.Name
+            </option>
+        }
+
+    </select>
+</div>
+
+<div class="mb-3">
+    <label class="form-label">Số lượng</label>
+
+    <input asp-for="Quantity"
+           type="number"
+           min="1"
+           class="form-control"
+           required />
+</div>
+
+<div class="mb-3">
+    <label class="form-label">Trạng thái</label>
+
+    <select asp-for="FurnitureStatusId"
+            class="form-select"
+            required>
+
+        <option value="">-- Chọn trạng thái --</option>
+
+        @foreach (var status in Model.Statuses)
+        {
+            <option value="@status.FurnitureStatusId">
+                @status.Name
+            </option>
+        }
+
+    </select>
+</div>
+
+<div class="mb-3">
+    <label class="form-label">Mô tả</label>
+
+    <textarea asp-for="Description"
+              class="form-control">
+    </textarea>
+</div>
+
+
+<h5 class="mt-4">Ảnh hiện tại</h5>
+
+<div class="d-flex flex-wrap gap-3">
+
+    @foreach (var img in Model.ExistingImages)
+{
+    <div class="existing-image" style="text-align:center">
+
+        <img src="@img.StoragePath" width="120" class="rounded shadow" />
+
+        <br />
+
+        <label>
+
+            <input type="checkbox"
+                   name="DeleteImageIds"
+                   value="@img.StoredFileId"
+                   class="delete-image-checkbox" />
+
+            Xóa
+
+        </label>
+
+    </div>
+}
+
+</div>
+
+
+<div class="mb-3 mt-4">
+
+    <label class="form-label">Thêm ảnh mới</label>
+
+    <input asp-for="Images"
+           type="file"
+           multiple
+           class="form-control"
+           id="imageInput"/>
+
+</div>
+
+
+<div id="preview" class="d-flex flex-wrap gap-2"></div>
+
+
+<button class="btn btn-primary mt-3"
+        id="btnSave"
+        type="submit">
+
+    Lưu
+
+</button>
+```
+
+</form>
+
+<script>
+
+const form = document.getElementById("furnitureForm");
+const btn = document.getElementById("btnSave");
+const preview = document.getElementById("preview");
+const imageInput = document.getElementById("imageInput");
+
+
+form.addEventListener("input", function () {
+
+    let valid = true;
+
+    form.querySelectorAll("[required]").forEach(e => {
+
+        if (!e.value) valid = false;
+
+    });
+
+    btn.disabled = !valid;
+
+});
+
+
+
+imageInput.addEventListener("change", function () {
+
+    preview.innerHTML = "";
+
+    const files = this.files;
+
+    for (let i = 0; i < files.length; i++)
+    {
+        const reader = new FileReader();
+
+        reader.onload = function (e)
+        {
+            const img = document.createElement("img");
+
+            img.src = e.target.result;
+            img.width = 100;
+            img.className = "rounded shadow";
+
+            preview.appendChild(img);
+        };
+
+        reader.readAsDataURL(files[i]);
+    }
+
+});
+
+// Khi check box xóa ảnh, ẩn ngay ảnh để người dùng thấy thay đổi
+document.querySelectorAll(".delete-image-checkbox").forEach(cb => {
+    cb.addEventListener("change", function () {
+        const container = this.closest(".existing-image");
+        if (!container) return;
+
+        if (this.checked) {
+            container.style.opacity = "0.4";
+        } else {
+            container.style.opacity = "1";
+        }
+    });
+});
+
+</script>
