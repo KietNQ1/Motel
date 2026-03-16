@@ -4,191 +4,630 @@
     ViewData["Title"] = $"Cho thuê phòng {Model.RoomName}";
 }
 
-<div class="container py-4">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card shadow">
-                <div class="card-header bg-success text-white">
-                    <h4 class="mb-0">
-                        <i class="bi bi-person-plus"></i> Cho thuê phòng @Model.RoomName
-                    </h4>
-                    <small>@Model.PropertyName - Giá thuê: @Model.RentPrice.ToString("N0") VNĐ/tháng</small>
-                </div>
+@section Styles {
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<style>
+    :root {
+        --primary: #ec5b13;
+        --primary-light: rgba(236,91,19,0.10);
+        --primary-glow: rgba(236,91,19,0.25);
+        --bg: #f7f5f3;
+        --surface: #ffffff;
+        --border: #e8e3df;
+        --text: #1a1410;
+        --text-muted: #7a6f68;
+        --radius: 14px;
+    }
 
-                <div class="card-body">
-                    <form asp-action="Rent" method="post">
-                        @Html.AntiForgeryToken()
+    *, *::before, *::after { box-sizing: border-box; }
 
-                        <input type="hidden" asp-for="RoomId" />
-                        <input type="hidden" asp-for="RoomName" />
-                        <input type="hidden" asp-for="RentPrice" />
-                        <input type="hidden" asp-for="PropertyName" />
-                        <input type="hidden" asp-for="MaxOccupants" />
+    body {
+        font-family: 'Be Vietnam Pro', sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+    }
 
-                        <div asp-validation-summary="All" class="text-danger mb-3"></div>
+    .rent-header {
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        padding: 14px 0;
+    }
 
-                        <!-- OCCUPANTS -->
-                        <h5 class="border-bottom pb-2 mb-3">Thông tin người ở (có thể ở ghép)</h5>
+    .rent-header .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--primary);
+        font-weight: 800;
+        font-size: 1.1rem;
+        text-decoration: none;
+    }
 
-                        <div id="occupantsContainer">
-                            @for (int i = 0; i < Model.Occupants.Count; i++)
-                            {
-                                <div class="border rounded p-3 mb-3 occupant-item">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <strong>Người @(i + 1)</strong>
+    .brand-icon {
+        width: 36px; height: 36px;
+        background: var(--primary-light);
+        border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+    }
 
-                                        <div class="d-flex align-items-center gap-3">
-                                            <label class="mb-0">
-                                                <input type="radio" name="PrimaryIndex" value="@i" @(Model.PrimaryIndex == i ? "checked" : "") />
-                                                Tenant chính
-                                            </label>
+    .page-wrapper {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 36px 20px 80px;
+    }
 
-                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeOccupant(this)">
-                                                Xóa
-                                            </button>
-                                        </div>
-                                    </div>
+    /* Breadcrumb */
+    .breadcrumb-nav {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 28px;
+        font-size: 0.82rem;
+    }
+    .breadcrumb-nav a { color: var(--primary); text-decoration: none; font-weight: 600; }
+    .breadcrumb-nav a:hover { text-decoration: underline; }
+    .breadcrumb-sep { color: #bbb; }
+    .breadcrumb-nav span.current { color: var(--text-muted); font-weight: 500; }
 
-                                    <div class="row">
-                                        <div class="col-md-6 mb-2">
-                                            <label class="form-label">Họ tên</label>
-                                            <input class="form-control" name="Occupants[@i].FullName" value="@Model.Occupants[i].FullName" />
-                                        </div>
-                                        <div class="col-md-6 mb-2">
-                                            <label class="form-label">SĐT</label>
-                                            <input class="form-control" name="Occupants[@i].Phone" value="@Model.Occupants[i].Phone" />
-                                        </div>
-                                        <div class="col-md-6 mb-2">
-                                            <label class="form-label">Email</label>
-                                            <input class="form-control" name="Occupants[@i].Email" value="@Model.Occupants[i].Email" />
-                                        </div>
-                                        <div class="col-md-6 mb-2">
-                                            <label class="form-label">CMND/CCCD</label>
-                                            <input class="form-control" name="Occupants[@i].IdentityNo" value="@Model.Occupants[i].IdentityNo" />
-                                        </div>
-                                    </div>
-                                </div>
-                            }
-                        </div>
+    /* Page title */
+    .page-title h1 {
+        font-size: clamp(1.8rem, 4vw, 2.4rem);
+        font-weight: 900;
+        letter-spacing: -0.03em;
+        margin: 0 0 6px;
+    }
+    .page-title .subtitle {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+    .price-badge {
+        background: var(--primary);
+        color: #fff;
+        font-weight: 700;
+        font-size: 0.82rem;
+        padding: 3px 10px;
+        border-radius: 99px;
+        margin-left: 4px;
+    }
 
-                        <button type="button" class="btn btn-outline-primary" onclick="addOccupant()">
-                            + Thêm người ở
-                        </button>
+    /* Section */
+    .form-section {
+        margin-top: 36px;
+    }
 
-                        <small class="text-muted d-block mt-2">
-                            Tối đa: @Model.MaxOccupants người
-                        </small>
+    .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+    }
 
-                        <!-- CONTRACT INFO -->
-                        <h5 class="border-bottom pb-2 mb-3 mt-4">Thông tin hợp đồng</h5>
+    .section-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 1rem;
+        font-weight: 800;
+        color: var(--text);
+    }
 
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="StartDate" class="form-label"></label>
-                                <input asp-for="StartDate" class="form-control" type="date" />
-                                <span asp-validation-for="StartDate" class="text-danger"></span>
-                            </div>
+    .section-num {
+        width: 28px; height: 28px;
+        background: var(--primary);
+        color: #fff;
+        border-radius: 8px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.82rem;
+        font-weight: 800;
+        flex-shrink: 0;
+    }
 
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="EndDate" class="form-label"></label>
-                                <input asp-for="EndDate" class="form-control" type="date" />
-                                <span asp-validation-for="EndDate" class="text-danger"></span>
-                            </div>
-                        </div>
+    .max-badge {
+        background: #f0ece8;
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 99px;
+    }
 
-                        <div class="mb-3">
-                            <label asp-for="DepositAmount" class="form-label"></label>
-                            <div class="input-group">
-                                <input asp-for="DepositAmount" class="form-control" type="number" step="100000" />
-                                <span class="input-group-text">VNĐ</span>
-                            </div>
-                            <span asp-validation-for="DepositAmount" class="text-danger"></span>
-                        </div>
+    /* Card */
+    .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 24px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
 
-                        <!-- INITIAL METER -->
-                        <h5 class="border-bottom pb-2 mb-3 mt-4">Chỉ số điện nước ban đầu (tùy chọn)</h5>
+    /* Occupant card */
+    .occupant-card {
+        position: relative;
+        overflow: hidden;
+    }
 
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="InitialElectricReading" class="form-label"></label>
-                                <input asp-for="InitialElectricReading" class="form-control" type="number" min="0" />
-                                <span asp-validation-for="InitialElectricReading" class="text-danger"></span>
-                            </div>
+    .occupant-card::before {
+        content: '';
+        position: absolute;
+        left: 0; top: 0; bottom: 0;
+        width: 4px;
+        background: var(--primary);
+        border-radius: 4px 0 0 4px;
+    }
 
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="InitialWaterReading" class="form-label"></label>
-                                <input asp-for="InitialWaterReading" class="form-control" type="number" min="0" />
-                                <span asp-validation-for="InitialWaterReading" class="text-danger"></span>
-                            </div>
-                        </div>
+    .occupant-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
 
-                        <!-- SUBMIT -->
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                            <a asp-action="Details" asp-route-id="@Model.RoomId" class="btn btn-secondary">
-                                Hủy
-                            </a>
-                            <button type="submit" class="btn btn-success">
-                                Xác nhận cho thuê
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+    .occupant-identity {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .occupant-num {
+        width: 38px; height: 38px;
+        background: var(--primary-light);
+        color: var(--primary);
+        font-weight: 800;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1rem;
+    }
+
+    .occupant-label { font-weight: 700; font-size: 1rem; }
+
+    .primary-radio-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #fff4ee;
+        border: 1px solid rgba(236,91,19,0.3);
+        color: var(--primary);
+        font-size: 0.78rem;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 99px;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+    .primary-radio-label:hover { background: #ffe8d8; }
+    .primary-radio-label input[type="radio"] { accent-color: var(--primary); }
+
+    .btn-remove {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border: none;
+        background: transparent;
+        color: #e04040;
+        font-size: 0.82rem;
+        font-weight: 700;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background 0.15s;
+        font-family: inherit;
+    }
+    .btn-remove:hover { background: #fff0f0; }
+
+    /* Form fields */
+    .fields-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 16px;
+    }
+
+    .field-group label {
+        display: block;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 6px;
+    }
+
+    .field-group input,
+    .field-group select {
+        width: 100%;
+        padding: 9px 12px;
+        border: 1.5px solid var(--border);
+        border-radius: 9px;
+        font-size: 0.88rem;
+        font-family: inherit;
+        color: var(--text);
+        background: #fafaf9;
+        transition: border-color 0.15s, box-shadow 0.15s;
+        outline: none;
+    }
+
+    .field-group input:focus,
+    .field-group select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px var(--primary-glow);
+        background: #fff;
+    }
+
+    .field-group .input-suffix {
+        position: relative;
+    }
+    .field-group .input-suffix input { padding-right: 36px; }
+    .field-group .input-suffix .suffix {
+        position: absolute;
+        right: 12px; top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        font-weight: 600;
+        pointer-events: none;
+    }
+
+    /* Add person button */
+    .btn-add-person {
+        margin-top: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        padding: 13px;
+        border: 2px dashed #d4cdc8;
+        background: transparent;
+        border-radius: var(--radius);
+        font-family: inherit;
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: border-color 0.2s, color 0.2s, background 0.2s;
+    }
+    .btn-add-person:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+        background: var(--primary-light);
+    }
+
+    /* Meter row with icon */
+    .meter-icon {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .meter-icon .material-symbols-outlined {
+        font-size: 1rem;
+        vertical-align: middle;
+    }
+
+    /* Divider */
+    .section-divider {
+        border: none;
+        border-top: 1px solid var(--border);
+        margin: 36px 0 0;
+    }
+
+    /* Footer actions */
+    .footer-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 12px;
+        padding-top: 28px;
+        flex-wrap: wrap;
+    }
+
+    .btn-cancel {
+        padding: 11px 24px;
+        border: 1.5px solid var(--border);
+        background: transparent;
+        border-radius: 10px;
+        font-family: inherit;
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        cursor: pointer;
+        text-decoration: none;
+        transition: background 0.15s, color 0.15s;
+        display: inline-flex;
+        align-items: center;
+    }
+    .btn-cancel:hover { background: #f0ece8; color: var(--text); }
+
+    .btn-submit {
+        padding: 11px 28px;
+        background: var(--primary);
+        border: none;
+        border-radius: 10px;
+        font-family: inherit;
+        font-size: 0.9rem;
+        font-weight: 800;
+        color: #fff;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 16px var(--primary-glow);
+        transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+    }
+    .btn-submit:hover {
+        background: #d44e0e;
+        box-shadow: 0 6px 20px var(--primary-glow);
+        transform: translateY(-1px);
+    }
+    .btn-submit:active { transform: translateY(0); }
+
+    /* Validation */
+    .text-danger { color: #d63031; font-size: 0.78rem; font-weight: 600; margin-top: 4px; display: block; }
+
+    /* Spacing for multiple occupant cards */
+    .occupant-item + .occupant-item {
+        margin-top: 14px;
+    }
+
+    @@media (max-width: 600px) {
+        .fields-grid { grid-template-columns: 1fr; }
+        .footer-actions { flex-direction: column-reverse; align-items: stretch; }
+        .btn-cancel, .btn-submit { justify-content: center; }
+    }
+</style>
+}
+
+<div class="page-wrapper">
+
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb-nav">
+        <a href="#">Nhà trọ của tôi</a>
+        <span class="breadcrumb-sep">/</span>
+        <a href="#">@Model.PropertyName</a>
+        <span class="breadcrumb-sep">/</span>
+        <span class="current">Cho thuê phòng @Model.RoomName</span>
+    </nav>
+
+    <!-- Page title -->
+    <div class="page-title">
+        <h1>Cho thuê phòng @Model.RoomName</h1>
+        <div class="subtitle">
+            <span class="material-symbols-outlined" style="font-size:1rem;">location_on</span>
+            @Model.PropertyName
+            <span class="price-badge">@Model.RentPrice.ToString("N0") VNĐ/tháng</span>
         </div>
     </div>
+
+    <form asp-action="Rent" method="post" id="rentForm">
+        @Html.AntiForgeryToken()
+
+        <input type="hidden" asp-for="RoomId" />
+        <input type="hidden" asp-for="RoomName" />
+        <input type="hidden" asp-for="RentPrice" />
+        <input type="hidden" asp-for="PropertyName" />
+        <input type="hidden" asp-for="MaxOccupants" />
+
+        <div asp-validation-summary="All" class="text-danger" style="margin-top:16px;"></div>
+
+        <!-- Section 1: Occupants -->
+        <section class="form-section">
+            <div class="section-header">
+                <div class="section-title">
+                    <span class="section-num">1</span>
+                    Thông tin người ở <span style="font-weight:400; color:var(--text-muted);">(có thể ở ghép)</span>
+                </div>
+                <span class="max-badge">Tối đa: @Model.MaxOccupants người</span>
+            </div>
+
+            <div id="occupantsContainer">
+                @for (int i = 0; i < Model.Occupants.Count; i++)
+                {
+                    <div class="card occupant-card occupant-item">
+                        <div class="occupant-top">
+                            <div class="occupant-identity">
+                                <div class="occupant-num">@(i + 1)</div>
+                                <div>
+                                    <div class="occupant-label">Người @(i + 1)</div>
+                                </div>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                                <label class="primary-radio-label">
+                                    <input type="radio" name="PrimaryIndex" value="@i" @(Model.PrimaryIndex == i ? "checked" : "") />
+                                    Tenant chính
+                                </label>
+                                <button type="button" class="btn-remove" onclick="removeOccupant(this)">
+                                    <span class="material-symbols-outlined" style="font-size:1rem;">delete</span> Xóa
+                                </button>
+                            </div>
+                        </div>
+                        <div class="fields-grid">
+                            <div class="field-group">
+                                <label>Họ tên</label>
+                                <input type="text" name="Occupants[@i].FullName" value="@Model.Occupants[i].FullName" placeholder="Nhập họ và tên" />
+                            </div>
+                            <div class="field-group">
+                                <label>SĐT</label>
+                                <input type="tel" name="Occupants[@i].Phone" value="@Model.Occupants[i].Phone" placeholder="Nhập số điện thoại" />
+                            </div>
+                            <div class="field-group">
+                                <label>Email</label>
+                                <input type="email" name="Occupants[@i].Email" value="@Model.Occupants[i].Email" placeholder="Nhập email" />
+                            </div>
+                            <div class="field-group">
+                                <label>CMND / CCCD</label>
+                                <input type="text" name="Occupants[@i].IdentityNo" value="@Model.Occupants[i].IdentityNo" placeholder="Nhập số CMND/CCCD" />
+                            </div>
+                            <div class="field-group">
+                                <label>Ngày sinh</label>
+                                <input type="date" name="Occupants[@i].DateOfBirth"
+                                       value="@(Model.Occupants[i].DateOfBirth.HasValue ? Model.Occupants[i].DateOfBirth.Value.ToString("yyyy-MM-dd") : "")" />
+                            </div>
+                            <div class="field-group">
+                                <label>Nơi ĐKTT</label>
+                                <input type="text" name="Occupants[@i].PermanentAddress" value="@Model.Occupants[i].PermanentAddress" placeholder="Địa chỉ thường trú" />
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <button type="button" class="btn-add-person" onclick="addOccupant()">
+                <span class="material-symbols-outlined">person_add</span>
+                Thêm người ở
+            </button>
+        </section>
+
+        <!-- Section 2: Contract -->
+        <section class="form-section">
+            <div class="section-header">
+                <div class="section-title">
+                    <span class="section-num">2</span>
+                    Thông tin hợp đồng
+                </div>
+            </div>
+            <div class="card">
+                <div class="fields-grid">
+                    <div class="field-group">
+                        <label asp-for="StartDate">Ngày bắt đầu hợp đồng</label>
+                        <input asp-for="StartDate" type="date" />
+                        <span asp-validation-for="StartDate" class="text-danger"></span>
+                    </div>
+                    <div class="field-group">
+                        <label asp-for="EndDate">Ngày kết thúc hợp đồng</label>
+                        <input asp-for="EndDate" type="date" />
+                        <span asp-validation-for="EndDate" class="text-danger"></span>
+                    </div>
+                    <div class="field-group">
+                        <label asp-for="DepositAmount">Tiền cọc</label>
+                        <div class="input-suffix">
+                            <input asp-for="DepositAmount" type="number" step="100000" placeholder="Ví dụ: 2500000" />
+                            <span class="suffix">₫</span>
+                        </div>
+                        <span asp-validation-for="DepositAmount" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Meters -->
+        <section class="form-section">
+            <div class="section-header">
+                <div class="section-title">
+                    <span class="section-num">3</span>
+                    Chỉ số điện nước ban đầu
+                    <span style="font-weight:400; color:var(--text-muted); font-size:0.85rem;">(tùy chọn)</span>
+                </div>
+            </div>
+            <div class="card">
+                <div class="fields-grid" style="grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));">
+                    <div class="field-group">
+                        <label asp-for="InitialElectricReading">
+                            <span class="meter-icon">
+                                <span class="material-symbols-outlined" style="color:#f59e0b;">bolt</span>
+                                Chỉ số điện ban đầu (kWh)
+                            </span>
+                        </label>
+                        <input asp-for="InitialElectricReading" type="number" min="0" placeholder="Nhập chỉ số điện hiện tại" />
+                        <span asp-validation-for="InitialElectricReading" class="text-danger"></span>
+                    </div>
+                    <div class="field-group">
+                        <label asp-for="InitialWaterReading">
+                            <span class="meter-icon">
+                                <span class="material-symbols-outlined" style="color:#3b82f6;">water_drop</span>
+                                Chỉ số nước ban đầu (m³)
+                            </span>
+                        </label>
+                        <input asp-for="InitialWaterReading" type="number" min="0" placeholder="Nhập chỉ số nước hiện tại" />
+                        <span asp-validation-for="InitialWaterReading" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <hr class="section-divider" />
+        <div class="footer-actions">
+            <a asp-action="Details" asp-route-id="@Model.RoomId" class="btn-cancel">Hủy</a>
+            <button type="submit" class="btn-submit">
+                <span class="material-symbols-outlined" style="font-size:1.1rem;">assignment_turned_in</span>
+                Xác nhận cho thuê
+            </button>
+        </div>
+    </form>
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-                function addOccupant() {
-                    const container = document.getElementById('occupantsContainer');
-                    const index = container.querySelectorAll('.occupant-item').length;
+        function addOccupant() {
+            const container = document.getElementById('occupantsContainer');
+            const index = container.querySelectorAll('.occupant-item').length;
+            const max = @Model.MaxOccupants;
 
-                    const max = @Model.MaxOccupants;
-                    if (max > 0 && index >= max) {
-                        alert('Vượt quá số người tối đa của phòng.');
-                        return;
-                    }
+            if (max > 0 && index >= max) {
+                alert('Vượt quá số người tối đa của phòng (' + max + ' người).');
+                return;
+            }
 
-                    const html = `
-        <div class="border rounded p-3 mb-3 occupant-item">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <strong>Người ${index + 1}</strong>
-            <div class="d-flex align-items-center gap-3">
-              <label class="mb-0">
-                <input type="radio" name="PrimaryIndex" value="${index}" ${index === 0 ? 'checked' : ''} />
-                Tenant chính
-              </label>
-              <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeOccupant(this)">Xóa</button>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-md-6 mb-2">
-              <label class="form-label">Họ tên</label>
-              <input class="form-control" name="Occupants[${index}].FullName" />
-            </div>
-            <div class="col-md-6 mb-2">
-              <label class="form-label">SĐT</label>
-              <input class="form-control" name="Occupants[${index}].Phone" />
-            </div>
-            <div class="col-md-6 mb-2">
-              <label class="form-label">Email</label>
-              <input class="form-control" name="Occupants[${index}].Email" />
-            </div>
-            <div class="col-md-6 mb-2">
-              <label class="form-label">CMND/CCCD</label>
-              <input class="form-control" name="Occupants[${index}].IdentityNo" />
-            </div>
-          </div>
-        </div>`;
-                    container.insertAdjacentHTML('beforeend', html);
-                }
+            const html = `
+            <div class="card occupant-card occupant-item" style="margin-top:14px;">
+                <div class="occupant-top">
+                    <div class="occupant-identity">
+                        <div class="occupant-num">${index + 1}</div>
+                        <div><div class="occupant-label">Người ${index + 1}</div></div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                        <label class="primary-radio-label">
+                            <input type="radio" name="PrimaryIndex" value="${index}" />
+                            Tenant chính
+                        </label>
+                        <button type="button" class="btn-remove" onclick="removeOccupant(this)">
+                            <span class="material-symbols-outlined" style="font-size:1rem;">delete</span> Xóa
+                        </button>
+                    </div>
+                </div>
+                <div class="fields-grid">
+                    <div class="field-group">
+                        <label>Họ tên</label>
+                        <input type="text" name="Occupants[${index}].FullName" placeholder="Nhập họ và tên" />
+                    </div>
+                    <div class="field-group">
+                        <label>SĐT</label>
+                        <input type="tel" name="Occupants[${index}].Phone" placeholder="Nhập số điện thoại" />
+                    </div>
+                    <div class="field-group">
+                        <label>Email</label>
+                        <input type="email" name="Occupants[${index}].Email" placeholder="Nhập email" />
+                    </div>
+                    <div class="field-group">
+                        <label>CMND / CCCD</label>
+                        <input type="text" name="Occupants[${index}].IdentityNo" placeholder="Nhập số CMND/CCCD" />
+                    </div>
+                    <div class="field-group">
+                        <label>Ngày sinh</label>
+                        <input type="date" name="Occupants[${index}].DateOfBirth" />
+                    </div>
+                    <div class="field-group">
+                        <label>Nơi ĐKTT</label>
+                        <input type="text" name="Occupants[${index}].PermanentAddress" placeholder="Địa chỉ thường trú" />
+                    </div>
+                </div>
+            </div>`;
+            container.insertAdjacentHTML('beforeend', html);
+        }
 
-                function removeOccupant(btn) {
-                    const item = btn.closest('.occupant-item');
-                    item.remove();
-                    // tạm thời chưa re-index
-                }
+        function removeOccupant(btn) {
+            const item = btn.closest('.occupant-item');
+            if (document.querySelectorAll('.occupant-item').length <= 1) {
+                alert('Phải có ít nhất 1 người ở.');
+                return;
+            }
+            item.remove();
+        }
     </script>
 }

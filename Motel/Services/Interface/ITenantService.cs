@@ -1,4 +1,4 @@
-﻿using Motel.Models;
+using Motel.Models;
 using Motel.ViewModels.Tenant;
 
 namespace Motel.Services.Interfaces
@@ -8,5 +8,7 @@ namespace Motel.Services.Interfaces
         Task<int> CreateTenantAsync(int landlordId, TenantCreateViewModel vm);
         Task<Tenant?> GetTenantDetailsAsync(int landlordId, int tenantId);
         Task<PropertyTenantsViewModel?> GetTenantsByPropertyIdAsync(int landlordId, int propertyId);
+        Task<TenantEditViewModel?> BuildEditViewModelAsync(int landlordId, int tenantId);
+        Task<bool> UpdateTenantAsync(int landlordId, TenantEditViewModel vm);
     }
 }

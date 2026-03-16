@@ -1,4 +1,4 @@
-﻿using Motel.Models;
+using Motel.Models;
 using Motel.ViewModels.Room;
 
 namespace Motel.Repositories.Interface
@@ -8,6 +8,8 @@ namespace Motel.Repositories.Interface
         Task<Room?> GetRoomByIdAsync(int roomId, CancellationToken ct = default);
         Task<RoomDetailViewModel?> GetRoomDetailAsync(int roomId, CancellationToken ct = default);
         Task<bool> UpdateRoomAsync(Room room, CancellationToken ct = default);
+        Task<bool> DeleteRoomAsync(int roomId, CancellationToken ct = default);
+        Task<bool> RestoreRoomAsync(int roomId);
 
         Task<bool> RentRoomAsync(
             int roomId,

@@ -1,0 +1,330 @@
+@model Motel.ViewModels.Room.AddFurnitureViewModel
+
+@{
+    ViewData["Title"] = "Thêm nội thất";
+}
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+<div class="max-w-7xl mx-auto p-6">
+
+<!-- Breadcrumb -->
+<div class="text-sm text-gray-500 mb-4">
+Nhà trọ / Phòng / <span class="text-gray-700 font-medium">Thêm nội thất</span>
+</div>
+
+<!-- Title -->
+<h1 class="text-2xl font-semibold text-gray-800">
+Thêm Nội thất
+</h1>
+
+<p class="text-gray-500 mb-6">
+Quản lý và cập nhật danh sách trang thiết bị trong phòng của bạn.
+</p>
+
+<form asp-action="AddFurniture" method="post" enctype="multipart/form-data">
+
+<input type="hidden" asp-for="RoomId" />
+
+<!-- Add New Furniture Section -->
+<div id="newFurnitureSection" class="mt-6 bg-gray-50 p-4 rounded-lg border hidden">
+
+    <h3 class="text-lg font-medium text-gray-800 mb-4">Thêm nội thất mới</h3>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Tên nội thất</label>
+            <input asp-for="NewFurnitureName"
+                   class="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-orange-400"
+                   placeholder="Nhập tên nội thất mới" />
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Số lượng</label>
+            <input asp-for="NewFurnitureQuantity"
+                   type="number"
+                   min="1"
+                   class="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-orange-400" />
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>
+            <select asp-for="NewFurnitureStatusId"
+                    class="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-orange-400">
+                <option value="">-- Chọn trạng thái --</option>
+                @foreach (var status in Model.Statuses)
+                {
+                    <option value="@status.FurnitureStatusId">@status.Name</option>
+                }
+            </select>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Ảnh minh họa</label>
+            <input asp-for="NewFurnitureImages"
+                   type="file"
+                   multiple
+                   class="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded-md file:border file:text-sm file:font-medium file:bg-orange-50 file:text-orange-600 hover:file:bg-orange-100" />
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Existing furniture table -->
+<div class="bg-white rounded-lg shadow-sm border overflow-hidden mt-6">
+
+<table class="w-full">
+
+<thead class="bg-gray-50 border-b">
+<tr class="text-gray-500 text-sm text-left">
+
+<th class="p-4 w-20 text-center">
+Chọn
+</th>
+
+<th class="p-4">
+Tên nội thất
+</th>
+
+<th class="p-4 w-32">
+Số lượng
+</th>
+
+<th class="p-4 w-40">
+Trạng thái
+</th>
+
+<th class="p-4 w-64">
+Ảnh minh họa
+</th>
+
+</tr>
+</thead>
+
+<tbody class="divide-y">
+
+@for (int i = 0; i < Model.Furnitures.Count; i++)
+{
+<tr>
+
+<td class="p-4 text-center">
+
+<input type="checkbox"
+       asp-for="Furnitures[i].Selected"
+       class="furniture-check accent-orange-500">
+
+<input type="hidden"
+       asp-for="Furnitures[i].FurnitureCatalogId"
+       value="@Model.Furnitures[i].FurnitureCatalogId" />
+
+</td>
+
+<td class="p-4 font-medium text-gray-700">
+@Model.Catalogs[i].Name
+</td>
+
+<td class="p-4">
+
+<input asp-for="Furnitures[i].Quantity"
+       min="1"
+       disabled
+       class="quantity w-16 border rounded-md px-2 py-1 focus:ring-2 focus:ring-orange-400">
+
+</td>
+
+<td class="p-4">
+
+<select asp-for="Furnitures[i].FurnitureStatusId"
+        disabled
+        class="status border rounded-md px-3 py-1 focus:ring-2 focus:ring-orange-400">
+
+<option value="">--Trạng thái--</option>
+
+@foreach (var s in Model.Statuses)
+{
+<option value="@s.FurnitureStatusId">@s.Name</option>
+}
+
+</select>
+
+</td>
+
+<td class="p-4">
+
+<input type="file"
+       name="Furnitures[@i].Images"
+       multiple
+       disabled
+       class="images block w-full text-sm text-gray-500
+              file:mr-3 file:py-1 file:px-3
+              file:rounded-md file:border
+              file:text-sm file:font-medium
+              file:bg-orange-50 file:text-orange-600
+              hover:file:bg-orange-100">
+
+</td>
+
+</tr>
+}
+
+</tbody>
+
+</table>
+
+</div>
+
+<div class="flex justify-between items-center mt-4">
+    <button type="button"
+            id="btnAddFurniture"
+            class="text-orange-600 hover:text-orange-800 font-medium">
+        + Thêm nội thất mới
+    </button>
+
+    <!-- Buttons -->
+    <div class="flex justify-end gap-3">
+
+        <a asp-action="Details"
+           asp-route-id="@Model.RoomId"
+           class="px-6 py-2 border rounded-lg text-gray-600 hover:bg-gray-50">
+            Hủy bỏ
+        </a>
+
+        <button type="submit"
+                class="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600">
+            Lưu thay đổi
+        </button>
+
+    </div>
+</div>
+
+</form>
+
+</div>
+
+<template id="newFurnitureRowTemplate">
+    <tr>
+        <td class="p-4 text-center">
+            <input type="checkbox"
+                   name="Furnitures[__index__].Selected"
+                   class="furniture-check accent-orange-500">
+
+            <input type="hidden"
+                   name="Furnitures[__index__].FurnitureCatalogId"
+                   value="" />
+        </td>
+
+        <td class="p-4 font-medium text-gray-700">
+            <select name="Furnitures[__index__].FurnitureCatalogId"
+                    class="w-full border rounded-md px-2 py-1 focus:ring-2 focus:ring-orange-400"
+                    required>
+                <option value="">-- Chọn nội thất --</option>
+                @foreach (var c in Model.Catalogs)
+                {
+                    <option value="@c.FurnitureCatalogId">@c.Name</option>
+                }
+            </select>
+        </td>
+
+        <td class="p-4">
+            <input name="Furnitures[__index__].Quantity"
+                   type="number"
+                   min="1"
+                   disabled
+                   class="quantity w-16 border rounded-md px-2 py-1 focus:ring-2 focus:ring-orange-400">
+        </td>
+
+        <td class="p-4">
+            <select name="Furnitures[__index__].FurnitureStatusId"
+                    disabled
+                    class="status border rounded-md px-3 py-1 focus:ring-2 focus:ring-orange-400">
+                <option value="">--Trạng thái--</option>
+                @foreach (var s in Model.Statuses)
+                {
+                    <option value="@s.FurnitureStatusId">@s.Name</option>
+                }
+            </select>
+        </td>
+
+        <td class="p-4">
+            <input type="file"
+                   name="Furnitures[__index__].Images"
+                   multiple
+                   disabled
+                   class="images block w-full text-sm text-gray-500
+                          file:mr-3 file:py-1 file:px-3
+                          file:rounded-md file:border
+                          file:text-sm file:font-medium
+                          file:bg-orange-50 file:text-orange-600
+                          hover:file:bg-orange-100">
+        </td>
+    </tr>
+</template>
+
+@section Scripts{
+
+<script>
+
+function setupFurnitureRow(row) {
+    const cb = row.querySelector(".furniture-check");
+    if (!cb) return;
+
+    cb.addEventListener("change", function () {
+        const quantity = row.querySelector(".quantity");
+        const status = row.querySelector(".status");
+        const images = row.querySelector(".images");
+
+        const enabled = this.checked;
+
+        quantity.disabled = !enabled;
+        status.disabled = !enabled;
+        images.disabled = !enabled;
+
+        if (!enabled) {
+            quantity.value = "";
+            status.value = "";
+            images.value = "";
+        }
+    });
+}
+
+function addFurnitureRow() {
+    const tbody = document.querySelector("tbody");
+    const template = document.getElementById("newFurnitureRowTemplate").innerHTML;
+
+    const nextIndex = tbody.querySelectorAll("tr").length;
+    const rowHtml = template.replace(/__index__/g, nextIndex);
+
+    tbody.insertAdjacentHTML("beforeend", rowHtml);
+    const newRow = tbody.lastElementChild;
+    setupFurnitureRow(newRow);
+}
+
+// Setup existing rows
+document.querySelectorAll("tbody tr").forEach(row => setupFurnitureRow(row));
+
+// Helper to enable/disable inputs inside the new furniture section
+function setNewFurnitureSectionEnabled(enabled) {
+    const section = document.getElementById("newFurnitureSection");
+    section.querySelectorAll("input, select, textarea").forEach(el => {
+        el.disabled = !enabled;
+    });
+}
+
+// Initialize new furniture section as disabled (it is hidden by default)
+setNewFurnitureSectionEnabled(false);
+
+// Toggle new furniture section
+const addFurnitureBtn = document.getElementById("btnAddFurniture");
+addFurnitureBtn.addEventListener("click", function() {
+    const section = document.getElementById("newFurnitureSection");
+    const opening = section.classList.toggle("hidden");
+
+    this.textContent = opening ? "+ Thêm nội thất mới" : "- Ẩn thêm nội thất mới";
+    setNewFurnitureSectionEnabled(!opening);
+});
+
+</script>
+
+}

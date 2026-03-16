@@ -11,20 +11,23 @@ public sealed class InvoiceController : Controller
     private readonly IContractRepository _contractRepo;
     private readonly IRoomRepository _roomRepo;
     private readonly IMeterReadingRepository _meterRepo;
-    private readonly IRoomUtilitySettingRepository _settingRepo;
+    private readonly IFeeTypeRepository _feeTypeRepo;
+    private readonly IFeeSettingRepository _feeSettingRepo;
 
     public InvoiceController(
         IInvoiceService invoiceService,
         IContractRepository contractRepo,
         IRoomRepository roomRepo,
         IMeterReadingRepository meterRepo,
-        IRoomUtilitySettingRepository settingRepo)
+        IFeeTypeRepository feeTypeRepo,
+        IFeeSettingRepository feeSettingRepo)
     {
         _invoiceService = invoiceService;
         _contractRepo = contractRepo;
         _roomRepo = roomRepo;
         _meterRepo = meterRepo;
-        _settingRepo = settingRepo;
+        _feeTypeRepo = feeTypeRepo;
+        _feeSettingRepo = feeSettingRepo;
     }
 
     // GET: /Invoice/History
@@ -38,53 +41,70 @@ public sealed class InvoiceController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Create(int contractId, int? periodMonth, CancellationToken ct)
+    public async Task<IActionResult> Create(int roomId, int? periodMonth, CancellationToken ct)
     {
         var now = DateTime.Now;
         var yyyymm = periodMonth ?? (now.Year * 100 + now.Month);
 
+        var contract = await _contractRepo.GetActiveContractByRoomIdAsync(roomId, ct);
+        if (contract == null)
+        {
+            return Content("Phòng này hiện tại chưa có hợp đồng thuê nào đang hoạt động.");
+        }
+
         var vm = new CreateInvoiceViewModel
         {
-            ContractId = contractId,
+            ContractId = contract.ContractId,
+            RoomId = roomId,
             PeriodMonth = yyyymm,
             DueDate = DateOnly.FromDateTime(DateTime.Today.AddDays(7))
         };
 
-        var contract = await _contractRepo.GetActiveByIdAsync(contractId, ct);
-        if (contract != null)
+        var room = await _roomRepo.GetRoomByIdAsync(roomId, ct);
+        if (room != null)
         {
-            var room = await _roomRepo.GetRoomByIdAsync(contract.RoomId, ct);
-            if (room != null)
-            {
-                vm.RoomName = room.RoomName;
-            }
+            vm.RoomName = room.RoomName;
+            var occupancies = await _contractRepo.GetActiveOccupanciesAsync(roomId, ct);
+            int occupantCount = occupancies.Count;
 
-            var setting = await _settingRepo.GetEffectiveAsync(contract.RoomId, yyyymm, ct);
-            if (setting != null)
-            {
-                vm.ElectricUnitPrice = setting.ElectricUnitPrice;
-                vm.WaterUnitPrice = setting.WaterUnitPrice;
-            }
-
-            var meter = await _meterRepo.GetByRoomAndPeriodAsync(contract.RoomId, yyyymm, ct);
-            if (meter != null)
-            {
-                vm.ElectricOld = meter.ElectricOld;
-                vm.ElectricNew = meter.ElectricNew;
-                vm.WaterOld = meter.WaterOld;
-                vm.WaterNew = meter.WaterNew;
-            }
-            else
-            {
-                var prevPeriod = yyyymm % 100 == 1 ? yyyymm - 89 : yyyymm - 1;
-                var prevMeter = await _meterRepo.GetByRoomAndPeriodAsync(contract.RoomId, prevPeriod, ct);
-                if (prevMeter != null)
+            var feeSettings = await _feeSettingRepo.GetEffectiveForRoomAsync(room.PropertyId, room.RoomId, yyyymm, ct);
+            var prevPeriod = yyyymm % 100 == 1 ? (yyyymm - 100) + 11 : yyyymm - 1;
+            
+            var currentMeter = await _meterRepo.GetByRoomAndPeriodAsync(roomId, yyyymm, ct);
+            var prevMeter = await _meterRepo.GetByRoomAndPeriodAsync(roomId, prevPeriod, ct);
+            
+            foreach (var setting in feeSettings)
                 {
-                    vm.ElectricOld = prevMeter.ElectricNew;
-                    vm.WaterOld = prevMeter.WaterNew;
+                    var feeItem = new InvoiceFeeItemVm
+                    {
+                        FeeTypeId = setting.FeeTypeId,
+                        FeeTypeName = setting.FeeType?.Name ?? "Unknown",
+                        CalculationMethod = setting.CalculationMethod,
+                        UnitPrice = setting.UnitPrice,
+                        BaseAmount = setting.BaseAmount
+                    };
+
+                    if (setting.CalculationMethod == "meter")
+                    {
+                        if (setting.FeeType?.Name == "Electricity") 
+                        {
+                            feeItem.CurrentReading = currentMeter?.ElectricNew;
+                            feeItem.PreviousReading = currentMeter != null ? currentMeter.ElectricOld : prevMeter?.ElectricNew;
+                        }
+                        else if (setting.FeeType?.Name == "Water") 
+                        {
+                            feeItem.CurrentReading = currentMeter?.WaterNew;
+                            feeItem.PreviousReading = currentMeter != null ? currentMeter.WaterOld : prevMeter?.WaterNew;
+                        }
+                    }
+                    else if (setting.CalculationMethod == "per_person")
+                    {
+                        feeItem.Quantity = occupantCount > 0 ? occupantCount : 1;
+                    }
+                    
+                    vm.FeeItems.Add(feeItem);
                 }
             }
-        }
 
         return View(vm);
     }

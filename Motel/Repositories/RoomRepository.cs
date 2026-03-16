@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Motel.Data;
 using Motel.Models;
 using Motel.Repositories.Interface;
@@ -27,7 +27,6 @@ namespace Motel.Repositories
                 // lấy danh sách người đang ở
                 .Include(r => r.RoomOccupancies.Where(ro => ro.Status == "active"))
                     .ThenInclude(ro => ro.Tenant)
-                .Include(r => r.RoomUtilitySettings)
                 .Include(r => r.MeterReadings.OrderByDescending(m => m.PeriodMonth).Take(2))
                 .FirstOrDefaultAsync(r => r.RoomId == roomId && !r.IsDeleted, ct);
 
@@ -59,23 +58,32 @@ namespace Motel.Repositories
                     FullName = ro.Tenant.FullName,
                     Phone = ro.Tenant.Phone,
                     Email = ro.Tenant.Email,
-                    IsPrimary = ro.IsPrimary
+                    IsPrimary = ro.IsPrimary,
+                    ContractId = ro.Tenant.Contracts
+                        .Where(c => c.RoomId == roomId && !c.IsDeleted && c.Status == "active")
+                        .Select(c => (int?)c.ContractId)
+                        .FirstOrDefault()
                 }).OrderByDescending(t => t.IsPrimary).ThenBy(t => t.FullName).ToList()
             };
 
             var today = DateOnly.FromDateTime(DateTime.Today);
-            var currentSetting = room.RoomUtilitySettings
-                .Where(s => s.EffectiveFrom <= today && (s.EffectiveTo == null || s.EffectiveTo >= today))
-                .OrderByDescending(s => s.EffectiveFrom)
-                .FirstOrDefault();
+            var applicableSettings = await _db.FeeSettings
+                .Include(s => s.FeeType)
+                .AsNoTracking()
+                .Where(s => (s.RoomId == roomId) || (s.PropertyId == room.Property.PropertyId && s.RoomId == null))
+                .Where(s => s.EffectiveFrom <= today)
+                .Where(s => s.EffectiveTo == null || s.EffectiveTo >= today)
+                .ToListAsync(ct);
 
-            if (currentSetting != null)
-            {
-                viewModel.ElectricUnitPrice = currentSetting.ElectricUnitPrice;
-                viewModel.WaterUnitPrice = currentSetting.WaterUnitPrice;
-                viewModel.InternetFee = currentSetting.InternetFee;
-                viewModel.TrashFee = currentSetting.TrashFee;
-            }
+            var effectiveSettings = applicableSettings
+                .GroupBy(s => s.FeeTypeId)
+                .Select(g => g.OrderByDescending(s => s.RoomId.HasValue).ThenByDescending(s => s.EffectiveFrom).First())
+                .ToList();
+
+            viewModel.ElectricUnitPrice = effectiveSettings.FirstOrDefault(s => s.FeeType?.Name == "Electricity")?.UnitPrice ?? 0;
+            viewModel.WaterUnitPrice = effectiveSettings.FirstOrDefault(s => s.FeeType?.Name == "Water")?.UnitPrice ?? 0;
+            viewModel.InternetFee = effectiveSettings.FirstOrDefault(s => s.FeeType?.Name == "Internet")?.BaseAmount ?? 0;
+            viewModel.TrashFee = effectiveSettings.FirstOrDefault(s => s.FeeType?.Name == "Trash")?.BaseAmount ?? 0;
 
             var readings = room.MeterReadings.OrderByDescending(m => m.PeriodMonth).Take(2).ToList();
 
@@ -120,6 +128,45 @@ namespace Motel.Repositories
         }
 
         // =========================
+        // DELETE ROOM (SOFT)
+        // =========================
+        public async Task<bool> DeleteRoomAsync(int roomId, CancellationToken ct = default)
+        {
+            try
+            {
+                var room = await _db.Rooms.FindAsync(new object[] { roomId }, ct);
+                if (room == null || room.IsDeleted) return false;
+
+                room.IsDeleted = true;
+                _db.Rooms.Update(room);
+                await _db.SaveChangesAsync(ct);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> RestoreRoomAsync(int roomId)
+        {
+            try
+            {
+                var room = await _db.Rooms.FirstOrDefaultAsync(r => r.RoomId == roomId);
+                if (room == null || !room.IsDeleted) return false;
+
+                room.IsDeleted = false;
+                _db.Rooms.Update(room);
+                await _db.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        // =========================
         // RENT ROOM
         // =========================
         public async Task<bool> RentRoomAsync(
@@ -145,7 +192,7 @@ namespace Motel.Repositories
                 if (room == null) return false;
                 if (room.Status != "available") return false;
 
-                // chặn nếu đã có contract active (phòng có thể bị lệch status)
+                // chặn nếu tenant này đã có contract active trong phòng này
                 var hasActiveContract = await _db.Contracts
                     .AnyAsync(c => c.RoomId == roomId && !c.IsDeleted && c.Status == "active", ct);
 
@@ -156,43 +203,60 @@ namespace Motel.Repositories
                 if (primaryIndex < 0 || primaryIndex >= occupants.Count) return false;
                 if (room.MaxOccupants > 0 && occupants.Count > room.MaxOccupants) return false;
 
-                // 1) tạo tenants
+                // 1) tạo hoặc lấy lại tenants theo CCCD
                 var tenantEntities = new List<Tenant>();
                 foreach (var o in occupants)
                 {
-                    var t = new Tenant
+                    Tenant t = null;
+                    if (!string.IsNullOrWhiteSpace(o.IdentityNo))
                     {
-                        LandlordId = landlordId,
-                        FullName = o.FullName.Trim(),
-                        Phone = o.Phone,
-                        Email = o.Email,
-                        IdentityNo = o.IdentityNo,
-                        IsDeleted = false,
-                        CreatedAt = DateTime.Now
-                    };
+                        t = await _db.Tenants.FirstOrDefaultAsync(x => x.LandlordId == landlordId && x.IdentityNo == o.IdentityNo && !x.IsDeleted, ct);
+                    }
+                    
+                    if (t == null)
+                    {
+                        t = new Tenant
+                        {
+                            LandlordId = landlordId,
+                            FullName = o.FullName.Trim(),
+                            Phone = o.Phone,
+                            Email = o.Email,
+                            IdentityNo = o.IdentityNo,
+                            DateOfBirth = o.DateOfBirth,
+                            PermanentAddress = o.PermanentAddress,
+                            IsDeleted = false,
+                            CreatedAt = DateTime.Now
+                        };
+                        _db.Tenants.Add(t);
+                    }
+                    else
+                    {
+                        t.FullName = o.FullName.Trim();
+                        t.Phone = o.Phone;
+                        t.Email = o.Email;
+                        t.DateOfBirth = o.DateOfBirth;
+                        t.PermanentAddress = o.PermanentAddress;
+                    }
                     tenantEntities.Add(t);
                 }
 
-                _db.Tenants.AddRange(tenantEntities);
                 await _db.SaveChangesAsync(ct);
 
-                // 2) tạo contract với tenant chính
-                var primaryTenant = tenantEntities[primaryIndex];
-
-                var contract = new Contract
+                // 2) tạo contract cho TỪNG tenant
+                var contracts = tenantEntities.Select(t => new Contract
                 {
                     RoomId = roomId,
-                    TenantId = primaryTenant.TenantId,
+                    TenantId = t.TenantId,
                     DepositAmount = depositAmount,
                     StartDate = startDate,
                     EndDate = endDate,
                     Status = "active",
                     IsDeleted = false,
                     CreatedAt = DateTime.Now
-                };
-                _db.Contracts.Add(contract);
+                }).ToList();
+                _db.Contracts.AddRange(contracts);
 
-                // 3) tạo occupancies (tenant chính bắt buộc nằm trong danh sách)
+                // 3) tạo occupancies
                 var occupancies = tenantEntities.Select((t, idx) => new RoomOccupancy
                 {
                     RoomId = roomId,

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace Motel.Models;
@@ -16,6 +16,10 @@ public partial class Tenant
     public string? Email { get; set; }
 
     public string? IdentityNo { get; set; }
+
+    public DateOnly? DateOfBirth { get; set; }
+
+    public string? PermanentAddress { get; set; }
 
     public bool IsDeleted { get; set; }
 

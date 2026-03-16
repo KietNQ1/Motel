@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Motel.Helpers;
 using Motel.Services.Interfaces;
 using Motel.ViewModels.Tenant;
@@ -71,6 +71,43 @@ namespace Motel.Controllers
                 return RedirectToAction("Index", "Property");
             }
             return View(tenant);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id)
+        {
+            var vm = await _service.BuildEditViewModelAsync(await _landlordHelper.GetCurrentLandlordIdAsync(User), id);
+            if (vm == null)
+            {
+                TempData["Error"] = "Không tìm thấy người thuê.";
+                return RedirectToAction("Index", "Property");
+            }
+            return View(vm);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(TenantEditViewModel vm)
+        {
+            if (!ModelState.IsValid) return View(vm);
+
+            try
+            {
+                var ok = await _service.UpdateTenantAsync(await _landlordHelper.GetCurrentLandlordIdAsync(User), vm);
+                if (!ok)
+                {
+                    TempData["Error"] = "Không tìm thấy người thuê.";
+                    return RedirectToAction("Index", "Property");
+                }
+                TempData["Success"] = "Cập nhật người thuê thành công!";
+                return RedirectToAction(nameof(Details), new { id = vm.TenantId });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Edit tenant error");
+                ModelState.AddModelError("", "Có lỗi xảy ra khi cập nhật.");
+                return View(vm);
+            }
         }
     }
 }

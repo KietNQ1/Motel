@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace Motel.Models;
@@ -22,4 +22,6 @@ public partial class Property
     public virtual Landlord Landlord { get; set; } = null!;
 
     public virtual ICollection<Room> Rooms { get; set; } = new List<Room>();
+
+    public virtual ICollection<FeeSetting> FeeSettings { get; set; } = new List<FeeSetting>();
 }
