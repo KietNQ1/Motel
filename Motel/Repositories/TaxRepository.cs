@@ -49,7 +49,7 @@ public sealed class TaxRepository : ITaxRepository
     /// - Hợp đồng có overlap với năm: StartDate <= yearEnd AND EndDate >= yearStart
     /// - Include Room và Property để lấy RentPrice và verify ownership
     /// </summary>
-    public async Task<List<Contract>> GetLandlordContractsForYearAsync(int landlordId, int year, CancellationToken ct = default)
+        public async Task<List<Contract>> GetLandlordContractsForYearAsync(int landlordId, int year, CancellationToken ct = default)
     {
         var yearStart = new DateOnly(year, 1, 1);
         var yearEnd = new DateOnly(year, 12, 31);
@@ -58,6 +58,9 @@ public sealed class TaxRepository : ITaxRepository
             .AsNoTracking()
             .Include(c => c.Room)
             .ThenInclude(r => r.Property)
+            .Include(c => c.Room)
+            .ThenInclude(r => r.FeeSettings)
+                .ThenInclude(fs => fs.FeeType)
             .Where(c =>
                 !c.IsDeleted &&
                 c.Room.Property.LandlordId == landlordId &&
