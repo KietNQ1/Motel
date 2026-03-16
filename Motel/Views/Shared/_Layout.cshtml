@@ -1,4 +1,4 @@
-﻿@inject Microsoft.AspNetCore.Identity.UserManager<Motel.Models.ApplicationUser> UserManager
+@inject Microsoft.AspNetCore.Identity.UserManager<Motel.Models.ApplicationUser> UserManager
 
 @{
     var currentUser = await UserManager.GetUserAsync(User);
@@ -135,6 +135,22 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
                     </svg>
                     Thanh toán
+                </a>
+
+                <a asp-controller="PaymentSettings" asp-action="Index"
+                   class="flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5a1 1 0 012 0v1.06a7.001 7.001 0 014.243 4.243H19a1 1 0 010 2h-1.757A7.001 7.001 0 0113 17.94V19a1 1 0 11-2 0v-1.06A7.001 7.001 0 016.757 12H5a1 1 0 110-2h1.757A7.001 7.001 0 0111 6.06V5z" />
+                    </svg>
+                    Payment Settings
+                </a>
+
+                <a asp-controller="Payment" asp-action="VietQrRequests"
+                   class="flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h4l2 3h7a1 1 0 01.894.553L21 9.382A2 2 0 0121 11v6a2 2 0 01-2 2H7a4 4 0 01-4-4V4z" />
+                    </svg>
+                    Yêu cầu VietQR
                 </a>
                 
                 <a asp-controller="Tax" asp-action="Index" 

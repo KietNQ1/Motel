@@ -1,4 +1,4 @@
-﻿
+
 using System.Text.Json;
 using Motel.Models;
 using Motel.Repositories.Interface;
@@ -25,8 +25,12 @@ namespace Motel.Services
             if (invoice.Status == "paid")
                 throw new Exception("Invoice already paid");
 
-            if (await _repo.HasPendingIntentAsync(invoiceId))
-                throw new Exception("Invoice already has a pending payment intent");
+            // Nếu đã có intent pending cùng provider (chưa hết hạn) thì tái sử dụng
+            var existing = await _repo.GetPendingIntentForInvoiceAsync(invoiceId, provider);
+            if (existing != null)
+            {
+                return existing;
+            }
 
             var intent = new PaymentIntent
             {
@@ -86,6 +90,55 @@ namespace Motel.Services
 
             intent.Status = PaymentIntentStatus.Succeeded;
             intent.Invoice.Status = "paid";
+
+            await _repo.AddPaymentAsync(payment);
+            await _repo.SaveChangesAsync();
+
+            return payment;
+        }
+
+        public async Task<Payment> ConfirmVietQrAsync(int paymentIntentId, int confirmedByUserId)
+        {
+            var intent = await _repo.GetIntentAsync(paymentIntentId);
+            if (intent == null) throw new Exception("PaymentIntent not found");
+
+            if (intent.Provider != PaymentProviders.VIETQR)
+                throw new Exception("Only VietQR payment can be confirmed here");
+
+            if (intent.Status == PaymentIntentStatus.Succeeded)
+                throw new Exception("This intent is already marked as paid");
+
+            if (intent.ExpiredAt.HasValue && intent.ExpiredAt.Value <= DateTime.UtcNow)
+            {
+                intent.Status = PaymentIntentStatus.Expired;
+                await _repo.SaveChangesAsync();
+                throw new Exception("Payment intent expired");
+            }
+
+            var txnId = $"VIETQR-{DateTime.UtcNow:yyyyMMddHHmmss}-INTENT{intent.PaymentIntentId}";
+
+            if (await _repo.PaymentTxnExistsAsync(PaymentProviders.VIETQR, txnId))
+                throw new Exception("Duplicate transaction id");
+
+            var payment = new Payment
+            {
+                InvoiceId = intent.InvoiceId,
+                PaymentIntentId = intent.PaymentIntentId,
+                Provider = PaymentProviders.VIETQR,
+                ProviderTxnId = txnId,
+                Amount = intent.Amount,
+                PaidAt = DateTime.UtcNow,
+                Status = PaymentStatus.Succeeded,
+                RawCallbackJson = JsonSerializer.Serialize(new
+                {
+                    type = "vietqr_manual_confirm",
+                    confirmedByUserId,
+                    confirmedAt = DateTime.UtcNow
+                })
+            };
+
+            intent.Status = PaymentIntentStatus.Succeeded;
+            intent.Invoice.Status = InvoiceStatus.Paid;
 
             await _repo.AddPaymentAsync(payment);
             await _repo.SaveChangesAsync();

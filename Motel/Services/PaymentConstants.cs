@@ -1,4 +1,4 @@
-﻿namespace Motel.Services;
+namespace Motel.Services;
 
 public static class PaymentProviders
 {
@@ -21,6 +21,7 @@ public static class PaymentStatus
     public const string Succeeded = "succeeded";
     public const string Failed = "failed";
     public const string Refunded = "refunded";
+    public const string Rejected = "rejected";
 }
 public static class InvoiceStatus
 {

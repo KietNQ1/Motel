@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Motel.Data;
 using Motel.Models;
 using Motel.Repositories.Interface;
@@ -19,7 +19,10 @@ public class PaymentRepository : IPaymentRepository
        => _db.Invoices
         .Include(i => i.InvoiceLines)
         .Include(i => i.Contract).ThenInclude(c => c.Tenant)
-        .Include(i => i.Room).ThenInclude(r => r.Property)
+        .Include(i => i.Room)
+            .ThenInclude(r => r.Property)
+                .ThenInclude(p => p.Landlord)
+                    .ThenInclude(l => l.LandlordBankAccounts)
         .FirstOrDefaultAsync(i => i.InvoiceId == invoiceId);
 
     public async Task<PaymentIntent?> GetIntentAsync(int paymentIntentId)
@@ -27,11 +30,30 @@ public class PaymentRepository : IPaymentRepository
         return await _db.PaymentIntents
             .Include(p => p.Invoice)
                 .ThenInclude(i => i.Room)
+                    .ThenInclude(r => r.Property)
+                        .ThenInclude(p => p.Landlord)
+                            .ThenInclude(l => l.LandlordBankAccounts)
             .Include(p => p.Invoice)
                 .ThenInclude(i => i.Contract)
                     .ThenInclude(c => c.Tenant)
             .FirstOrDefaultAsync(p => p.PaymentIntentId == paymentIntentId);
     }
+
+    public Task<PaymentIntent?> GetPendingIntentForInvoiceAsync(int invoiceId, string provider)
+        => _db.PaymentIntents
+            .Include(p => p.Invoice)
+                .ThenInclude(i => i.Room)
+                    .ThenInclude(r => r.Property)
+                        .ThenInclude(p => p.Landlord)
+                            .ThenInclude(l => l.LandlordBankAccounts)
+            .Include(p => p.Invoice)
+                .ThenInclude(i => i.Contract)
+                    .ThenInclude(c => c.Tenant)
+            .FirstOrDefaultAsync(x =>
+                x.InvoiceId == invoiceId &&
+                x.Provider == provider &&
+                x.Status == PaymentIntentStatus.Pending &&
+                (!x.ExpiredAt.HasValue || x.ExpiredAt > DateTime.UtcNow));
 
     public Task<bool> HasPendingIntentAsync(int invoiceId)
     => _db.PaymentIntents.AnyAsync(x =>
@@ -51,6 +73,24 @@ public class PaymentRepository : IPaymentRepository
     {
         _db.Payments.Add(payment);
         await Task.CompletedTask;
+    }
+
+    public async Task<List<PaymentIntent>> GetVietQrRequestsForLandlordAsync(int landlordId)
+    {
+        return await _db.PaymentIntents
+            .Include(p => p.Invoice)
+                .ThenInclude(i => i.Room)
+                    .ThenInclude(r => r.Property)
+            .Include(p => p.Invoice)
+                .ThenInclude(i => i.Contract)
+                    .ThenInclude(c => c.Tenant)
+            .Where(p =>
+                p.Provider == PaymentProviders.VIETQR &&
+                p.Invoice.Room.Property.LandlordId == landlordId &&
+                p.Status == PaymentIntentStatus.Succeeded &&
+                !p.Payments.Any(x => x.Status == PaymentStatus.Succeeded || x.Status == PaymentStatus.Rejected))
+            .OrderByDescending(p => p.CreatedAt)
+            .ToListAsync();
     }
 
     public Task SaveChangesAsync()

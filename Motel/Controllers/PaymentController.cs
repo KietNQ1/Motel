@@ -5,6 +5,8 @@ using Motel.Services;
 using Motel.Services.Interface;
 using Motel.ViewModels.Payment;
 using static Motel.ViewModels.Payment.CashReceiptViewModel;
+using Motel.Helpers;
+using Motel.Models;
 
 namespace Motel.Controllers;
 
@@ -13,15 +15,18 @@ public class PaymentController : Controller
     private readonly IPaymentService _paymentService;
     private readonly IPaymentRepository _paymentRepo;
     private readonly IInvoiceRepository _invoiceRepo; // ✅ thêm
+    private readonly LandlordHelper _landlordHelper;
 
     public PaymentController(
         IPaymentService paymentService,
         IPaymentRepository paymentRepo,
-        IInvoiceRepository invoiceRepo)
+        IInvoiceRepository invoiceRepo,
+        LandlordHelper landlordHelper)
     {
         _paymentService = paymentService;
         _paymentRepo = paymentRepo;
         _invoiceRepo = invoiceRepo;
+        _landlordHelper = landlordHelper;
     }
 
    
@@ -77,8 +82,12 @@ public class PaymentController : Controller
                 return RedirectToAction(nameof(CashConfirm), new { paymentIntentId = intent.PaymentIntentId });
             }
 
-            // Online: tạm thời bạn chưa implement gateway => trả về trang "chưa hỗ trợ"
-            // Sau này PAYOS/VNPAY/MOMO: tạo link/QR rồi redirect/show QR
+            if (vm.Provider == PaymentProviders.VIETQR)
+            {
+                return RedirectToAction(nameof(VietQr), new { paymentIntentId = intent.PaymentIntentId });
+            }
+
+            // Online khác (PayOS, v.v...): tạm thời chưa implement gateway => trả về trang "chưa hỗ trợ"
             return RedirectToAction(nameof(IntentCreated), new { id = intent.PaymentIntentId });
         }
         catch (Exception ex)
@@ -114,6 +123,68 @@ public class PaymentController : Controller
         ViewBag.RoomName = intent.Invoice?.Room?.RoomName ?? "Chưa có phòng";
         ViewBag.TenantName = intent.Invoice?.Contract?.Tenant?.FullName ?? "Chưa có người thuê";
         return View();
+    }
+
+    // GET: /Payment/VietQr?paymentIntentId=5
+    [HttpGet]
+    public async Task<IActionResult> VietQr(int paymentIntentId)
+    {
+        var intent = await _paymentRepo.GetIntentAsync(paymentIntentId);
+        if (intent == null) return NotFound();
+
+        var invoice = intent.Invoice;
+        if (invoice == null) return NotFound();
+
+        var room = invoice.Room;
+        var property = room?.Property;
+        var landlord = property?.Landlord;
+        var bank = landlord?.LandlordBankAccounts
+            .Where(b => !b.IsDeleted)
+            .OrderByDescending(b => b.IsPrimary)
+            .ThenBy(b => b.LandlordBankAccountId)
+            .FirstOrDefault();
+
+        if (landlord == null || bank == null)
+        {
+            return RedirectToAction(nameof(PaymentNotice), new
+            {
+                message = "Chủ trọ chưa cấu hình thông tin tài khoản ngân hàng cho VietQR.",
+                invoiceId = invoice.InvoiceId
+            });
+        }
+
+        // var amountVnd = (long)decimal.Round(intent.Amount, 0, MidpointRounding.AwayFromZero);
+        // // Nội dung rõ ràng cho người thuê & chủ trọ
+        // var transferContent = $"Thanh toan hoa don {invoice.InvoiceId}";
+        var amountVnd = (long)decimal.Round(intent.Amount, 0, MidpointRounding.AwayFromZero);
+
+        // Ví dụ nội dung chi tiết: HĐ 5 - P101 - 3/2024
+        var roomName = room?.RoomName ?? "";
+        var period = invoice.PeriodMonth; // dạng yyyymm
+        var transferContent = $"HD {invoice.InvoiceId} - {roomName} - {period}";
+
+        var encodedContent = Uri.EscapeDataString(transferContent);
+        var qrImageUrl =
+            $"https://img.vietqr.io/image/{bank.BankCode}-{bank.BankAccountNumber}-qr_only.png?amount={amountVnd}&addInfo={encodedContent}";
+
+        var vm = new VietQrPaymentViewModel
+        {
+            InvoiceId = invoice.InvoiceId,
+            PaymentIntentId = intent.PaymentIntentId,
+            Amount = intent.Amount,
+            TransferContent = transferContent,
+            LandlordName = landlord.DisplayName,
+            BankName = bank.BankName,
+            BankAccountNumber = bank.BankAccountNumber,
+            BankAccountName = bank.BankAccountName,
+            BankCode = bank.BankCode,
+            QrImageUrl = qrImageUrl,
+            RoomName = room?.RoomName,
+            PropertyName = property?.Name,
+            TenantName = invoice.Contract?.Tenant?.FullName
+        };
+
+        return View(vm);
     }
 
 
@@ -182,5 +253,155 @@ public class PaymentController : Controller
         ViewBag.Message = message;
         ViewBag.InvoiceId = invoiceId;
         return View();
+    }
+
+    // POST: /Payment/VietQrTenantConfirmed
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> VietQrTenantConfirmed(int paymentIntentId)
+    {
+        var intent = await _paymentRepo.GetIntentAsync(paymentIntentId);
+        if (intent == null)
+            return RedirectToAction(nameof(PaymentNotice), new
+            {
+                message = "Payment intent không tồn tại.",
+                invoiceId = (int?)null
+            });
+
+        if (intent.Provider != PaymentProviders.VIETQR)
+        {
+            return RedirectToAction(nameof(PaymentNotice), new
+            {
+                message = "Phương thức thanh toán không hợp lệ.",
+                invoiceId = intent.InvoiceId
+            });
+        }
+
+        if (intent.ExpiredAt.HasValue && intent.ExpiredAt.Value <= DateTime.UtcNow)
+        {
+            intent.Status = PaymentIntentStatus.Expired;
+            await _paymentRepo.SaveChangesAsync();
+
+            return RedirectToAction(nameof(PaymentNotice), new
+            {
+                message = "Yêu cầu thanh toán đã hết hạn, vui lòng tạo lại.",
+                invoiceId = intent.InvoiceId
+            });
+        }
+
+        // Đánh dấu intent đã được người thuê báo là đã chuyển khoản.
+        // Vẫn chưa tạo Payment, chờ chủ trọ xác nhận thủ công.
+        intent.Status = PaymentIntentStatus.Succeeded;
+        await _paymentRepo.SaveChangesAsync();
+
+        return RedirectToAction(nameof(PaymentNotice), new
+        {
+            message = "Cảm ơn bạn. Thanh toán của bạn đang chờ chủ trọ xác nhận.",
+            invoiceId = intent.InvoiceId
+        });
+    }
+
+    // POST: /Payment/VietQrLandlordConfirm
+    // Action này dành cho chủ trọ, sau khi kiểm tra trong app ngân hàng.
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> VietQrLandlordConfirm(int paymentIntentId)
+    {
+        try
+        {
+            // TODO: lấy userId thực từ Identity
+            var payment = await _paymentService.ConfirmVietQrAsync(paymentIntentId, confirmedByUserId: 1);
+
+            return RedirectToAction(
+                nameof(CashReceipt),
+                new { paymentId = payment.PaymentId }
+            );
+        }
+        catch (Exception ex)
+        {
+            var intent = await _paymentRepo.GetIntentAsync(paymentIntentId);
+            return RedirectToAction(nameof(PaymentNotice), new
+            {
+                message = ex.Message,
+                invoiceId = intent?.InvoiceId
+            });
+        }
+    }
+
+    // POST: /Payment/VietQrLandlordReject
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> VietQrLandlordReject(int paymentIntentId)
+    {
+        var intent = await _paymentRepo.GetIntentAsync(paymentIntentId);
+        if (intent == null)
+        {
+            return RedirectToAction(nameof(PaymentNotice), new
+            {
+                message = "Payment intent không tồn tại.",
+                invoiceId = (int?)null
+            });
+        }
+
+        if (intent.Provider != PaymentProviders.VIETQR)
+        {
+            return RedirectToAction(nameof(PaymentNotice), new
+            {
+                message = "Phương thức thanh toán không hợp lệ.",
+                invoiceId = intent.InvoiceId
+            });
+        }
+
+        // Tạo bản ghi Payment với trạng thái Rejected để lưu lịch sử
+        var payment = new Payment
+        {
+            InvoiceId = intent.InvoiceId,
+            PaymentIntentId = intent.PaymentIntentId,
+            Provider = PaymentProviders.VIETQR,
+            ProviderTxnId = $"VIETQR-REJECT-{DateTime.UtcNow:yyyyMMddHHmmss}-INTENT{intent.PaymentIntentId}",
+            Amount = intent.Amount,
+            PaidAt = DateTime.UtcNow,
+            Status = PaymentStatus.Rejected,
+            RawCallbackJson = System.Text.Json.JsonSerializer.Serialize(new
+            {
+                type = "vietqr_rejected",
+                rejectedAt = DateTime.UtcNow
+            })
+        };
+
+        await _paymentRepo.AddPaymentAsync(payment);
+        await _paymentRepo.SaveChangesAsync();
+
+        return RedirectToAction(nameof(PaymentNotice), new
+        {
+            message = "Yêu cầu thanh toán đã bị từ chối.",
+            invoiceId = intent.InvoiceId
+        });
+    }
+
+    // GET: /Payment/VietQrRequests
+    [HttpGet]
+    public async Task<IActionResult> VietQrRequests()
+    {
+        var landlordId = await _landlordHelper.GetCurrentLandlordIdAsync(User);
+        if (landlordId == 0)
+        {
+            return RedirectToAction("Index", "Home");
+        }
+
+        var intents = await _paymentRepo.GetVietQrRequestsForLandlordAsync(landlordId);
+
+        var list = intents.Select(p => new VietQrRequestItemViewModel
+        {
+            PaymentIntentId = p.PaymentIntentId,
+            InvoiceId = p.InvoiceId,
+            RoomName = p.Invoice.Room.RoomName,
+            PropertyName = p.Invoice.Room.Property.Name,
+            TenantName = p.Invoice.Contract.Tenant.FullName,
+            Amount = p.Amount,
+            CreatedAt = p.CreatedAt
+        }).ToList();
+
+        return View(list);
     }
 }
