@@ -162,11 +162,15 @@ public class PaymentController : Controller
         var roomName = room?.RoomName ?? "";
         var period = invoice.PeriodMonth; // dạng yyyymm
         var transferContent = $"HD {invoice.InvoiceId} - {roomName} - {period}";
+        //var bankCode = bank.BankCode.Trim().ToLower();
 
         var encodedContent = Uri.EscapeDataString(transferContent);
+        //var qrImageUrl =
+        //    $"https://img.vietqr.io/image/{bankCode}-{bank.BankAccountNumber}-qr_only.png?amount={amountVnd}&addInfo={encodedContent}";
         var qrImageUrl =
-            $"https://img.vietqr.io/image/{bank.BankCode}-{bank.BankAccountNumber}-qr_only.png?amount={amountVnd}&addInfo={encodedContent}";
-
+                        $"https://img.vietqr.io/image/{bank.BankCode.Trim().ToLower()}-{bank.BankAccountNumber}-compact2.png" +
+                        $"?amount={amountVnd}&addInfo={Uri.EscapeDataString(transferContent)}";
+        Console.WriteLine(qrImageUrl);
         var vm = new VietQrPaymentViewModel
         {
             InvoiceId = invoice.InvoiceId,

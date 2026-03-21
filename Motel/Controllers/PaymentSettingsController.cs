@@ -17,14 +17,14 @@ public class PaymentSettingsController : Controller
     private readonly LandlordHelper _landlordHelper;
     private static readonly (string Code, string Name)[] VietQrBanks =
     {
-        ("VCB", "Vietcombank"),
-        ("BIDV", "Ngân hàng Đầu tư và Phát triển Việt Nam (BIDV)"),
-        ("MBB", "Ngân hàng Quân đội (MB Bank)"),
-        ("TCB", "Techcombank"),
-        ("ACB", "Asia Commercial Bank (ACB)"),
-        ("VPB", "VPBank"),
-        ("VIB", "VIB"),
-        ("TPB", "TPBank"),
+        ("970436", "Vietcombank"),
+        ("970418", "BIDV"),
+        ("970422", "MB Bank"),
+        ("970407", "Techcombank"),
+        ("970416", "ACB"),
+        ("970432", "VPBank"),
+        ("970441", "VIB"),
+        ("970423", "TPBank"),
     };
 
     public PaymentSettingsController(MotelDbContext db, LandlordHelper landlordHelper)
