@@ -12,23 +12,29 @@
             <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
             <p class="mt-1.5 text-sm text-gray-600 dark:text-gray-400">Tổng quan và quản lý nhanh</p>
         </div>
-        <div class="flex items-center gap-3">
-            <select id="propertyFilter" class="rounded-xl border-[#e7d9cf] bg-white px-4 py-2.5 text-sm font-medium text-text-main shadow-sm transition-all hover:border-primary/30 hover:shadow focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
+        <div class="flex flex-wrap items-center gap-3">
+            <select id="propertyFilter" class="rounded-xl border-[#e7d9cf] bg-white px-4 py-2.5 text-sm font-medium text-text-main shadow-sm transition-all hover:border-primary/30 focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
                 <option value="">Tất cả tòa nhà</option>
                 @foreach (var property in Model.Properties)
                 {
                     var isSelected = ViewBag.SelectedPropertyId != null && ViewBag.SelectedPropertyId == property.PropertyId;
-                    <option value="@property.PropertyId" selected="@isSelected">
-                        @property.Name - @property.Address
-                    </option>
+                    <option value="@property.PropertyId" selected="@isSelected">@property.Name - @property.Address</option>
                 }
             </select>
-            <button class="rounded-xl bg-gradient-to-r from-primary to-primary-dark px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary/30 transition-all hover:shadow-xl hover:shadow-primary/40 hover:-translate-y-0.5">
-                <svg class="inline h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
-                Thao tác nhanh
-            </button>
+            <select id="monthFilter" class="rounded-xl border-[#e7d9cf] bg-white px-4 py-2.5 text-sm font-medium text-text-main shadow-sm transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                @for (var m = 1; m <= 12; m++)
+                {
+                    var sel = ViewBag.SelectedMonth != null && (int)ViewBag.SelectedMonth == m;
+                    <option value="@m" selected="@sel">Tháng @m</option>
+                }
+            </select>
+            <select id="yearFilter" class="rounded-xl border-[#e7d9cf] bg-white px-4 py-2.5 text-sm font-medium text-text-main shadow-sm transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                @for (var y = DateTime.Now.Year; y >= DateTime.Now.Year - 5; y--)
+                {
+                    var sel = ViewBag.SelectedYear != null && (int)ViewBag.SelectedYear == y;
+                    <option value="@y" selected="@sel">@y</option>
+                }
+            </select>
         </div>
     </div>
 </div>
@@ -124,12 +130,10 @@
                 <p class="mt-1.5 text-2xl font-bold text-rose-600 dark:text-rose-400">@Model.FinancialStats.UnpaidAmountFormatted</p>
                 <div class="mt-2 flex items-center justify-between">
                     <span class="text-xs text-rose-600 dark:text-rose-400">@Model.FinancialStats.UnpaidInvoiceText</span>
-                    <button class="inline-flex items-center gap-1 text-xs font-semibold text-rose-600 transition-colors hover:text-rose-700">
+                    <a asp-controller="Invoice" asp-action="Index" class="inline-flex items-center gap-1 text-xs font-semibold text-rose-600 transition-colors hover:text-rose-700">
                         Xem
-                        <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"/>
-                        </svg>
-                    </button>
+                        <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </a>
                 </div>
             </div>
         </div>
@@ -179,7 +183,7 @@
                     </h3>
                     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Cần theo dõi</p>
                 </div>
-                <a asp-controller="Invoice" asp-action="Index" class="inline-flex items-center gap-1.5 text-sm font-semibold text-sky-600 transition-colors hover:text-sky-700">
+                <a asp-controller="Invoice" asp-action="Index" class="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-2 text-sm font-semibold text-sky-600 shadow-sm ring-1 ring-sky-200 transition-all hover:bg-sky-50 hover:text-sky-700 hover:ring-sky-300 dark:bg-gray-800 dark:ring-gray-700">
                     Xem tất cả
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -192,7 +196,7 @@
                     <div class="max-h-[298px] space-y-2 overflow-y-auto pr-1">
                         @foreach (var invoice in Model.RecentInvoices)
                         {
-                            <div class="group flex items-center justify-between rounded-xl border border-gray-100 bg-gradient-to-r from-gray-50/50 to-transparent p-3 transition-all hover:border-sky-200 hover:from-sky-50/30 hover:shadow-md dark:border-gray-800 dark:from-gray-800/30 dark:hover:border-sky-300/30 dark:hover:from-sky-900/10">
+                            <a asp-controller="Invoice" asp-action="Details" asp-route-id="@invoice.InvoiceId" class="group flex items-center justify-between rounded-xl border border-gray-100 bg-gradient-to-r from-gray-50/50 to-transparent p-3 transition-all hover:border-sky-200 hover:from-sky-50/30 hover:shadow-md dark:border-gray-800 dark:from-gray-800/30 dark:hover:border-sky-300/30 dark:hover:from-sky-900/10">
                                 <div class="flex-1 min-w-0">
                                     <p class="text-sm font-bold text-gray-900 dark:text-white">@invoice.RoomName</p>
                                     <p class="mt-1 flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
@@ -208,7 +212,7 @@
                                         @invoice.StatusText
                                     </span>
                                 </div>
-                            </div>
+                            </a>
                         }
                     </div>
                 }
@@ -238,7 +242,7 @@
                     </h3>
                     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">30 ngày tới</p>
                 </div>
-                <a asp-controller="Contract" asp-action="Index" class="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-2 text-sm font-semibold text-rose-600 shadow-sm ring-1 ring-rose-200 transition-all hover:bg-rose-50 hover:text-rose-700 hover:ring-rose-300 dark:bg-gray-800 dark:ring-gray-700">
+                <a asp-controller="Contract" asp-action="Index" asp-route-expiringOnly="true" class="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-2 text-sm font-semibold text-rose-600 shadow-sm ring-1 ring-rose-200 transition-all hover:bg-rose-50 hover:text-rose-700 hover:ring-rose-300 dark:bg-gray-800 dark:ring-gray-700">
                     Xem tất cả
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -303,19 +307,19 @@
 
 @section Scripts {
 <script>
-    // Property Filter Handler
-    document.getElementById('propertyFilter').addEventListener('change', function() {
-        const propertyId = this.value;
+    function applyFilters() {
         const url = new URL(window.location.href);
-        
-        if (propertyId) {
-            url.searchParams.set('propertyId', propertyId);
-        } else {
-            url.searchParams.delete('propertyId');
-        }
-        
+        const propertyId = document.getElementById('propertyFilter').value;
+        const month = document.getElementById('monthFilter').value;
+        const year = document.getElementById('yearFilter').value;
+        if (propertyId) url.searchParams.set('propertyId', propertyId); else url.searchParams.delete('propertyId');
+        url.searchParams.set('month', month);
+        url.searchParams.set('year', year);
         window.location.href = url.toString();
-    });
+    }
+    document.getElementById('propertyFilter').addEventListener('change', applyFilters);
+    document.getElementById('monthFilter').addEventListener('change', applyFilters);
+    document.getElementById('yearFilter').addEventListener('change', applyFilters);
 
     // Main Revenue Chart (12 months)
     const revenueOptions = {

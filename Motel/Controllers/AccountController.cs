@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.WebUtilities;
 using Motel.Models;
@@ -64,7 +66,31 @@ namespace Motel.Controllers
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                 return Redirect(returnUrl);
 
-            return RedirectToAction("Index", "Home");
+            return RedirectToAction("Index", "Dashboard");
+        }
+
+        // ================= PROFILE =================
+
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> Profile()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return RedirectToAction("Login");
+
+            var roles = await _userManager.GetRolesAsync(user);
+            var landlord = await _db.Landlords.FirstOrDefaultAsync(l => l.UserId == user.Id && !l.IsDeleted);
+
+            var vm = new ProfileViewModel
+            {
+                FullName = user.FullName ?? "",
+                Email = user.Email ?? "",
+                PhoneNumber = user.PhoneNumber,
+                Role = roles.FirstOrDefault(),
+                LandlordDisplayName = landlord?.DisplayName
+            };
+            return View(vm);
         }
 
         // ================= LOGOUT =================
@@ -130,7 +156,7 @@ namespace Motel.Controllers
 
             await _signInManager.SignInAsync(user, false);
 
-            return RedirectToAction("Index", "Home");
+            return RedirectToAction("Index", "Dashboard");
         }
 
         // ================= FORGOT PASSWORD =================
@@ -259,7 +285,7 @@ namespace Motel.Controllers
 
             if (signInResult.Succeeded)
             {
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction("Index", "Dashboard");
             }
 
             // Lấy thông tin từ Google
@@ -305,7 +331,7 @@ namespace Motel.Controllers
             // login hệ thống
             await _signInManager.SignInAsync(user, false);
 
-            return RedirectToAction("Index", "Home");
+            return RedirectToAction("Index", "Dashboard");
         }
     }
 }

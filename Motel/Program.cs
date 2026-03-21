@@ -74,6 +74,7 @@ builder.Services.AddScoped<ITaxRepository, TaxRepository>();
 builder.Services.AddScoped<IRoomFurnitureRepository, RoomFurnitureRepository>();
 
 // Services
+
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IRoomService, RoomService>();
 builder.Services.AddScoped<IInvoiceService, InvoiceService>();
@@ -81,7 +82,7 @@ builder.Services.AddScoped<ITenantService, TenantService>();
 builder.Services.AddScoped<IContractService, ContractService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<ITaxService, TaxService>();
-
+builder.Services.AddScoped<INotificationService, NotificationService>();
 // Helpers
 builder.Services.AddScoped<LandlordHelper>();
 builder.Services.AddScoped<IRoomFurnitureService, RoomFurnitureService>();

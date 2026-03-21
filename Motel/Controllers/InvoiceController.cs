@@ -1,10 +1,14 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Motel.Helpers;
+using Motel.Repositories;
 using Motel.Repositories.Interface;
 using Motel.Services.Interface;
 using Motel.ViewModels.Invoice;
 
 namespace Motel.Controllers;
 
+[Authorize]
 public sealed class InvoiceController : Controller
 {
     private readonly IInvoiceService _invoiceService;
@@ -13,6 +17,8 @@ public sealed class InvoiceController : Controller
     private readonly IMeterReadingRepository _meterRepo;
     private readonly IFeeTypeRepository _feeTypeRepo;
     private readonly IFeeSettingRepository _feeSettingRepo;
+    private readonly IDashboardRepository _dashboardRepo;
+    private readonly LandlordHelper _landlordHelper;
 
     public InvoiceController(
         IInvoiceService invoiceService,
@@ -20,7 +26,9 @@ public sealed class InvoiceController : Controller
         IRoomRepository roomRepo,
         IMeterReadingRepository meterRepo,
         IFeeTypeRepository feeTypeRepo,
-        IFeeSettingRepository feeSettingRepo)
+        IFeeSettingRepository feeSettingRepo,
+        IDashboardRepository dashboardRepo,
+        LandlordHelper landlordHelper)
     {
         _invoiceService = invoiceService;
         _contractRepo = contractRepo;
@@ -28,14 +36,55 @@ public sealed class InvoiceController : Controller
         _meterRepo = meterRepo;
         _feeTypeRepo = feeTypeRepo;
         _feeSettingRepo = feeSettingRepo;
+        _dashboardRepo = dashboardRepo;
+        _landlordHelper = landlordHelper;
     }
 
-    // GET: /Invoice/History
+    /// <summary>
+    /// Danh sách hóa đơn - xem tất cả, lọc
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> Index(int? propertyId, string? status, int? month, int? year, CancellationToken ct)
+    {
+        var landlordId = await _landlordHelper.GetCurrentLandlordIdAsync(User);
+        if (landlordId == 0)
+        {
+            TempData["Error"] = "Bạn không có quyền truy cập.";
+            return RedirectToAction("Index", "Home");
+        }
+
+        int? periodMonth = (year.HasValue && month.HasValue) ? year.Value * 100 + month.Value : null;
+        var list = await _dashboardRepo.GetInvoiceListAsync(landlordId, propertyId, status, periodMonth);
+        var properties = await _dashboardRepo.GetPropertiesAsync(landlordId);
+
+        ViewBag.Properties = properties;
+        ViewBag.SelectedPropertyId = propertyId;
+        ViewBag.SelectedStatus = status ?? "";
+        ViewBag.SelectedMonth = month;
+        ViewBag.SelectedYear = year;
+        return View(list);
+    }
+
+    /// <summary>
+    /// Gửi nhắc thanh toán hàng loạt (UI đã có, backend phát triển sau).
+    /// </summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult SendBulkReminder([FromForm] int[]? invoiceIds)
+    {
+        TempData["Info"] = "Tính năng nhắc thanh toán đang được phát triển. Vui lòng thử lại sau.";
+        return RedirectToAction(nameof(Index));
+    }
+
     [HttpGet]
     public async Task<IActionResult> History(CancellationToken ct)
     {
-        // TODO: lấy landlordId từ claims sau khi có auth, tạm dùng 1
-        var landlordId = 1;
+        var landlordId = await _landlordHelper.GetCurrentLandlordIdAsync(User);
+        if (landlordId == 0)
+        {
+            TempData["Error"] = "Bạn không có quyền truy cập.";
+            return RedirectToAction("Index", "Home");
+        }
         var history = await _invoiceService.GetTransactionHistoryAsync(landlordId, ct);
         return View(history);
     }
@@ -135,13 +184,20 @@ public sealed class InvoiceController : Controller
         }
     }
 
-    // GET: /Invoice/Details/5
     [HttpGet]
     public async Task<IActionResult> Details(int id, CancellationToken ct)
     {
+        var landlordId = await _landlordHelper.GetCurrentLandlordIdAsync(User);
+        if (landlordId == 0)
+        {
+            TempData["Error"] = "Bạn không có quyền truy cập.";
+            return RedirectToAction("Index", "Home");
+        }
         var invoice = await _invoiceService.GetInvoiceWithLinesAsync(id, ct);
         if (invoice is null) return NotFound();
+        if (invoice.Room?.Property?.LandlordId != landlordId)
+            return NotFound();
 
-        return View(invoice); // => Views/Invoice/Details.cshtml
+        return View(invoice);
     }
 }

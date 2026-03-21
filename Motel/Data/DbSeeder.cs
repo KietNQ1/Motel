@@ -104,6 +104,16 @@ namespace Motel.Data
             // Tenant 4 -> A1
             await SetupFullRentalFlow(context, p3r1, tenant4, landlordUser2.Id, today.AddMonths(-3), 1500000, 3000, 12000, 0, 10000, 20, 50, 5, 12);
 
+            // Một hợp đồng sắp hết hạn trong 25 ngày (P101 - để test mục "sắp hết hạn")
+            var contractExpiring = await context.Contracts
+                .Include(c => c.Room)
+                .FirstOrDefaultAsync(c => c.Room.RoomName == "P101" && c.Status == "active");
+            if (contractExpiring != null)
+            {
+                contractExpiring.EndDate = today.AddDays(25);
+                await context.SaveChangesAsync();
+            }
+
             // --- 8. SEED TAX RULES ---
             Console.WriteLine("=> Seeding TaxRules...");
             var ruleName = "Thông tư 40/2021/TT-BTC";
@@ -187,9 +197,34 @@ namespace Motel.Data
 
         private static async Task EnsureFurnitureAsync(MotelDbContext context, int roomId, string name, int qty, string desc)
         {
-            if (!await context.RoomFurnitures.AnyAsync(f => f.RoomId == roomId && f.Name == name && !f.IsDeleted))
+            // Ensure the catalog exists for this furniture name
+            var catalog = await context.FurnitureCatalogs
+                .FirstOrDefaultAsync(c => c.Name == name);
+
+            if (catalog == null)
             {
-                context.RoomFurnitures.Add(new RoomFurniture { RoomId = roomId, Name = name, Quantity = qty, Description = desc, IsDeleted = false });
+                catalog = new FurnitureCatalog { Name = name, IsActive = true };
+                context.FurnitureCatalogs.Add(catalog);
+                await context.SaveChangesAsync();
+            }
+
+            // Default status: try to find "Tốt" otherwise use any existing status
+            var status = await context.FurnitureStatuses
+                .FirstOrDefaultAsync(s => s.Name == "Tốt")
+                ?? await context.FurnitureStatuses.FirstOrDefaultAsync();
+
+            // Add furniture if not exists in this room for this catalog
+            if (!await context.RoomFurnitures.AnyAsync(f => f.RoomId == roomId && f.FurnitureCatalogId == catalog.FurnitureCatalogId && !f.IsDeleted))
+            {
+                context.RoomFurnitures.Add(new RoomFurniture
+                {
+                    RoomId = roomId,
+                    FurnitureCatalogId = catalog.FurnitureCatalogId,
+                    Quantity = qty,
+                    Description = desc,
+                    FurnitureStatusId = status?.FurnitureStatusId ?? 0,
+                    IsDeleted = false
+                });
                 await context.SaveChangesAsync();
             }
         }
@@ -293,7 +328,36 @@ namespace Motel.Data
                 context.FeeTypes.Add(f);
                 await context.SaveChangesAsync();
             }
+
+            if (!context.FurnitureCatalogs.Any())
+            {
+                context.FurnitureCatalogs.AddRange(
+                    new FurnitureCatalog { Name = "Giường" },
+                    new FurnitureCatalog { Name = "Tủ quần áo" },
+                    new FurnitureCatalog { Name = "Bàn" },
+                    new FurnitureCatalog { Name = "Ghế" },
+                    new FurnitureCatalog { Name = "Điều hòa" },
+                    new FurnitureCatalog { Name = "Máy giặt" },
+                    new FurnitureCatalog { Name = "Tủ lạnh" },
+                    new FurnitureCatalog { Name = "Quạt" }
+                );
+
+                await context.SaveChangesAsync();
+            }
+
+            if (!context.FurnitureStatuses.Any())
+            {
+                context.FurnitureStatuses.AddRange(
+                    new FurnitureStatus { Name = "Tốt" },
+                    new FurnitureStatus { Name = "Hỏng" },
+                    new FurnitureStatus { Name = "Bảo trì" }
+                );
+
+                await context.SaveChangesAsync();
+            }
+
             return f;
         }
     }
 }
+

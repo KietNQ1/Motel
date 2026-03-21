@@ -1,31 +1,79 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Motel.Helpers;
+using Motel.Repositories;
 using Motel.Services.Interface;
 using Motel.Services.Interfaces;
 using Motel.ViewModels.Contract;
 
 namespace Motel.Controllers
 {
+    [Authorize]
     public class ContractController : Controller
     {
         private readonly IContractService _service;
         private readonly ILogger<ContractController> _logger;
         private readonly LandlordHelper _landlordHelper;
         private readonly IRoomFurnitureService _furnitureService;
+        private readonly IDashboardRepository _dashboardRepo;
 
         public ContractController(
             IContractService service,
             ILogger<ContractController> logger,
             LandlordHelper landlordHelper,
-            IRoomFurnitureService furnitureService)
+            IRoomFurnitureService furnitureService,
+            IDashboardRepository dashboardRepo)
         {
             _service = service;
             _logger = logger;
             _landlordHelper = landlordHelper;
             _furnitureService = furnitureService;
+            _dashboardRepo = dashboardRepo;
         }
 
-[HttpGet]
+        /// <summary>
+        /// Danh sách hợp đồng (tất cả đang hiệu lực hoặc chỉ sắp hết hạn)
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> Index(int? propertyId, bool expiringOnly = false)
+        {
+            var landlordId = await _landlordHelper.GetCurrentLandlordIdAsync(User);
+            if (landlordId == 0)
+            {
+                TempData["Error"] = "Bạn không có quyền truy cập.";
+                return RedirectToAction("Index", "Home");
+            }
+            var list = await _dashboardRepo.GetContractListAsync(landlordId, propertyId, expiringOnly);
+            var properties = await _dashboardRepo.GetPropertiesAsync(landlordId);
+            ViewBag.Properties = properties;
+            ViewBag.SelectedPropertyId = propertyId;
+            ViewBag.ExpiringOnly = expiringOnly;
+            return View(list);
+        }
+
+        /// <summary>
+        /// Gia hạn: chuyển sang tạo hợp đồng mới cho cùng phòng
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> Renew(int id)
+        {
+            var landlordId = await _landlordHelper.GetCurrentLandlordIdAsync(User);
+            if (landlordId == 0)
+            {
+                TempData["Error"] = "Bạn không có quyền.";
+                return RedirectToAction("Index", "Home");
+            }
+            var (contract, _, _) = await _service.GetContractDetailsAsync(landlordId, id);
+            if (contract == null)
+            {
+                TempData["Error"] = "Không tìm thấy hợp đồng.";
+                return RedirectToAction(nameof(Index));
+            }
+            TempData["Info"] = "Tạo hợp đồng mới để gia hạn. Hợp đồng cũ sẽ cần kết thúc sau khi ký mới.";
+            return RedirectToAction(nameof(Create), new { roomId = contract.RoomId });
+        }
+
+        [HttpGet]
         public async Task<IActionResult> Create(int roomId)
         {
             var vm = await _service.BuildCreateViewModelAsync(await _landlordHelper.GetCurrentLandlordIdAsync(User), roomId);
