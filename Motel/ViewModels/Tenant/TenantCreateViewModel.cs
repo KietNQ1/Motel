@@ -27,6 +27,8 @@ namespace Motel.ViewModels.Tenant
         [Display(Name = "Nơi ĐKTT")]
         public string? PermanentAddress { get; set; }
 
+        public int? CccdImageId { get; set; }
+
         // optional: sau khi tạo xong quay về room/contract
         public int? ReturnRoomId { get; set; }
         public int? ReturnPropertyId { get; set; }

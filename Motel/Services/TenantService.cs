@@ -2,6 +2,7 @@ using Motel.Models;
 using Motel.Repositories.Interface;
 using Motel.Services.Interfaces;
 using Motel.ViewModels.Tenant;
+using Motel.Data;
 
 namespace Motel.Services
 {
@@ -9,10 +10,13 @@ namespace Motel.Services
     {
         private readonly ITenantRepository _repo;
         private readonly IPropertyRepository _propertyRepo;
-        public TenantService(ITenantRepository repo, IPropertyRepository propertyRepo) 
+        private readonly MotelDbContext _context;
+
+        public TenantService(ITenantRepository repo, IPropertyRepository propertyRepo, MotelDbContext context) 
         {
             _repo = repo;
             _propertyRepo = propertyRepo;
+            _context = context;
         }
 
         public async Task<int> CreateTenantAsync(int landlordId, TenantCreateViewModel vm)
@@ -30,7 +34,22 @@ namespace Motel.Services
                 CreatedAt = DateTime.Now
             };
 
-            return await _repo.CreateTenantAsync(tenant);
+            var tenantId = await _repo.CreateTenantAsync(tenant);
+
+            if (vm.CccdImageId.HasValue && vm.CccdImageId.Value > 0)
+            {
+                var storedFileRef = new StoredFileReference
+                {
+                    StoredFileId = vm.CccdImageId.Value,
+                    RefType = "tenant",
+                    RefId = tenantId,
+                    CreatedAt = DateTime.Now
+                };
+                _context.StoredFileReferences.Add(storedFileRef);
+                await _context.SaveChangesAsync();
+            }
+
+            return tenantId;
         }
 
         public Task<Tenant?> GetTenantDetailsAsync(int landlordId, int tenantId)
