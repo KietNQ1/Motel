@@ -57,8 +57,12 @@ public partial class MotelDbContext : IdentityDbContext<ApplicationUser, Identit
     public virtual DbSet<Tenant> Tenants { get; set; }
 
     public virtual DbSet<Transaction> Transactions { get; set; }
+
     public virtual DbSet<FurnitureCatalog> FurnitureCatalogs { get; set; }
+
     public DbSet<FurnitureStatus> FurnitureStatuses { get; set; }
+
+    public virtual DbSet<LandlordBankAccount> LandlordBankAccounts { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -166,6 +170,21 @@ public partial class MotelDbContext : IdentityDbContext<ApplicationUser, Identit
                 .HasForeignKey<Landlord>(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Landlords_AspNetUsers");
+        });
+
+        modelBuilder.Entity<LandlordBankAccount>(entity =>
+        {
+            entity.Property(e => e.BankName).HasMaxLength(150);
+            entity.Property(e => e.BankAccountNumber).HasMaxLength(50);
+            entity.Property(e => e.BankAccountName).HasMaxLength(150);
+            entity.Property(e => e.BankCode).HasMaxLength(20);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysdatetime())");
+
+            entity.HasOne(e => e.Landlord)
+                .WithMany(l => l.LandlordBankAccounts)
+                .HasForeignKey(e => e.LandlordId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_LandlordBankAccounts_Landlords");
         });
 
         modelBuilder.Entity<MeterReading>(entity =>
