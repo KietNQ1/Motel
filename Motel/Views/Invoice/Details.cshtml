@@ -35,6 +35,12 @@
 
     @if (Model.Status == "unpaid")
     {
+        <form asp-controller="Invoice" asp-action="SendReminder" asp-route-id="@Model.InvoiceId" method="post" class="d-inline">
+            <button type="submit" class="btn btn-info text-white">
+                Gửi email nhắc nợ
+            </button>
+        </form>
+
         <a class="btn btn-success"
            asp-controller="Payment"
            asp-action="CreateIntent"
