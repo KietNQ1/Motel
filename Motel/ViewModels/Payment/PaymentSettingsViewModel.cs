@@ -21,5 +21,9 @@ public class PaymentSettingsViewModel
     public string BankAccountName { get; set; } = string.Empty;
 
     public List<SelectListItem> BankOptions { get; set; } = new();
+
+    public List<VietQrRequestItemViewModel> VietQrRequests { get; set; } = new();
+
+    public List<PendingCashConfirmItemViewModel> PendingCashConfirms { get; set; } = new();
 }
 

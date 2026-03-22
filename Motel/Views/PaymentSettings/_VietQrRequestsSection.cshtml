@@ -1,0 +1,68 @@
+@model List<Motel.ViewModels.Payment.VietQrRequestItemViewModel>
+
+<div id="vietqr-requests" class="scroll-mt-24">
+    <h2 class="text-xl font-bold text-gray-900 dark:text-white">Yêu cầu thanh toán VietQR</h2>
+    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+        Các hóa đơn người thuê đã bấm &quot;Tôi đã thanh toán&quot; và đang chờ bạn đối chiếu ngân hàng.
+    </p>
+
+    <div class="mt-4 bg-white dark:bg-gray-800 shadow-sm rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-900/50">
+                <tr>
+                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Hóa đơn</th>
+                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Phòng</th>
+                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Người thuê</th>
+                    <th class="px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase">Số tiền</th>
+                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Thời gian</th>
+                    <th class="px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase">Hành động</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+            @if (!Model.Any())
+            {
+                <tr>
+                    <td colspan="6" class="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
+                        Hiện chưa có yêu cầu VietQR nào đang chờ xác nhận.
+                    </td>
+                </tr>
+            }
+            else
+            {
+                foreach (var item in Model)
+                {
+                    var isOverdue = (DateTime.UtcNow - item.CreatedAt).TotalDays > 2;
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                        <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">
+                            #@item.InvoiceId
+                            @if (isOverdue)
+                            {
+                                <span class="ml-2 inline-flex rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700">Quá hạn 2 ngày</span>
+                            }
+                        </td>
+                        <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+                            <div class="font-medium">@item.RoomName</div>
+                            <div class="text-xs text-gray-400">@item.PropertyName</div>
+                        </td>
+                        <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">@item.TenantName</td>
+                        <td class="px-4 py-3 text-sm text-right font-semibold text-gray-900 dark:text-white">@item.Amount.ToString("N0") đ</td>
+                        <td class="px-4 py-3 text-sm text-gray-500">@item.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                        <td class="px-4 py-3 text-sm text-right space-x-2">
+                            <form asp-action="VietQrLandlordConfirm" asp-controller="Payment" method="post" class="inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="paymentIntentId" value="@item.PaymentIntentId" />
+                                <button type="submit" class="inline-flex items-center px-3 py-1.5 rounded-md bg-green-600 text-white text-xs font-medium hover:bg-green-700">Xác nhận đã nhận tiền</button>
+                            </form>
+                            <form asp-action="VietQrLandlordReject" asp-controller="Payment" method="post" class="inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="paymentIntentId" value="@item.PaymentIntentId" />
+                                <button type="submit" class="inline-flex items-center px-3 py-1.5 rounded-md bg-red-600 text-white text-xs font-medium hover:bg-red-700">Từ chối</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

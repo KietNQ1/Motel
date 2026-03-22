@@ -25,12 +25,15 @@ namespace Motel.Services
             if (invoice.Status == "paid")
                 throw new Exception("Invoice already paid");
 
-            // Nếu đã có intent pending cùng provider (chưa hết hạn) thì tái sử dụng
+            // Cùng phương thức + pending chưa hết hạn → dùng lại (tránh tạo bản ghi trùng).
             var existing = await _repo.GetPendingIntentForInvoiceAsync(invoiceId, provider);
             if (existing != null)
-            {
                 return existing;
-            }
+
+            // Một hóa đơn chỉ một luồng thanh toán đang mở: chặn thêm khi đã có pending (phương thức khác) hoặc VietQR chờ chủ trọ.
+            if (await _repo.HasBlockingPaymentIntentForInvoiceAsync(invoiceId))
+                throw new Exception(
+                    "Hóa đơn này đã có yêu cầu thanh toán đang xử lý. Bạn không thể tạo thêm yêu cầu cho đến khi yêu cầu hiện tại hết hạn, bị hủy hoặc được xử lý xong (ví dụ chủ trọ xác nhận / từ chối).");
 
             var intent = new PaymentIntent
             {
@@ -105,8 +108,16 @@ namespace Motel.Services
             if (intent.Provider != PaymentProviders.VIETQR)
                 throw new Exception("Only VietQR payment can be confirmed here");
 
-            if (intent.Status == PaymentIntentStatus.Succeeded)
-                throw new Exception("This intent is already marked as paid");
+            if (intent.Payments.Any(x => x.Status == PaymentStatus.Succeeded))
+                throw new Exception("Giao dịch này đã được đánh dấu đã thanh toán.");
+
+            var noFinalPayment = !intent.Payments.Any(x =>
+                x.Status == PaymentStatus.Succeeded || x.Status == PaymentStatus.Rejected);
+            var tenantReported = intent.Status == PaymentIntentStatus.AwaitingLandlord
+                || (intent.Status == PaymentIntentStatus.Succeeded && noFinalPayment);
+            if (!tenantReported)
+                throw new Exception(
+                    "Chưa có xác nhận từ người thuê hoặc yêu cầu không còn ở trạng thái chờ xử lý.");
 
             if (intent.ExpiredAt.HasValue && intent.ExpiredAt.Value <= DateTime.UtcNow)
             {

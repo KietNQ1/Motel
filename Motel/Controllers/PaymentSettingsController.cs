@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Motel.Data;
 using Motel.Helpers;
 using Motel.Models;
+using Motel.Repositories.Interface;
 using Motel.ViewModels.Payment;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Security.Claims;
@@ -15,6 +16,7 @@ public class PaymentSettingsController : Controller
 {
     private readonly MotelDbContext _db;
     private readonly LandlordHelper _landlordHelper;
+    private readonly IPaymentRepository _paymentRepo;
     private static readonly (string Code, string Name)[] VietQrBanks =
     {
         ("970436", "Vietcombank"),
@@ -27,10 +29,11 @@ public class PaymentSettingsController : Controller
         ("970423", "TPBank"),
     };
 
-    public PaymentSettingsController(MotelDbContext db, LandlordHelper landlordHelper)
+    public PaymentSettingsController(MotelDbContext db, LandlordHelper landlordHelper, IPaymentRepository paymentRepo)
     {
         _db = db;
         _landlordHelper = landlordHelper;
+        _paymentRepo = paymentRepo;
     }
 
     [HttpGet]
@@ -42,30 +45,7 @@ public class PaymentSettingsController : Controller
             return RedirectToAction("Index", "Home");
         }
 
-        var bank = await _db.LandlordBankAccounts
-            .AsNoTracking()
-            .Where(x => x.LandlordId == landlordId && !x.IsDeleted)
-            .OrderByDescending(x => x.IsPrimary)
-            .ThenBy(x => x.LandlordBankAccountId)
-            .FirstOrDefaultAsync();
-
-        var vm = new PaymentSettingsViewModel();
-        if (bank != null)
-        {
-            vm.BankName = bank.BankName;
-            vm.BankCode = bank.BankCode;
-            vm.BankAccountNumber = bank.BankAccountNumber;
-            vm.BankAccountName = bank.BankAccountName;
-        }
-
-        vm.BankOptions = VietQrBanks
-            .Select(b => new SelectListItem
-            {
-                Value = b.Code,
-                Text = $"{b.Name} ({b.Code})",
-                Selected = string.Equals(b.Code, vm.BankCode, StringComparison.OrdinalIgnoreCase)
-            })
-            .ToList();
+        var vm = await BuildViewModelAsync(landlordId);
         return View(vm);
     }
 
@@ -86,14 +66,7 @@ public class PaymentSettingsController : Controller
 
         if (!ModelState.IsValid)
         {
-            vm.BankOptions = VietQrBanks
-                .Select(b => new SelectListItem
-                {
-                    Value = b.Code,
-                    Text = $"{b.Name} ({b.Code})",
-                    Selected = string.Equals(b.Code, vm.BankCode, StringComparison.OrdinalIgnoreCase)
-                })
-                .ToList();
+            await FillBankAndPaymentQueuesAsync(vm, landlordId);
             return View(vm);
         }
 
@@ -105,15 +78,7 @@ public class PaymentSettingsController : Controller
         {
             ModelState.AddModelError(nameof(vm.BankCode), "Mã ngân hàng không hợp lệ. Vui lòng chọn trong danh sách.");
 
-            vm.BankOptions = VietQrBanks
-                .Select(b => new SelectListItem
-                {
-                    Value = b.Code,
-                    Text = $"{b.Name} ({b.Code})",
-                    Selected = string.Equals(b.Code, vm.BankCode, StringComparison.OrdinalIgnoreCase)
-                })
-                .ToList();
-
+            await FillBankAndPaymentQueuesAsync(vm, landlordId);
             return View(vm);
         }
 
@@ -155,6 +120,64 @@ public class PaymentSettingsController : Controller
         await _db.SaveChangesAsync();
         TempData["Success"] = "Đã lưu cấu hình tài khoản ngân hàng cho VietQR.";
         return RedirectToAction(nameof(Index));
+    }
+
+    private async Task<PaymentSettingsViewModel> BuildViewModelAsync(int landlordId)
+    {
+        var bank = await _db.LandlordBankAccounts
+            .AsNoTracking()
+            .Where(x => x.LandlordId == landlordId && !x.IsDeleted)
+            .OrderByDescending(x => x.IsPrimary)
+            .ThenBy(x => x.LandlordBankAccountId)
+            .FirstOrDefaultAsync();
+
+        var vm = new PaymentSettingsViewModel();
+        if (bank != null)
+        {
+            vm.BankName = bank.BankName;
+            vm.BankCode = bank.BankCode;
+            vm.BankAccountNumber = bank.BankAccountNumber;
+            vm.BankAccountName = bank.BankAccountName;
+        }
+
+        await FillBankAndPaymentQueuesAsync(vm, landlordId);
+        return vm;
+    }
+
+    private async Task FillBankAndPaymentQueuesAsync(PaymentSettingsViewModel vm, int landlordId)
+    {
+        vm.BankOptions = VietQrBanks
+            .Select(b => new SelectListItem
+            {
+                Value = b.Code,
+                Text = $"{b.Name} ({b.Code})",
+                Selected = string.Equals(b.Code, vm.BankCode, StringComparison.OrdinalIgnoreCase)
+            })
+            .ToList();
+
+        var vietQr = await _paymentRepo.GetVietQrRequestsForLandlordAsync(landlordId);
+        vm.VietQrRequests = vietQr.Select(p => new VietQrRequestItemViewModel
+        {
+            PaymentIntentId = p.PaymentIntentId,
+            InvoiceId = p.InvoiceId,
+            RoomName = p.Invoice.Room.RoomName,
+            PropertyName = p.Invoice.Room.Property.Name,
+            TenantName = p.Invoice.Contract.Tenant.FullName,
+            Amount = p.Amount,
+            CreatedAt = p.CreatedAt
+        }).ToList();
+
+        var cash = await _paymentRepo.GetPendingCashIntentsForLandlordAsync(landlordId);
+        vm.PendingCashConfirms = cash.Select(p => new PendingCashConfirmItemViewModel
+        {
+            PaymentIntentId = p.PaymentIntentId,
+            InvoiceId = p.InvoiceId,
+            RoomName = p.Invoice.Room.RoomName,
+            PropertyName = p.Invoice.Room.Property.Name,
+            TenantName = p.Invoice.Contract.Tenant.FullName,
+            Amount = p.Amount,
+            CreatedAt = p.CreatedAt
+        }).ToList();
     }
 }
 

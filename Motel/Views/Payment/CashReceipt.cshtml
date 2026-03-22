@@ -1,207 +1,114 @@
-﻿@model Motel.ViewModels.Payment.CashReceiptViewModel
+@model Motel.ViewModels.Payment.CashReceiptViewModel
 @{
+    Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "Biên nhận thanh toán";
 }
 
-<!DOCTYPE html>
-<html class="light" lang="vi">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<div class="mx-auto max-w-3xl px-4 py-6 sm:py-8">
+    <div class="overflow-hidden rounded-2xl border border-[#e7d9cf] bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
 
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&display=swap" rel="stylesheet" />
-
-    <script>
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "primary": "#f2722c",
-                        "background-light": "#f6f7f8",
-                        "background-dark": "#101922",
-                    },
-                    fontFamily: {
-                        "display": ["Inter", "sans-serif"]
-                    },
-                    borderRadius: {
-                        "DEFAULT": "8px",
-                        "lg": "8px",
-                        "xl": "12px",
-                        "full": "9999px"
-                    },
-                },
-            },
-        }
-    </script>
-
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-        }
-    </style>
-</head>
-
-<body class="bg-background-light dark:bg-background-dark min-h-screen text-slate-900 dark:text-slate-100">
-    <div class="layout-container flex h-full grow flex-col">
-        <!-- Header -->
-        <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-10 py-3">
-            <div class="flex items-center gap-4 text-primary">
-                <div class="size-8 flex items-center justify-center bg-primary/10 rounded-lg">
-                    <span class="material-symbols-outlined text-primary">apartment</span>
-                </div>
-                <h2 class="text-slate-900 dark:text-white text-xl font-bold leading-tight tracking-tight">Rentify</h2>
+        <div class="flex flex-col items-center border-b border-gray-100 px-6 pb-8 pt-10 text-center dark:border-gray-700">
+            <div class="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-success/15">
+                <span class="material-symbols-outlined text-5xl text-success">check_circle</span>
             </div>
-        </header>
+            <h1 class="mb-2 text-2xl font-extrabold text-text-main dark:text-white">Thanh toán thành công!</h1>
+            <p class="text-sm text-text-sub dark:text-gray-400">Giao dịch của bạn đã được xử lý hoàn tất.</p>
+        </div>
 
-        <!-- Main Content -->
-        <main class="flex-1 flex flex-col items-center justify-center p-6">
-            <div class="max-w-[700px] w-full bg-white dark:bg-slate-900 rounded-xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 overflow-hidden">
+        <div class="border-b border-gray-100 bg-secondary/30 px-6 py-6 dark:border-gray-700 dark:bg-gray-900/40">
+            <h3 class="mb-4 text-xs font-bold uppercase tracking-widest text-text-sub dark:text-gray-500">Chi tiết giao dịch</h3>
 
-                <!-- Success State Header -->
-                <div class="flex flex-col items-center justify-center pt-12 pb-8 px-8 text-center">
-                    <div class="size-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-6">
-                        <span class="material-symbols-outlined text-green-600 dark:text-green-400 text-5xl">check_circle</span>
-                    </div>
-                    <h1 class="text-2xl font-bold text-slate-900 dark:text-white mb-2">Thanh toán thành công!</h1>
-                    <p class="text-slate-500 dark:text-slate-400 text-base">Giao dịch của bạn đã được xử lý hoàn tất.</p>
+            <div class="space-y-3 text-sm">
+                <div class="flex items-center justify-between gap-4">
+                    <span class="text-text-sub dark:text-gray-400">Số tiền</span>
+                    <span class="text-lg font-bold text-text-main dark:text-white">@Model.TotalAmount.ToString("N0") đ</span>
                 </div>
-
-                <!-- Receipt Details -->
-                <div class="px-8 py-6 bg-slate-50 dark:bg-slate-800/50 border-y border-slate-100 dark:border-slate-800">
-                    <h3 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-4">Chi tiết giao dịch</h3>
-
-                    <div class="space-y-4">
-                        <div class="flex justify-between items-center">
-                            <span class="text-slate-500 dark:text-slate-400 text-sm">Số tiền</span>
-                            <span class="text-slate-900 dark:text-white text-lg font-bold">@Model.TotalAmount.ToString("N0") đ</span>
-                        </div>
-
-                        <div class="flex justify-between items-center">
-                            <span class="text-slate-500 dark:text-slate-400 text-sm">Người thuê</span>
-                            <span class="text-slate-900 dark:text-white text-sm font-medium">@Model.TenantName</span>
-                        </div>
-
-                        <div class="flex justify-between items-center">
-                            <span class="text-slate-500 dark:text-slate-400 text-sm">Số điện thoại</span>
-                            <span class="text-slate-900 dark:text-white text-sm font-medium">@Model.TenantPhone</span>
-                        </div>
-
-                        <div class="flex justify-between items-center">
-                            <span class="text-slate-500 dark:text-slate-400 text-sm">Phòng</span>
-                            <span class="text-slate-900 dark:text-white text-sm font-medium">@Model.RoomName</span>
-                        </div>
-
-                        <div class="flex justify-between items-center">
-                            <span class="text-slate-500 dark:text-slate-400 text-sm">Khu trọ</span>
-                            <span class="text-slate-900 dark:text-white text-sm font-medium">@Model.PropertyName</span>
-                        </div>
-
-                        <div class="flex justify-between items-center">
-                            <span class="text-slate-500 dark:text-slate-400 text-sm">Mã giao dịch</span>
-                            <span class="text-slate-900 dark:text-white text-sm font-mono bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded">@Model.ProviderTxnId</span>
-                        </div>
-
-                        <div class="flex justify-between items-center">
-                            <span class="text-slate-500 dark:text-slate-400 text-sm">Mã thanh toán</span>
-                            <span class="text-slate-900 dark:text-white text-sm font-medium">#@Model.PaymentId</span>
-                        </div>
-
-                        <div class="flex justify-between items-center">
-                            <span class="text-slate-500 dark:text-slate-400 text-sm">Ngày thanh toán</span>
-                            <span class="text-slate-900 dark:text-white text-sm font-medium">@Model.PaidAt.ToString("dd/MM/yyyy HH:mm")</span>
-                        </div>
-
-                        <div class="flex justify-between items-center">
-                            <span class="text-slate-500 dark:text-slate-400 text-sm">Kỳ thanh toán</span>
-                            <span class="text-slate-900 dark:text-white text-sm font-medium">Tháng @Model.PeriodMonth</span>
-                        </div>
-
-                        <div class="flex justify-between items-center">
-                            <span class="text-slate-500 dark:text-slate-400 text-sm">Hạn thanh toán</span>
-                            <span class="text-slate-900 dark:text-white text-sm font-medium">@Model.DueDate.ToString("dd/MM/yyyy")</span>
-                        </div>
-
-                        <div class="flex justify-between items-center">
-                            <span class="text-slate-500 dark:text-slate-400 text-sm">Phương thức</span>
-                            <div class="flex items-center gap-2">
-                                <span class="material-symbols-outlined text-slate-400 text-sm">payments</span>
-                                <span class="text-slate-900 dark:text-white text-sm font-medium">Tiền mặt</span>
-                            </div>
-                        </div>
+                <div class="flex items-center justify-between gap-4">
+                    <span class="text-text-sub dark:text-gray-400">Người thuê</span>
+                    <span class="font-medium text-text-main dark:text-gray-200">@Model.TenantName</span>
+                </div>
+                <div class="flex items-center justify-between gap-4">
+                    <span class="text-text-sub dark:text-gray-400">Số điện thoại</span>
+                    <span class="font-medium text-text-main dark:text-gray-200">@(string.IsNullOrWhiteSpace(Model.TenantPhone) ? "—" : Model.TenantPhone)</span>
+                </div>
+                <div class="flex items-center justify-between gap-4">
+                    <span class="text-text-sub dark:text-gray-400">Phòng</span>
+                    <span class="font-medium text-text-main dark:text-gray-200">@Model.RoomName</span>
+                </div>
+                <div class="flex items-center justify-between gap-4">
+                    <span class="text-text-sub dark:text-gray-400">Khu trọ</span>
+                    <span class="font-medium text-text-main dark:text-gray-200">@Model.PropertyName</span>
+                </div>
+                <div class="flex items-center justify-between gap-4">
+                    <span class="text-text-sub dark:text-gray-400">Mã giao dịch</span>
+                    <span class="max-w-[60%] break-all rounded bg-gray-100 px-2 py-0.5 font-mono text-xs text-text-main dark:bg-gray-700 dark:text-gray-100">@Model.ProviderTxnId</span>
+                </div>
+                <div class="flex items-center justify-between gap-4">
+                    <span class="text-text-sub dark:text-gray-400">Mã thanh toán</span>
+                    <span class="font-medium text-text-main dark:text-gray-200">#@Model.PaymentId</span>
+                </div>
+                <div class="flex items-center justify-between gap-4">
+                    <span class="text-text-sub dark:text-gray-400">Ngày thanh toán</span>
+                    <span class="font-medium text-text-main dark:text-gray-200">@Model.PaidAt.ToString("dd/MM/yyyy HH:mm")</span>
+                </div>
+                <div class="flex items-center justify-between gap-4">
+                    <span class="text-text-sub dark:text-gray-400">Kỳ thanh toán</span>
+                    <span class="font-medium text-text-main dark:text-gray-200">Tháng @Model.PeriodMonth</span>
+                </div>
+                <div class="flex items-center justify-between gap-4">
+                    <span class="text-text-sub dark:text-gray-400">Hạn thanh toán</span>
+                    <span class="font-medium text-text-main dark:text-gray-200">@Model.DueDate.ToString("dd/MM/yyyy")</span>
+                </div>
+                <div class="flex items-center justify-between gap-4">
+                    <span class="text-text-sub dark:text-gray-400">Phương thức</span>
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-lg text-primary">@Model.PaymentMethodIcon</span>
+                        <span class="font-semibold text-text-main dark:text-gray-200">@Model.PaymentMethodLabel</span>
                     </div>
                 </div>
-
-                <!-- Invoice lines -->
-                <div class="px-8 py-6">
-                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Chi tiết hóa đơn</h3>
-
-                    <div class="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700">
-                        <table class="w-full text-sm">
-                            <thead class="bg-slate-100 dark:bg-slate-800">
-                                <tr>
-                                    <th class="text-left px-4 py-3 font-semibold">Loại phí</th>
-                                    <th class="text-left px-4 py-3 font-semibold">Mô tả</th>
-                                    <th class="text-right px-4 py-3 font-semibold">SL</th>
-                                    <th class="text-right px-4 py-3 font-semibold">Đơn giá</th>
-                                    <th class="text-right px-4 py-3 font-semibold">Thành tiền</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var line in Model.Lines)
-                                {
-                                    <tr class="border-t border-slate-200 dark:border-slate-700">
-                                        <td class="px-4 py-3">@line.ItemType</td>
-                                        <td class="px-4 py-3">@line.Description</td>
-                                        <td class="px-4 py-3 text-right">@line.Quantity</td>
-                                        <td class="px-4 py-3 text-right">@line.UnitPrice.ToString("N0")</td>
-                                        <td class="px-4 py-3 text-right font-medium">@line.LineTotal.ToString("N0")</td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="p-8 flex flex-col sm:flex-row gap-3">
-                    <a asp-controller="Home" asp-action="Index"
-                       class="flex-1 h-12 flex items-center justify-center gap-2 bg-primary hover:bg-orange-600 text-white font-bold rounded-lg transition-all shadow-lg shadow-primary/20">
-                        <span class="material-symbols-outlined text-sm">home</span>
-                        <span>Về trang chủ</span>
-                    </a>
-
-                    <button type="button" onclick="window.print()"
-                            class="flex-1 h-12 flex items-center justify-center gap-2 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-lg transition-all">
-                        <span class="material-symbols-outlined text-sm">receipt_long</span>
-                        <span>In biên lai</span>
-                    </button>
-                </div>
             </div>
+        </div>
 
-            <!-- Helpful note -->
-            <div class="mt-8 text-center">
-                <p class="text-slate-400 dark:text-slate-500 text-sm">
-                    Bạn cần hỗ trợ? <a class="text-primary font-medium hover:underline" href="#">Liên hệ với chúng tôi</a>
-                </p>
+        <div class="px-6 py-6">
+            <h3 class="mb-4 text-xs font-bold uppercase tracking-widest text-text-sub dark:text-gray-500">Chi tiết hóa đơn</h3>
+            <div class="overflow-hidden rounded-xl border border-[#e7d9cf] dark:border-gray-600">
+                <table class="w-full text-sm">
+                    <thead class="bg-secondary/50 dark:bg-gray-700/50">
+                        <tr>
+                            <th class="px-4 py-3 text-left font-semibold text-text-main dark:text-gray-200">Loại phí</th>
+                            <th class="px-4 py-3 text-left font-semibold text-text-main dark:text-gray-200">Mô tả</th>
+                            <th class="px-4 py-3 text-right font-semibold text-text-main dark:text-gray-200">SL</th>
+                            <th class="px-4 py-3 text-right font-semibold text-text-main dark:text-gray-200">Đơn giá</th>
+                            <th class="px-4 py-3 text-right font-semibold text-text-main dark:text-gray-200">Thành tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var line in Model.Lines)
+                        {
+                            <tr class="border-t border-[#e7d9cf] dark:border-gray-600">
+                                <td class="px-4 py-3 text-text-main dark:text-gray-200">@line.ItemType</td>
+                                <td class="px-4 py-3 text-text-sub dark:text-gray-400">@line.Description</td>
+                                <td class="px-4 py-3 text-right">@line.Quantity</td>
+                                <td class="px-4 py-3 text-right">@line.UnitPrice.ToString("N0")</td>
+                                <td class="px-4 py-3 text-right font-medium text-text-main dark:text-gray-200">@line.LineTotal.ToString("N0")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
             </div>
-        </main>
+        </div>
 
-        <!-- Footer -->
-        <footer class="flex flex-col gap-6 px-5 py-10 text-center border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 mt-auto">
-            <div class="flex flex-wrap items-center justify-center gap-8">
-                <a class="text-slate-500 dark:text-slate-400 text-sm font-medium hover:text-primary transition-colors" href="#">Điều khoản</a>
-                <a class="text-slate-500 dark:text-slate-400 text-sm font-medium hover:text-primary transition-colors" href="#">Bảo mật</a>
-                <a class="text-slate-500 dark:text-slate-400 text-sm font-medium hover:text-primary transition-colors" href="#">Liên hệ</a>
-            </div>
-            <p class="text-slate-400 dark:text-slate-500 text-sm font-normal">© 2024 Rentify. All rights reserved.</p>
-        </footer>
+        <div class="flex flex-col gap-3 border-t border-gray-100 px-6 py-6 dark:border-gray-700 sm:flex-row">
+            <a asp-controller="Home" asp-action="Index"
+               class="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-primary font-bold text-white shadow-lg shadow-primary/25 transition hover:bg-primary-dark">
+                <span class="material-symbols-outlined text-lg">home</span>
+                Về trang chủ
+            </a>
+            <button type="button" onclick="window.print()"
+                    class="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl border border-[#e7d9cf] font-bold text-text-main transition hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700">
+                <span class="material-symbols-outlined text-lg">receipt_long</span>
+                In biên lai
+            </button>
+        </div>
     </div>
-</body>
-</html>
+</div>

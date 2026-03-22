@@ -1,16 +1,21 @@
 @model Motel.ViewModels.Payment.PaymentSettingsViewModel
 @{
-    ViewData["Title"] = "Cấu hình thanh toán";
+    ViewData["Title"] = "Cài đặt thanh toán";
 }
 
-<div class="max-w-2xl mx-auto space-y-6">
-    <div class="flex items-center justify-between">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-900">Cấu hình tài khoản ngân hàng</h1>
-            <p class="mt-1 text-sm text-gray-500">
-                Thông tin này được dùng để tạo mã VietQR cho các hóa đơn của bạn. Người thuê sẽ chuyển tiền trực tiếp vào tài khoản này.
-            </p>
-        </div>
+<div class="max-w-5xl mx-auto space-y-10">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Cài đặt thanh toán</h1>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            Cấu hình ngân hàng VietQR, duyệt yêu cầu VietQR và xác nhận tiền mặt — tất cả tại một trang.
+        </p>
+    </div>
+
+    <div id="bank-config" class="scroll-mt-24">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-1">Cấu hình tài khoản ngân hàng</h2>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+            Dùng để tạo mã VietQR. Người thuê chuyển khoản trực tiếp vào tài khoản này.
+        </p>
     </div>
 
     @if (TempData["Success"] is string successMsg)
@@ -66,6 +71,14 @@
             </button>
         </div>
     </form>
+
+    <hr class="border-gray-200 dark:border-gray-700" />
+
+    @await Html.PartialAsync("_VietQrRequestsSection", Model.VietQrRequests)
+
+    <hr class="border-gray-200 dark:border-gray-700" />
+
+    @await Html.PartialAsync("_CashPendingSection", Model.PendingCashConfirms)
 </div>
 
 @section Scripts {

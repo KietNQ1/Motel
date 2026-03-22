@@ -1,6 +1,6 @@
 namespace Motel.ViewModels.Payment;
 
-public class VietQrRequestItemViewModel
+public class PendingCashConfirmItemViewModel
 {
     public int PaymentIntentId { get; set; }
     public int InvoiceId { get; set; }
