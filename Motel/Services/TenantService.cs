@@ -3,6 +3,7 @@ using Motel.Repositories.Interface;
 using Motel.Services.Interfaces;
 using Motel.ViewModels.Tenant;
 using Motel.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Motel.Services
 {
@@ -100,7 +101,37 @@ namespace Motel.Services
             tenant.PermanentAddress   = vm.PermanentAddress?.Trim();
 
             await _repo.UpdateTenantAsync(tenant);
+
+            if (vm.CccdFrontImageId.HasValue && vm.CccdFrontImageId.Value > 0)
+            {
+                var refFront = new StoredFileReference { StoredFileId = vm.CccdFrontImageId.Value, RefType = "tenant", RefId = tenant.TenantId, CreatedAt = DateTime.Now };
+                _context.StoredFileReferences.Add(refFront);
+            }
+            if (vm.CccdBackImageId.HasValue && vm.CccdBackImageId.Value > 0)
+            {
+                var refBack = new StoredFileReference { StoredFileId = vm.CccdBackImageId.Value, RefType = "tenant", RefId = tenant.TenantId, CreatedAt = DateTime.Now };
+                _context.StoredFileReferences.Add(refBack);
+            }
+
+            if (vm.CccdFrontImageId.HasValue || vm.CccdBackImageId.HasValue)
+            {
+                await _context.SaveChangesAsync();
+            }
+
             return true;
+        }
+
+        public async Task<(string? frontImage, string? backImage)> GetTenantCccdImagesAsync(int tenantId)
+        {
+            var refs = await _context.StoredFileReferences
+                .Include(r => r.StoredFile)
+                .Where(r => r.RefType == "tenant" && r.RefId == tenantId)
+                .ToListAsync();
+
+            var front = refs.FirstOrDefault(r => r.StoredFile.StoragePath.Contains("_front"))?.StoredFile.StoragePath;
+            var back = refs.FirstOrDefault(r => r.StoredFile.StoragePath.Contains("_back"))?.StoredFile.StoragePath;
+
+            return (front, back);
         }
     }
 }

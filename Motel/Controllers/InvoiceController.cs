@@ -113,6 +113,7 @@ public sealed class InvoiceController : Controller
         if (room != null)
         {
             vm.RoomName = room.RoomName;
+            vm.RentPrice = room.RentPrice;
             var occupancies = await _contractRepo.GetActiveOccupanciesAsync(roomId, ct);
             int occupantCount = occupancies.Count;
 

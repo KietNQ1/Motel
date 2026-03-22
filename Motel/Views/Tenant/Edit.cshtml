@@ -17,6 +17,33 @@
 
                 <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3" style="display:@(ViewData.ModelState.IsValid ? "none" : "block")"></div>
 
+                <!-- Scan CCCD Section -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="border rounded p-3 bg-light">
+                            <h6 class="text-primary mb-3"><i class="bi bi-camera"></i> Scan CCCD (Tự động điền)</h6>
+                            <div class="d-flex flex-wrap gap-3 align-items-end">
+                                <input type="hidden" asp-for="CccdFrontImageId" id="frontId" />
+                                <input type="hidden" asp-for="CccdBackImageId" id="backId" />
+                                <div>
+                                    <label class="form-label small text-muted mb-1">Ảnh mặt trước</label>
+                                    <input type="file" id="frontFile" class="form-control form-control-sm" accept="image/*" />
+                                </div>
+                                <div>
+                                    <label class="form-label small text-muted mb-1">Ảnh mặt sau</label>
+                                    <input type="file" id="backFile" class="form-control form-control-sm" accept="image/*" />
+                                </div>
+                                <div>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="processEkyc()" id="btnScan">
+                                        <i class="bi bi-upc-scan"></i> Tải lên & Quét
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="scanMsg" class="mt-2 text-danger fw-bold" style="display:none; font-size:0.85rem;"></div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label asp-for="FullName" class="form-label"></label>
@@ -67,6 +94,131 @@
     </div>
 </div>
 
+<!-- EKYC Modal -->
+<div class="modal fade" id="ekycModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-primary"><i class="bi bi-person-badge"></i> Thông tin trích xuất</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label small text-muted text-uppercase fw-bold">Họ tên</label>
+                    <input type="text" id="ekycName" class="form-control" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small text-muted text-uppercase fw-bold">Số CCCD</label>
+                    <input type="text" id="ekycId" class="form-control" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small text-muted text-uppercase fw-bold">Ngày sinh</label>
+                    <input type="date" id="ekycDob" class="form-control" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small text-muted text-uppercase fw-bold">Giới tính</label>
+                    <input type="text" id="ekycGender" class="form-control" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small text-muted text-uppercase fw-bold">Nơi cư trú (Nơi ĐKTT)</label>
+                    <input type="text" id="ekycAddress" class="form-control" />
+                </div>
+                <input type="hidden" id="ekycFrontId" />
+                <input type="hidden" id="ekycBackId" />
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" onclick="fillEkycData()">Điền thông tin</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        async function processEkyc() {
+            const frontFile = document.getElementById('frontFile').files[0];
+            const backFile = document.getElementById('backFile').files[0];
+            const msgObj = document.getElementById('scanMsg');
+            const btnObj = document.getElementById('btnScan');
+            
+            if (!frontFile || !backFile) {
+                msgObj.innerText = "Vui lòng chọn cả ảnh mặt trước và mặt sau CCCD.";
+                msgObj.className = "mt-2 fw-bold text-danger";
+                msgObj.style.display = "block";
+                return;
+            }
+
+            msgObj.innerText = "Đang tải lên và nhận dạng...";
+            msgObj.className = "mt-2 fw-bold text-primary";
+            msgObj.style.display = "block";
+            btnObj.disabled = true;
+
+            const formData = new FormData();
+            formData.append('frontFile', frontFile);
+            formData.append('backFile', backFile);
+
+            try {
+                const response = await fetch('/api/VnptEkyc/scan-both', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                btnObj.disabled = false;
+
+                if (result.success) {
+                    msgObj.style.display = "none";
+                    
+                    document.getElementById('ekycFrontId').value = result.frontId;
+                    document.getElementById('ekycBackId').value = result.backId;
+                    
+                    if (result.data) {
+                        document.getElementById('ekycName').value = result.data.name || '';
+                        document.getElementById('ekycId').value = result.data.id || '';
+                        document.getElementById('ekycAddress').value = result.data.address || '';
+                        document.getElementById('ekycGender').value = result.data.gender || '';
+                        
+                        let dobVal = '';
+                        if (result.data.birthday) {
+                            const parts = result.data.birthday.split('/');
+                            if (parts.length === 3) dobVal = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                        }
+                        document.getElementById('ekycDob').value = dobVal;
+                    }
+
+                    const modal = new bootstrap.Modal(document.getElementById('ekycModal'));
+                    modal.show();
+                } else {
+                    msgObj.innerText = result.message || 'Lỗi nhận dạng';
+                    msgObj.className = "mt-2 fw-bold text-danger";
+                }
+            } catch (error) {
+                console.error('OCR Error:', error);
+                btnObj.disabled = false;
+                msgObj.innerText = 'Lỗi kết nối máy chủ.';
+                msgObj.className = "mt-2 fw-bold text-danger";
+            }
+        }
+
+        function fillEkycData() {
+            document.getElementById('frontId').value = document.getElementById('ekycFrontId').value;
+            document.getElementById('backId').value = document.getElementById('ekycBackId').value;
+
+            document.getElementById('FullName').value = document.getElementById('ekycName').value;
+            document.getElementById('IdentityNo').value = document.getElementById('ekycId').value;
+            document.getElementById('DateOfBirth').value = document.getElementById('ekycDob').value;
+            document.getElementById('PermanentAddress').value = document.getElementById('ekycAddress').value;
+
+            const modalEl = document.getElementById('ekycModal');
+            const modalObj = bootstrap.Modal.getInstance(modalEl);
+            modalObj.hide();
+
+            const msgObj = document.getElementById('scanMsg');
+            msgObj.innerText = "Đã điền thông tin thành công!";
+            msgObj.className = "mt-2 fw-bold text-success";
+            msgObj.style.display = "block";
+        }
+    </script>
 }

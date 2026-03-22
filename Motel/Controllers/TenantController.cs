@@ -70,6 +70,11 @@ namespace Motel.Controllers
                 TempData["Error"] = "Không tìm thấy người thuê.";
                 return RedirectToAction("Index", "Property");
             }
+
+            var (frontImage, backImage) = await _service.GetTenantCccdImagesAsync(id);
+            ViewBag.FrontImage = frontImage;
+            ViewBag.BackImage = backImage;
+
             return View(tenant);
         }
 

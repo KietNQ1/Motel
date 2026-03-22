@@ -469,9 +469,35 @@
                             </div>
                             <div class="field-group">
                                 <label>Nơi ĐKTT</label>
-                                <input type="text" name="Occupants[@i].PermanentAddress" value="@Model.Occupants[i].PermanentAddress" placeholder="Địa chỉ thường trú" />
+                                <input type="text" id="Address_@i" name="Occupants[@i].PermanentAddress" value="@Model.Occupants[i].PermanentAddress" placeholder="Địa chỉ thường trú" />
                             </div>
                         </div>
+
+                        <!-- Scan CCCD Section -->
+                        <div class="fields-grid" style="margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 15px;">
+                            <div class="field-group" style="grid-column: 1 / -1;">
+                                <label><span class="material-symbols-outlined" style="font-size:1rem; vertical-align:middle;">camera</span> Tải lên CCCD (Tự động điền)</label>
+                                <div class="d-flex gap-2 align-items-end flex-wrap">
+                                    <input type="hidden" name="Occupants[@i].CccdFrontImageId" id="frontId_@i" value="@Model.Occupants[i].CccdFrontImageId" />
+                                    <input type="hidden" name="Occupants[@i].CccdBackImageId" id="backId_@i" value="@Model.Occupants[i].CccdBackImageId" />
+                                    <div>
+                                        <small class="text-muted d-block mb-1">Mặt trước</small>
+                                        <input type="file" id="frontFile_@i" class="form-control" accept="image/*" style="padding: 5px 10px;" />
+                                    </div>
+                                    <div>
+                                        <small class="text-muted d-block mb-1">Mặt sau</small>
+                                        <input type="file" id="backFile_@i" class="form-control" accept="image/*" style="padding: 5px 10px;" />
+                                    </div>
+                                    <div>
+                                        <button type="button" class="btn-submit" style="padding: 8px 16px; font-size: 0.82rem;" onclick="processEkyc(@i)" id="btnScan_@i">
+                                            <span class="material-symbols-outlined" style="font-size:1.1rem; vertical-align:middle;">document_scanner</span> Tải lên & Quét
+                                        </button>
+                                    </div>
+                                </div>
+                                <div id="scanMsg_@i" class="mt-2 fw-bold" style="display:none; font-size: 0.85rem;"></div>
+                            </div>
+                        </div>
+
                     </div>
                 }
             </div>
@@ -505,7 +531,11 @@
                     <div class="field-group">
                         <label asp-for="DepositAmount">Tiền cọc</label>
                         <div class="input-suffix">
-                            <input asp-for="DepositAmount" type="number" step="100000" placeholder="Ví dụ: 2500000" />
+                            <input asp-for="DepositAmount"
+                                   type="number"
+                                   asp-format="{0:0}"
+                                   step="100000"
+                                   placeholder="Ví dụ: 2500000" />
                             <span class="suffix">₫</span>
                         </div>
                         <span asp-validation-for="DepositAmount" class="text-danger"></span>
@@ -559,6 +589,47 @@
             </button>
         </div>
     </form>
+
+    <!-- EKYC Modal -->
+    <div class="modal fade" id="ekycModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title fw-bold text-primary">Thông tin trích xuất từ CCCD</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+                <label class="form-label fw-bold small text-muted text-uppercase">Họ tên</label>
+                <input type="text" id="ekycName" class="form-control" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold small text-muted text-uppercase">Số CCCD</label>
+                <input type="text" id="ekycId" class="form-control" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold small text-muted text-uppercase">Ngày sinh</label>
+                <input type="date" id="ekycDob" class="form-control" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold small text-muted text-uppercase">Giới tính</label>
+                <input type="text" id="ekycGender" class="form-control" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold small text-muted text-uppercase">Nơi cư trú (Nơi ĐKTT)</label>
+                <input type="text" id="ekycAddress" class="form-control" />
+            </div>
+            <input type="hidden" id="ekycFrontId" />
+            <input type="hidden" id="ekycBackId" />
+            <input type="hidden" id="ekycTargetIndex" />
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            <button type="button" class="btn btn-primary" onclick="fillEkycData()">Điền thông tin</button>
+          </div>
+        </div>
+      </div>
+    </div>
 </div>
 
 @section Scripts {
@@ -610,13 +681,39 @@
                     </div>
                     <div class="field-group">
                         <label>Ngày sinh</label>
-                        <input type="date" name="Occupants[${index}].DateOfBirth" />
+                        <input type="date" id="DOB_${index}" name="Occupants[${index}].DateOfBirth" />
                     </div>
                     <div class="field-group">
                         <label>Nơi ĐKTT</label>
-                        <input type="text" name="Occupants[${index}].PermanentAddress" placeholder="Địa chỉ thường trú" />
+                        <input type="text" id="Address_${index}" name="Occupants[${index}].PermanentAddress" placeholder="Địa chỉ thường trú" />
                     </div>
                 </div>
+
+                <!-- Scan CCCD Section -->
+                <div class="fields-grid" style="margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 15px;">
+                    <div class="field-group" style="grid-column: 1 / -1;">
+                        <label><span class="material-symbols-outlined" style="font-size:1rem; vertical-align:middle;">camera</span> Tải lên CCCD (Tự động điền)</label>
+                        <div class="d-flex gap-2 align-items-end flex-wrap">
+                            <input type="hidden" name="Occupants[${index}].CccdFrontImageId" id="frontId_${index}" />
+                            <input type="hidden" name="Occupants[${index}].CccdBackImageId" id="backId_${index}" />
+                            <div>
+                                <small class="text-muted d-block mb-1">Mặt trước</small>
+                                <input type="file" id="frontFile_${index}" class="form-control" accept="image/*" style="padding: 5px 10px;" />
+                            </div>
+                            <div>
+                                <small class="text-muted d-block mb-1">Mặt sau</small>
+                                <input type="file" id="backFile_${index}" class="form-control" accept="image/*" style="padding: 5px 10px;" />
+                            </div>
+                            <div>
+                                <button type="button" class="btn-submit" style="padding: 8px 16px; font-size: 0.82rem;" onclick="processEkyc(${index})" id="btnScan_${index}">
+                                    <span class="material-symbols-outlined" style="font-size:1.1rem; vertical-align:middle;">document_scanner</span> Tải lên & Quét
+                                </button>
+                            </div>
+                        </div>
+                        <div id="scanMsg_${index}" class="mt-2 fw-bold" style="display:none; font-size: 0.85rem;"></div>
+                    </div>
+                </div>
+
             </div>`;
             container.insertAdjacentHTML('beforeend', html);
         }
@@ -628,6 +725,104 @@
                 return;
             }
             item.remove();
+        }
+
+        async function processEkyc(index) {
+            const frontFile = document.getElementById('frontFile_' + index).files[0];
+            const backFile = document.getElementById('backFile_' + index).files[0];
+            const msgObj = document.getElementById('scanMsg_' + index);
+            const btnObj = document.getElementById('btnScan_' + index);
+            
+            if (!frontFile || !backFile) {
+                msgObj.innerText = "Vui lòng chọn cả ảnh mặt trước và mặt sau CCCD.";
+                msgObj.className = "mt-2 fw-bold text-danger";
+                msgObj.style.display = "block";
+                return;
+            }
+
+            msgObj.innerText = "Đang tải lên và nhận dạng...";
+            msgObj.className = "mt-2 fw-bold text-primary";
+            msgObj.style.display = "block";
+            btnObj.disabled = true;
+
+            const formData = new FormData();
+            formData.append('frontFile', frontFile);
+            formData.append('backFile', backFile);
+
+            try {
+                const response = await fetch('/api/VnptEkyc/scan-both', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                btnObj.disabled = false;
+
+                if (result.success) {
+                    msgObj.style.display = "none";
+                    
+                    // Show modal
+                    document.getElementById('ekycTargetIndex').value = index;
+                    document.getElementById('ekycFrontId').value = result.frontId;
+                    document.getElementById('ekycBackId').value = result.backId;
+                    
+                    if (result.data) {
+                        document.getElementById('ekycName').value = result.data.name || '';
+                        document.getElementById('ekycId').value = result.data.id || '';
+                        document.getElementById('ekycAddress').value = result.data.address || '';
+                        document.getElementById('ekycGender').value = result.data.gender || '';
+                        
+                        let dobVal = '';
+                        if (result.data.birthday) {
+                            const parts = result.data.birthday.split('/');
+                            if (parts.length === 3) dobVal = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                        }
+                        document.getElementById('ekycDob').value = dobVal;
+                    }
+
+                    const modal = new bootstrap.Modal(document.getElementById('ekycModal'));
+                    modal.show();
+                } else {
+                    msgObj.innerText = result.message || 'Lỗi nhận dạng';
+                    msgObj.className = "mt-2 fw-bold text-danger";
+                }
+            } catch (error) {
+                console.error('OCR Error:', error);
+                btnObj.disabled = false;
+                msgObj.innerText = 'Lỗi kết nối máy chủ.';
+                msgObj.className = "mt-2 fw-bold text-danger";
+            }
+        }
+
+        function fillEkycData() {
+            const index = document.getElementById('ekycTargetIndex').value;
+            
+            // Fill ID
+            document.getElementById('frontId_' + index).value = document.getElementById('ekycFrontId').value;
+            document.getElementById('backId_' + index).value = document.getElementById('ekycBackId').value;
+
+            // Fill text fields
+            const nameInput = document.querySelector(`input[name="Occupants[${index}].FullName"]`);
+            if(nameInput) nameInput.value = document.getElementById('ekycName').value;
+
+            const idInput = document.querySelector(`input[name="Occupants[${index}].IdentityNo"]`);
+            if(idInput) idInput.value = document.getElementById('ekycId').value;
+
+            const dobInput = document.querySelector(`input[name="Occupants[${index}].DateOfBirth"]`);
+            if(dobInput) dobInput.value = document.getElementById('ekycDob').value;
+
+            const addressInput = document.querySelector(`input[name="Occupants[${index}].PermanentAddress"]`);
+            if(addressInput) addressInput.value = document.getElementById('ekycAddress').value;
+
+            // Hide modal
+            const modalEl = document.getElementById('ekycModal');
+            const modalObj = bootstrap.Modal.getInstance(modalEl);
+            modalObj.hide();
+
+            const msgObj = document.getElementById('scanMsg_' + index);
+            msgObj.innerText = "Đã điền thông tin thành công!";
+            msgObj.className = "mt-2 fw-bold text-success";
+            msgObj.style.display = "block";
         }
     </script>
 }

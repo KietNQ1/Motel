@@ -91,4 +91,65 @@ public class VnptEkycController : ControllerBase
             data = result
         });
     }
+
+    [HttpPost("scan-both")]
+    public async Task<IActionResult> ScanBoth(IFormFile frontFile, IFormFile backFile)
+    {
+        if (frontFile == null || frontFile.Length == 0 || backFile == null || backFile.Length == 0)
+            return BadRequest(new { message = "Thiếu mặt trước hoặc mặt sau CCCD" });
+
+        var landlordId = await _landlordHelper.GetCurrentLandlordIdAsync(User);
+        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (landlordId <= 0 || !int.TryParse(userIdString, out int userId))
+            return Unauthorized();
+
+        var uploadFolder = Path.Combine(_env.WebRootPath, "uploads", "cccd");
+        if (!Directory.Exists(uploadFolder)) Directory.CreateDirectory(uploadFolder);
+
+        // Helper func to save file
+        async Task<(int, string)> SaveFileAsync(IFormFile file, string suffix)
+        {
+            var ext = Path.GetExtension(file.FileName);
+            var fileName = $"{Guid.NewGuid()}_{suffix}{ext}";
+            var filePath = Path.Combine(uploadFolder, fileName);
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+            var storedFile = new StoredFile
+            {
+                FileName = file.FileName,
+                MimeType = file.ContentType,
+                StoragePath = $"/uploads/cccd/{fileName}",
+                UploadedAt = DateTime.Now,
+                LandlordId = landlordId,
+                UploadedByUserId = userId
+            };
+            _context.StoredFiles.Add(storedFile);
+            await _context.SaveChangesAsync();
+            return (storedFile.StoredFileId, storedFile.StoragePath);
+        }
+
+        var (frontId, frontPath) = await SaveFileAsync(frontFile, "front");
+        var (backId, backPath) = await SaveFileAsync(backFile, "back");
+
+        var result = await _ekycService.ScanBothIdCardsAsync(frontFile, backFile);
+
+        if (result == null)
+        {
+            return Ok(new
+            {
+                success = false,
+                message = "Không thể nhận dạng thẻ. Vui lòng kiểm tra lại ảnh chụp.",
+                frontId, backId, frontPath, backPath
+            });
+        }
+
+        return Ok(new
+        {
+            success = true,
+            frontId, backId, frontPath, backPath,
+            data = result
+        });
+    }
 }
