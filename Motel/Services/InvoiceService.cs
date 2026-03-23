@@ -18,6 +18,7 @@ public sealed class InvoiceService : IInvoiceService
     private readonly IInvoiceLineRepository _lineRepo;
     private readonly IUnitOfWork _uow;
     private readonly MotelDbContext _db;
+    private readonly Motel.Services.Interface.INotificationService _notificationService;
 
     public InvoiceService(
         IContractRepository contractRepo,
@@ -28,7 +29,8 @@ public sealed class InvoiceService : IInvoiceService
         IInvoiceRepository invoiceRepo,
         IInvoiceLineRepository lineRepo,
         IUnitOfWork uow,
-        MotelDbContext db)
+        MotelDbContext db,
+        Motel.Services.Interface.INotificationService notificationService)
     {
         _contractRepo = contractRepo;
         _roomRepo = roomRepo;
@@ -39,6 +41,71 @@ public sealed class InvoiceService : IInvoiceService
         _lineRepo = lineRepo;
         _uow = uow;
         _db = db;
+        _notificationService = notificationService;
+    }
+
+    public async Task<bool> SendPaymentReminderAsync(int invoiceId, int landlordId, CancellationToken ct = default)
+    {
+        var invoice = await _db.Invoices
+            .Include(i => i.Room)
+            .Include(i => i.Contract)
+                .ThenInclude(c => c.Tenant)
+            .FirstOrDefaultAsync(i => i.InvoiceId == invoiceId, ct);
+
+        if (invoice == null) return false;
+
+        var activeTenant = invoice.Contract?.Tenant;
+
+        if (activeTenant == null || activeTenant.IsDeleted || string.IsNullOrEmpty(activeTenant.Email)) return false;
+
+        var bankAcc = await _db.LandlordBankAccounts
+            .FirstOrDefaultAsync(b => b.LandlordId == landlordId && b.IsPrimary && !b.IsDeleted, ct);
+
+        if (bankAcc == null)
+            bankAcc = await _db.LandlordBankAccounts
+                .FirstOrDefaultAsync(b => b.LandlordId == landlordId && !b.IsDeleted, ct);
+
+        string qrHtml = "";
+        if (bankAcc != null)
+        {
+            var addInfo = $"Thanh toan tien phong {invoice.Room.RoomName} thang {invoice.PeriodMonth % 100}";
+            addInfo = Uri.EscapeDataString(addInfo);
+            var accountName = Uri.EscapeDataString(bankAcc.BankAccountName);
+            var qrUrl = $"https://img.vietqr.io/image/{bankAcc.BankCode}-{bankAcc.BankAccountNumber}-compact2.png?amount={(long)invoice.TotalAmount}&addInfo={addInfo}&accountName={accountName}";
+            
+            qrHtml = $@"
+<div style='margin-top:20px; text-align:center'>
+    <p><strong>Hoặc quét mã QR qua ứng dụng ngân hàng:</strong></p>
+    <img src='{qrUrl}' alt='QR Code Thanh Toan' style='max-width:300px; border:1px solid #ccc; border-radius:8px;'/>
+    <p style='margin-top:10px;'>Ngân hàng: <strong>{bankAcc.BankName}</strong><br/>
+    Số tài khoản: <strong>{bankAcc.BankAccountNumber}</strong><br/>
+    Chủ tài khoản: <strong>{bankAcc.BankAccountName}</strong></p>
+</div>";
+        }
+
+        var content = $@"
+<div style='font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;'>
+    <h2 style='color: #007bff; text-align: center;'>Thông báo thanh toán phí phòng trọ</h2>
+    <p>Xin chào <strong>{activeTenant.FullName}</strong>,</p>
+    <p>Chủ trọ xin gửi thông báo thanh toán tiền phòng của phòng <strong>{invoice.Room.RoomName}</strong>, kỳ hóa đơn <strong>{(invoice.PeriodMonth % 100):00}/{invoice.PeriodMonth / 100}</strong>.</p>
+    <table style='width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 15px;'>
+        <tr>
+            <td style='padding: 8px; border: 1px solid #ddd;'>Tổng số tiền cần thanh toán:</td>
+            <td style='padding: 8px; border: 1px solid #ddd; color: red; font-size: 18px; font-weight: bold;'>{invoice.TotalAmount:N0} VNĐ</td>
+        </tr>
+        <tr>
+            <td style='padding: 8px; border: 1px solid #ddd;'>Hạn thanh toán:</td>
+            <td style='padding: 8px; border: 1px solid #ddd;'><strong>{invoice.DueDate:dd/MM/yyyy}</strong></td>
+        </tr>
+    </table>
+    <p>Vui lòng tiến hành thanh toán sớm để đảm bảo việc sử dụng dịch vụ không bị gián đoạn.</p>
+    {qrHtml}
+    <hr style='border: none; border-top: 1px solid #eee; margin-top: 20px;' />
+    <p style='text-align: center; font-size: 12px; color: #777;'>Đây là email tự động. Vui lòng liên hệ trực tiếp Chủ trọ nếu bạn có thắc mắc.</p>
+</div>";
+        await _notificationService.SendToTenantAsync(landlordId, activeTenant.TenantId, $"Hóa đơn tiền phòng {invoice.Room.RoomName} - Kỳ {(invoice.PeriodMonth % 100):00}/{invoice.PeriodMonth / 100}", content);
+        
+        return true;
     }
 
     public async Task<int> CreateInvoiceAsync(CreateInvoiceViewModel vm, CancellationToken ct = default)
