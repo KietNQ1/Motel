@@ -477,16 +477,16 @@
                         <div class="fields-grid" style="margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 15px;">
                             <div class="field-group" style="grid-column: 1 / -1;">
                                 <label><span class="material-symbols-outlined" style="font-size:1rem; vertical-align:middle;">camera</span> Tải lên CCCD (Tự động điền)</label>
-                                <div class="d-flex gap-2 align-items-end flex-wrap">
+                                <div class="flex gap-2 items-end flex-wrap">
                                     <input type="hidden" name="Occupants[@i].CccdFrontImageId" id="frontId_@i" value="@Model.Occupants[i].CccdFrontImageId" />
                                     <input type="hidden" name="Occupants[@i].CccdBackImageId" id="backId_@i" value="@Model.Occupants[i].CccdBackImageId" />
                                     <div>
-                                        <small class="text-muted d-block mb-1">Mặt trước</small>
-                                        <input type="file" id="frontFile_@i" class="form-control" accept="image/*" style="padding: 5px 10px;" />
+                                        <small class="text-gray-500 block mb-1">Mặt trước</small>
+                                        <input type="file" id="frontFile_@i" class="w-full rounded-lg border-gray-300 px-2 py-1 border focus:border-primary focus:ring-primary text-sm" accept="image/*" style="padding: 5px 10px;" />
                                     </div>
                                     <div>
-                                        <small class="text-muted d-block mb-1">Mặt sau</small>
-                                        <input type="file" id="backFile_@i" class="form-control" accept="image/*" style="padding: 5px 10px;" />
+                                        <small class="text-gray-500 block mb-1">Mặt sau</small>
+                                        <input type="file" id="backFile_@i" class="w-full rounded-lg border-gray-300 px-2 py-1 border focus:border-primary focus:ring-primary text-sm" accept="image/*" style="padding: 5px 10px;" />
                                     </div>
                                     <div>
                                         <button type="button" class="btn-submit" style="padding: 8px 16px; font-size: 0.82rem;" onclick="processEkyc(@i)" id="btnScan_@i">
@@ -494,7 +494,7 @@
                                         </button>
                                     </div>
                                 </div>
-                                <div id="scanMsg_@i" class="mt-2 fw-bold" style="display:none; font-size: 0.85rem;"></div>
+                                <div id="scanMsg_@i" class="mt-2 font-bold" style="display:none; font-size: 0.85rem;"></div>
                             </div>
                         </div>
 
@@ -591,44 +591,54 @@
     </form>
 
     <!-- EKYC Modal -->
-    <div class="modal fade" id="ekycModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title fw-bold text-primary">Thông tin trích xuất từ CCCD</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <div class="mb-3">
-                <label class="form-label fw-bold small text-muted text-uppercase">Họ tên</label>
-                <input type="text" id="ekycName" class="form-control" />
+    <div id="ekycModal" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <!-- Background backdrop -->
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <!-- Modal panel -->
+                <div class="relative transform overflow-hidden rounded-xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                    <div class="bg-white dark:bg-gray-800 px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                        <div class="flex items-center justify-between mb-4 border-b pb-3 dark:border-gray-700">
+                            <h3 class="text-lg font-bold text-primary" id="modal-title">Thông tin trích xuất từ CCCD</h3>
+                            <button type="button" onclick="closeEkycModal()" class="text-gray-400 hover:text-gray-500">
+                                <span class="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Họ tên</label>
+                                <input type="text" id="ekycName" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 border focus:border-primary focus:ring-primary outline-none" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Số CCCD</label>
+                                <input type="text" id="ekycId" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 border focus:border-primary focus:ring-primary outline-none" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Ngày sinh</label>
+                                <input type="date" id="ekycDob" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 border focus:border-primary focus:ring-primary outline-none" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Giới tính</label>
+                                <input type="text" id="ekycGender" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 border focus:border-primary focus:ring-primary outline-none" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nơi cư trú (Nơi ĐKTT)</label>
+                                <input type="text" id="ekycAddress" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 border focus:border-primary focus:ring-primary outline-none" />
+                            </div>
+                            <input type="hidden" id="ekycFrontId" />
+                            <input type="hidden" id="ekycBackId" />
+                            <input type="hidden" id="ekycTargetIndex" />
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-700/50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 align-items-center">
+                        <button type="button" onclick="fillEkycData()" class="inline-flex w-full justify-center rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-dark sm:ml-3 sm:w-auto mt-0">Điền thông tin</button>
+                        <button type="button" onclick="closeEkycModal()" class="mt-3 inline-flex w-full justify-center rounded-lg bg-white dark:bg-gray-800 px-3 py-2 text-sm font-semibold text-gray-900 dark:text-gray-300 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 sm:mt-0 sm:w-auto">Đóng</button>
+                    </div>
+                </div>
             </div>
-            <div class="mb-3">
-                <label class="form-label fw-bold small text-muted text-uppercase">Số CCCD</label>
-                <input type="text" id="ekycId" class="form-control" />
-            </div>
-            <div class="mb-3">
-                <label class="form-label fw-bold small text-muted text-uppercase">Ngày sinh</label>
-                <input type="date" id="ekycDob" class="form-control" />
-            </div>
-            <div class="mb-3">
-                <label class="form-label fw-bold small text-muted text-uppercase">Giới tính</label>
-                <input type="text" id="ekycGender" class="form-control" />
-            </div>
-            <div class="mb-3">
-                <label class="form-label fw-bold small text-muted text-uppercase">Nơi cư trú (Nơi ĐKTT)</label>
-                <input type="text" id="ekycAddress" class="form-control" />
-            </div>
-            <input type="hidden" id="ekycFrontId" />
-            <input type="hidden" id="ekycBackId" />
-            <input type="hidden" id="ekycTargetIndex" />
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-            <button type="button" class="btn btn-primary" onclick="fillEkycData()">Điền thông tin</button>
-          </div>
         </div>
-      </div>
     </div>
 </div>
 
@@ -693,16 +703,16 @@
                 <div class="fields-grid" style="margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 15px;">
                     <div class="field-group" style="grid-column: 1 / -1;">
                         <label><span class="material-symbols-outlined" style="font-size:1rem; vertical-align:middle;">camera</span> Tải lên CCCD (Tự động điền)</label>
-                        <div class="d-flex gap-2 align-items-end flex-wrap">
+                        <div class="flex gap-2 items-end flex-wrap">
                             <input type="hidden" name="Occupants[${index}].CccdFrontImageId" id="frontId_${index}" />
                             <input type="hidden" name="Occupants[${index}].CccdBackImageId" id="backId_${index}" />
                             <div>
-                                <small class="text-muted d-block mb-1">Mặt trước</small>
-                                <input type="file" id="frontFile_${index}" class="form-control" accept="image/*" style="padding: 5px 10px;" />
+                                <small class="text-gray-500 block mb-1">Mặt trước</small>
+                                <input type="file" id="frontFile_${index}" class="w-full rounded-lg border-gray-300 px-2 py-1 border focus:border-primary focus:ring-primary text-sm" accept="image/*" style="padding: 5px 10px;" />
                             </div>
                             <div>
-                                <small class="text-muted d-block mb-1">Mặt sau</small>
-                                <input type="file" id="backFile_${index}" class="form-control" accept="image/*" style="padding: 5px 10px;" />
+                                <small class="text-gray-500 block mb-1">Mặt sau</small>
+                                <input type="file" id="backFile_${index}" class="w-full rounded-lg border-gray-300 px-2 py-1 border focus:border-primary focus:ring-primary text-sm" accept="image/*" style="padding: 5px 10px;" />
                             </div>
                             <div>
                                 <button type="button" class="btn-submit" style="padding: 8px 16px; font-size: 0.82rem;" onclick="processEkyc(${index})" id="btnScan_${index}">
@@ -710,7 +720,7 @@
                                 </button>
                             </div>
                         </div>
-                        <div id="scanMsg_${index}" class="mt-2 fw-bold" style="display:none; font-size: 0.85rem;"></div>
+                        <div id="scanMsg_${index}" class="mt-2 font-bold" style="display:none; font-size: 0.85rem;"></div>
                     </div>
                 </div>
 
@@ -735,13 +745,13 @@
             
             if (!frontFile || !backFile) {
                 msgObj.innerText = "Vui lòng chọn cả ảnh mặt trước và mặt sau CCCD.";
-                msgObj.className = "mt-2 fw-bold text-danger";
+                msgObj.className = "mt-2 font-bold text-red-500";
                 msgObj.style.display = "block";
                 return;
             }
 
             msgObj.innerText = "Đang tải lên và nhận dạng...";
-            msgObj.className = "mt-2 fw-bold text-primary";
+            msgObj.className = "mt-2 font-bold text-primary";
             msgObj.style.display = "block";
             btnObj.disabled = true;
 
@@ -780,18 +790,23 @@
                         document.getElementById('ekycDob').value = dobVal;
                     }
 
-                    const modal = new bootstrap.Modal(document.getElementById('ekycModal'));
-                    modal.show();
+                    const modalEl = document.getElementById('ekycModal');
+                    modalEl.classList.remove('hidden');
                 } else {
                     msgObj.innerText = result.message || 'Lỗi nhận dạng';
-                    msgObj.className = "mt-2 fw-bold text-danger";
+                    msgObj.className = "mt-2 font-bold text-red-500";
                 }
             } catch (error) {
                 console.error('OCR Error:', error);
                 btnObj.disabled = false;
                 msgObj.innerText = 'Lỗi kết nối máy chủ.';
-                msgObj.className = "mt-2 fw-bold text-danger";
+                msgObj.className = "mt-2 font-bold text-red-500";
             }
+        }
+
+        function closeEkycModal() {
+            const modalEl = document.getElementById('ekycModal');
+            modalEl.classList.add('hidden');
         }
 
         function fillEkycData() {
@@ -815,13 +830,11 @@
             if(addressInput) addressInput.value = document.getElementById('ekycAddress').value;
 
             // Hide modal
-            const modalEl = document.getElementById('ekycModal');
-            const modalObj = bootstrap.Modal.getInstance(modalEl);
-            modalObj.hide();
+            closeEkycModal();
 
             const msgObj = document.getElementById('scanMsg_' + index);
             msgObj.innerText = "Đã điền thông tin thành công!";
-            msgObj.className = "mt-2 fw-bold text-success";
+            msgObj.className = "mt-2 font-bold text-green-500";
             msgObj.style.display = "block";
         }
     </script>
