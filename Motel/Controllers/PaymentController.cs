@@ -16,17 +16,20 @@ public class PaymentController : Controller
     private readonly IPaymentRepository _paymentRepo;
     private readonly IInvoiceRepository _invoiceRepo; // ✅ thêm
     private readonly LandlordHelper _landlordHelper;
+    private readonly IInvoiceService _invoiceService;
 
     public PaymentController(
         IPaymentService paymentService,
         IPaymentRepository paymentRepo,
         IInvoiceRepository invoiceRepo,
-        LandlordHelper landlordHelper)
+        LandlordHelper landlordHelper,
+        IInvoiceService invoiceService)
     {
         _paymentService = paymentService;
         _paymentRepo = paymentRepo;
         _invoiceRepo = invoiceRepo;
         _landlordHelper = landlordHelper;
+        _invoiceService = invoiceService;
     }
 
    
@@ -88,6 +91,12 @@ public class PaymentController : Controller
 
             if (vm.Provider == PaymentProviders.VIETQR)
             {
+                var landlordId = await _landlordHelper.GetCurrentLandlordIdAsync(User);
+                if (landlordId > 0)
+                {
+                    await _invoiceService.SendPaymentReminderAsync(vm.InvoiceId, landlordId);
+                }
+
                 return RedirectToAction(nameof(VietQr), new { paymentIntentId = intent.PaymentIntentId });
             }
 

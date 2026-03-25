@@ -653,6 +653,16 @@
                     Tạo hóa đơn mới
                 </a>
 
+                @if (Model.Status == "unpaid")
+                {
+                    <form asp-controller="Invoice" asp-action="SendReminder" asp-route-id="@Model.InvoiceId" method="post" class="m-0 w-100" style="margin-top: 1rem;">
+                        <button type="submit" class="rc-btn-secondary">
+                            <span class="msym">mail</span>
+                            Gửi email nhắc nợ
+                        </button>
+                    </form>
+                }
+
                 @* Note *@
                 <div class="rc-note-box">
                     <strong>Sắp có:</strong> Xuất PDF &amp; Tạo QR thanh toán sẽ được thêm vào đây.
