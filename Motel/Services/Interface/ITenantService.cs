@@ -10,5 +10,6 @@ namespace Motel.Services.Interfaces
         Task<PropertyTenantsViewModel?> GetTenantsByPropertyIdAsync(int landlordId, int propertyId);
         Task<TenantEditViewModel?> BuildEditViewModelAsync(int landlordId, int tenantId);
         Task<bool> UpdateTenantAsync(int landlordId, TenantEditViewModel vm);
+        Task<(string? frontImage, string? backImage)> GetTenantCccdImagesAsync(int tenantId);
     }
 }
