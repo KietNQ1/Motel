@@ -113,6 +113,7 @@ public sealed class InvoiceController : Controller
         if (room != null)
         {
             vm.RoomName = room.RoomName;
+            vm.RentPrice = room.RentPrice;
             var occupancies = await _contractRepo.GetActiveOccupanciesAsync(roomId, ct);
             int occupantCount = occupancies.Count;
 
@@ -199,5 +200,29 @@ public sealed class InvoiceController : Controller
             return NotFound();
 
         return View(invoice);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SendReminder(int id, CancellationToken ct)
+    {
+        var landlordId = await _landlordHelper.GetCurrentLandlordIdAsync(User);
+        if (landlordId == 0)
+        {
+            TempData["Error"] = "Bạn không có quyền truy cập.";
+            return RedirectToAction("Index", "Home");
+        }
+
+        var success = await _invoiceService.SendPaymentReminderAsync(id, landlordId, ct);
+        if (success)
+        {
+            TempData["Success"] = "Đã gửi email nhắc thanh toán kèm mã QR thành công!";
+        }
+        else
+        {
+            TempData["Error"] = "Không thể gửi email. Kiểm tra lại Tenant có email không hoặc tài khoản Bank của bạn đã đầy đủ chưa.";
+        }
+
+        return RedirectToAction(nameof(Details), new { id = id });
     }
 }
