@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace Motel.Services.Interfaces;
 
-public interface IVnptEkycService
+public interface IEkycService
 {
     Task<OcrResult?> ScanIdCardAsync(IFormFile file);
     Task<OcrResult?> ScanBothIdCardsAsync(IFormFile frontFile, IFormFile backFile);

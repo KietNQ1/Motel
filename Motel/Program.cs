@@ -87,9 +87,9 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<LandlordHelper>();
 builder.Services.AddScoped<IRoomFurnitureService, RoomFurnitureService>();
 
-// Vnpt eKYC
-builder.Services.Configure<VnptEkycOptions>(builder.Configuration.GetSection("VnptEkyc"));
-builder.Services.AddHttpClient<IVnptEkycService, VnptEkycService>();
+// FptAi eKYC
+builder.Services.Configure<FptAiEkycOptions>(builder.Configuration.GetSection("FptAiEkyc"));
+builder.Services.AddHttpClient<IEkycService, FptAiEkycService>();
 
 
 // Session (optional – KHÔNG bắt buộc cho Identity)
