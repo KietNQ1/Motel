@@ -63,7 +63,9 @@ namespace Motel.Repositories
                     EndDate = ro.Tenant.Contracts
                         .Where(c => c.RoomId == ro.RoomId && c.Status == "active" && !c.IsDeleted)
                         .Select(c => (DateOnly?)c.EndDate)
-                        .FirstOrDefault()
+                        .FirstOrDefault(),
+                    IsTemporaryResidenceRegistered = _db.StoredFileReferences
+                        .Any(r => r.RefType == "tenant" && r.RefId == ro.TenantId && r.StoredFile.StoragePath.Contains("residence_proofs"))
                 })
                 .OrderByDescending(t => t.OccupancyStatus == "active")
                 .ThenBy(t => t.RoomName)

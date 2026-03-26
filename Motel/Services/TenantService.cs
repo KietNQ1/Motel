@@ -76,6 +76,11 @@ namespace Motel.Services
             var tenant = await _repo.GetTenantByIdAsync(tenantId, landlordId);
             if (tenant == null) return null;
 
+            var isRegistered = await _context.StoredFileReferences
+                .Include(r => r.StoredFile)
+                .AnyAsync(r => r.RefType == "tenant" && r.RefId == tenantId 
+                               && r.StoredFile.StoragePath.Contains("residence_proofs"));
+
             return new TenantEditViewModel
             {
                 TenantId = tenant.TenantId,
@@ -84,7 +89,8 @@ namespace Motel.Services
                 Email = tenant.Email,
                 IdentityNo = tenant.IdentityNo,
                 DateOfBirth = tenant.DateOfBirth,
-                PermanentAddress = tenant.PermanentAddress
+                PermanentAddress = tenant.PermanentAddress,
+                IsTemporaryResidenceRegistered = isRegistered
             };
         }
 
@@ -112,8 +118,13 @@ namespace Motel.Services
                 var refBack = new StoredFileReference { StoredFileId = vm.CccdBackImageId.Value, RefType = "tenant", RefId = tenant.TenantId, CreatedAt = DateTime.Now };
                 _context.StoredFileReferences.Add(refBack);
             }
+            if (vm.ResidenceProofImageId.HasValue && vm.ResidenceProofImageId.Value > 0)
+            {
+                var refProof = new StoredFileReference { StoredFileId = vm.ResidenceProofImageId.Value, RefType = "residence_proof", RefId = tenant.TenantId, CreatedAt = DateTime.Now };
+                _context.StoredFileReferences.Add(refProof);
+            }
 
-            if (vm.CccdFrontImageId.HasValue || vm.CccdBackImageId.HasValue)
+            if (vm.CccdFrontImageId.HasValue || vm.CccdBackImageId.HasValue || vm.ResidenceProofImageId.HasValue)
             {
                 await _context.SaveChangesAsync();
             }
@@ -132,6 +143,61 @@ namespace Motel.Services
             var back = refs.FirstOrDefault(r => r.StoredFile.StoragePath.Contains("_back"))?.StoredFile.StoragePath;
 
             return (front, back);
+        }
+
+        public async Task<string?> GetTenantResidenceProofImageAsync(int tenantId)
+        {
+            var rRef = await _context.StoredFileReferences
+                .Include(r => r.StoredFile)
+                .Where(r => r.RefType == "tenant" && r.RefId == tenantId 
+                            && r.StoredFile.StoragePath.Contains("residence_proofs"))
+                .OrderByDescending(r => r.CreatedAt)
+                .FirstOrDefaultAsync();
+
+            return rRef?.StoredFile.StoragePath;
+        }
+
+        public async Task<CT01ViewModel?> GetCT01DataAsync(int landlordId, int tenantId)
+        {
+            var tenant = await _repo.GetTenantByIdAsync(tenantId, landlordId);
+            if (tenant == null) return null;
+
+            // Extract gender from IdentityNo
+            string gender = "Nam"; // Default
+            if (!string.IsNullOrEmpty(tenant.IdentityNo) && tenant.IdentityNo.Length == 12)
+            {
+                char genderChar = tenant.IdentityNo[3];
+                if (genderChar == '1' || genderChar == '3' || genderChar == '5' || genderChar == '7' || genderChar == '9')
+                {
+                    gender = "Nữ";
+                }
+            }
+
+            // Get Current Room Address
+            var activeOccupancy = await _context.RoomOccupancies
+                .Include(o => o.Room)
+                .ThenInclude(r => r.Property)
+                .Where(o => o.TenantId == tenantId && o.Status == "active")
+                .FirstOrDefaultAsync();
+
+            string currentAddress = activeOccupancy?.Room != null 
+                ? $"Phòng {activeOccupancy.Room.RoomName}, {(activeOccupancy.Room.Property?.Address ?? "")}"
+                : "";
+
+            return new CT01ViewModel
+            {
+                TenantId = tenant.TenantId,
+                FullName = tenant.FullName,
+                DateOfBirth = tenant.DateOfBirth,
+                Gender = gender,
+                IdentityNo = tenant.IdentityNo ?? "",
+                Phone = tenant.Phone ?? "",
+                Email = tenant.Email ?? "",
+                PermanentAddress = tenant.PermanentAddress ?? "",
+                LandlordFullName = tenant.Landlord?.DisplayName ?? "",
+                LandlordIdentityNo = tenant.Landlord?.IdentityNo ?? "",
+                CurrentAddress = currentAddress
+            };
         }
     }
 }

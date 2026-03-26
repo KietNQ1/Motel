@@ -330,6 +330,7 @@
                                 <th>CCCD / CMND</th>
                                 <th>Phòng</th>
                                 <th>Hợp đồng</th>
+                                <th>Tạm trú</th>
                                 <th>Trạng thái</th>
                                 <th class="text-end">Thao tác</th>
                             </tr>
@@ -374,6 +375,20 @@
                                         else
                                         {
                                             <span class="rc-chip-none">Không có HĐ</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (tenant.IsTemporaryResidenceRegistered)
+                                        {
+                                            <span class="badge bg-success bg-opacity-10 text-success border border-success">
+                                                <i class="bi bi-check-circle"></i> Đã đăng ký
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning">
+                                                <i class="bi bi-exclamation-triangle"></i> Chưa đăng ký
+                                            </span>
                                         }
                                     </td>
                                     <td>

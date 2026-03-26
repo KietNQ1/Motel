@@ -17,6 +17,7 @@ namespace Motel.ViewModels.Tenant
         public int? ContractId { get; set; }
         public DateOnly? StartDate { get; set; }
         public DateOnly? EndDate { get; set; }
+        public bool IsTemporaryResidenceRegistered { get; set; }
     }
 
     public class PropertyTenantsViewModel

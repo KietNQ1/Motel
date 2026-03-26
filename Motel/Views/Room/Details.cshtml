@@ -299,6 +299,20 @@
                                 {
                                     <div class="tenant-phone" style="margin-top:2px;"><i class="bi bi-envelope"></i> @t.Email</div>
                                 }
+                                <div style="margin-top:6px;">
+                                    @if (t.IsTemporaryResidenceRegistered)
+                                    {
+                                        <span class="badge bg-success bg-opacity-10 text-success border border-success" style="font-size: 0.75rem;">
+                                            <i class="bi bi-check-circle-fill"></i> Tạm trú: Đã ĐK
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning" style="font-size: 0.75rem;">
+                                            <i class="bi bi-exclamation-triangle-fill"></i> Tạm trú: Chưa ĐK
+                                        </span>
+                                    }
+                                </div>
                             </div>
                             @if (t.ContractId.HasValue)
                             {
