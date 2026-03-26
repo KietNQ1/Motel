@@ -11,15 +11,15 @@ namespace Motel.Controllers.Api;
 [Route("api/[controller]")]
 [ApiController]
 [Authorize]
-public class VnptEkycController : ControllerBase
+public class EkycController : ControllerBase
 {
-    private readonly IVnptEkycService _ekycService;
+    private readonly IEkycService _ekycService;
     private readonly MotelDbContext _context;
     private readonly LandlordHelper _landlordHelper;
     private readonly IWebHostEnvironment _env;
 
-    public VnptEkycController(
-        IVnptEkycService ekycService,
+    public EkycController(
+        IEkycService ekycService,
         MotelDbContext context,
         LandlordHelper landlordHelper,
         IWebHostEnvironment env)
@@ -77,7 +77,7 @@ public class VnptEkycController : ControllerBase
         {
             return Ok(new { 
                 success = false, 
-                message = "Không thể nhận dạng thẻ. Vui lòng thử lại với ảnh rõ nét hơn.",
+                message = "Không thể nhận dạng thẻ. Vui lòng thử lại với mặt trước ảnh rõ nét hơn.",
                 storedFileId = storedFile.StoredFileId,
                 storagePath = storagePath
             });
@@ -140,7 +140,7 @@ public class VnptEkycController : ControllerBase
             return Ok(new
             {
                 success = false,
-                message = "Không thể nhận dạng thẻ. Vui lòng kiểm tra lại ảnh chụp.",
+                message = "Không thể nhận dạng thẻ. Vui lòng kiểm tra lại ảnh chụp mặt trước/sau.",
                 frontId, backId, frontPath, backPath
             });
         }
