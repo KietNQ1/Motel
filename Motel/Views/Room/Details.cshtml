@@ -104,6 +104,8 @@
         .tenant-role-primary { display:inline-block; background:#dbeafe; color:#1e40af; font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; padding:1px 7px; border-radius:4px; margin-bottom:4px; }
         .tenant-role-member { display:inline-block; background:#f3f4f6; color:#374151; font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; padding:1px 7px; border-radius:4px; margin-bottom:4px; }
         .tenant-phone { font-size:.84rem; color:#555; display:flex; align-items:center; gap:5px; }
+        .tenant-res-yes { display:inline-flex; align-items:center; gap:4px; background:#d1fae5; color:#065f46; font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; padding:3px 8px; border-radius:6px; border:1px solid #a7f3d0; }
+        .tenant-res-no { display:inline-flex; align-items:center; gap:4px; background:#fef2f2; color:#991b1b; font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; padding:3px 8px; border-radius:6px; border:1px solid #fecaca; }
 
         /* ── estimated total card ── */
         .est-card { background:linear-gradient(135deg,#fff8f4 0%,#fff 100%); border:1px solid rgba(211,84,0,.2); border-radius:16px; padding:24px; }
@@ -299,29 +301,36 @@
                                 {
                                     <div class="tenant-phone" style="margin-top:2px;"><i class="bi bi-envelope"></i> @t.Email</div>
                                 }
-                                <div style="margin-top:6px;">
+                                <div style="margin-top:8px;">
                                     @if (t.IsTemporaryResidenceRegistered)
                                     {
-                                        <span class="badge bg-success bg-opacity-10 text-success border border-success" style="font-size: 0.75rem;">
+                                        <span class="tenant-res-yes">
                                             <i class="bi bi-check-circle-fill"></i> Tạm trú: Đã ĐK
                                         </span>
                                     }
                                     else
                                     {
-                                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning" style="font-size: 0.75rem;">
+                                        <span class="tenant-res-no">
                                             <i class="bi bi-exclamation-triangle-fill"></i> Tạm trú: Chưa ĐK
                                         </span>
                                     }
                                 </div>
                             </div>
-                            @if (t.ContractId.HasValue)
-                            {
-                                <a asp-controller="Contract" asp-action="Details" asp-route-id="@t.ContractId.Value"
-                                   style="flex-shrink:0;display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;background:#fef3c7;color:#92400e;font-size:.8rem;font-weight:600;text-decoration:none;border:1px solid #fde68a;white-space:nowrap;"
-                                   title="Xem hợp đồng">
-                                    <i class="bi bi-file-text"></i> Hợp đồng
+                            <div style="display:flex; flex-direction:column; gap:8px; flex-shrink:0;">
+                                @if (t.ContractId.HasValue)
+                                {
+                                    <a asp-controller="Contract" asp-action="Details" asp-route-id="@t.ContractId.Value"
+                                       style="display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:5px 12px;border-radius:8px;background:#fef3c7;color:#92400e;font-size:.8rem;font-weight:600;text-decoration:none;border:1px solid #fde68a;white-space:nowrap;"
+                                       title="Xem hợp đồng">
+                                        <i class="bi bi-file-text"></i> Hợp đồng
+                                    </a>
+                                }
+                                <a asp-controller="Tenant" asp-action="PrintCT01" asp-route-id="@t.TenantId"
+                                   style="display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:5px 12px;border-radius:8px;background:#e0f2fe;color:#0369a1;font-size:.8rem;font-weight:600;text-decoration:none;border:1px solid #bae6fd;white-space:nowrap;"
+                                   title="Tạo mẫu CT01">
+                                    <i class="bi bi-printer"></i> Mẫu CT01
                                 </a>
-                            }
+                            </div>
                         </div>
                     }
                 }
