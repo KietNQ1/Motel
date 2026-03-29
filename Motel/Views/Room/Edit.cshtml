@@ -45,7 +45,7 @@
             <i class="bi bi-info-circle-fill text-primary"></i> Thông tin cơ bản
         </div>
 
-        <form asp-action="Edit" method="post" class="basic-info-form">
+        <form asp-action="Edit" method="post" class="basic-info-form" enctype="multipart/form-data">
             <input type="hidden" asp-for="RoomId" />
             <input type="hidden" asp-for="PropertyId" />
             <input type="hidden" asp-for="PropertyName" />
@@ -67,6 +67,30 @@
                 <label>Số người tối đa <span class="required">*</span></label>
                 <input asp-for="MaxOccupants" type="number" min="1" max="20" />
                 <span asp-validation-for="MaxOccupants" class="field-error"></span>
+            </div>
+
+            <div class="field-group mt-3" style="border-top: 1px dashed #ddd; padding-top: 16px;">
+                <label>Hình ảnh phòng <small class="text-muted">(Phòng ngủ, nhà vệ sinh, nhà bếp, ban công...)</small></label>
+                
+                @if (Model.ExistingImages != null && Model.ExistingImages.Any())
+                {
+                    <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px;">
+                        @foreach (var img in Model.ExistingImages)
+                        {
+                            <div style="position: relative; width: 120px; height: 120px; border-radius: 8px; overflow: hidden; border: 1px solid #ddd; background: #fafafa;">
+                                <img src="@img.StoragePath" style="width: 100%; height: 100%; object-fit: cover;" alt="Room Image" />
+                                <div style="position: absolute; top: 0; right: 0; background: rgba(255, 255, 255, 0.9); padding: 4px; border-bottom-left-radius: 6px;">
+                                    <label style="font-size: 0.8rem; margin: 0; cursor: pointer;">
+                                        <input type="checkbox" name="DeleteImageIds" value="@img.StoredFileId" style="margin-right: 4px;" />Xóa
+                                    </label>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+
+                <label style="font-size: 0.85rem;">Tải thêm ảnh mới</label>
+                <input asp-for="NewImages" type="file" multiple accept="image/*" />
             </div>
 
             <div class="form-action-right">
