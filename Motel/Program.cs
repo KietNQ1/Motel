@@ -7,6 +7,7 @@ using Motel.Models;
 using Motel.Repositories;
 using Motel.Repositories.Interface;
 using Motel.Services;
+using Motel.Hubs;
 using Motel.Services.Interface;
 using Motel.Services.Interfaces;
 
@@ -72,6 +73,8 @@ builder.Services.AddScoped<IContractRepository, ContractRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<ITaxRepository, TaxRepository>();
 builder.Services.AddScoped<IRoomFurnitureRepository, RoomFurnitureRepository>();
+builder.Services.AddScoped<IChatService, ChatService>();
+builder.Services.AddHttpClient<IGeminiService, GeminiService>();
 
 // Services
 
@@ -86,7 +89,10 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 // Helpers
 builder.Services.AddScoped<LandlordHelper>();
 builder.Services.AddScoped<IRoomFurnitureService, RoomFurnitureService>();
+builder.Services.AddScoped<IChatRepository, ChatRepository>();
 
+//  Add SignalR
+builder.Services.AddSignalR();
 
 // Session (optional – KHÔNG bắt buộc cho Identity)
 builder.Services.AddSession(options =>
@@ -95,6 +101,7 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
+
 
 var app = builder.Build();
 
@@ -135,5 +142,8 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+
+app.MapHub<ChatHub>("/chatHub");
 
 app.Run();
