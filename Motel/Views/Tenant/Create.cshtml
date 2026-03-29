@@ -10,6 +10,25 @@
         @Html.AntiForgeryToken()
 
         <input type="hidden" asp-for="ReturnRoomId" />
+        <input type="hidden" asp-for="CccdImageId" id="CccdImageId" />
+
+        <div class="mb-3">
+            <label class="form-label fw-bold"><i class="bi bi-camera me-1"></i> Tải lên CCCD (Mặt trước) để nhận thông tin tự động</label>
+            <input type="file" id="CccdFile" class="form-control" accept="image/*" />
+            
+            <div id="CccdPreviewContainer" class="mt-2 shadow-sm rounded p-2" style="display: none; background-color: #f8f9fa;">
+                <img id="CccdPreview" src="#" alt="CCCD Preview" class="img-fluid rounded" style="max-height: 200px; display: block; margin: 0 auto;" />
+            </div>
+            
+            <div id="ocrLoading" class="mt-2 text-primary" style="display: none;">
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                <strong>Đang xử lý nhận dạng CCCD...</strong>
+            </div>
+            <div id="ocrError" class="mt-2 text-danger fw-bold" style="display: none;"></div>
+            <div id="ocrSuccess" class="mt-2 text-success fw-bold" style="display: none;">
+                <i class="bi bi-check-circle-fill me-1"></i> Nhận dạng thành công! Đã tự động điền form.
+            </div>
+        </div>
 
         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
@@ -59,4 +78,68 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.getElementById('CccdFile').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) {
+                document.getElementById('CccdPreviewContainer').style.display = 'none';
+                return;
+            }
+
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                document.getElementById('CccdPreview').src = evt.target.result;
+                document.getElementById('CccdPreviewContainer').style.display = 'block';
+            }
+            reader.readAsDataURL(file);
+
+            // Hide old status messages
+            document.getElementById('ocrLoading').style.display = 'block';
+            document.getElementById('ocrError').style.display = 'none';
+            document.getElementById('ocrSuccess').style.display = 'none';
+
+            // Upload to API
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/api/Ekyc/scan', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                document.getElementById('ocrLoading').style.display = 'none';
+
+                if (result.success) {
+                    document.getElementById('ocrSuccess').style.display = 'block';
+                    document.getElementById('CccdImageId').value = result.storedFileId;
+                    
+                    if (result.data) {
+                        if (result.data.name) document.getElementById('FullName').value = result.data.name;
+                        if (result.data.id) document.getElementById('IdentityNo').value = result.data.id;
+                        if (result.data.address) document.getElementById('PermanentAddress').value = result.data.address;
+                        
+                        if (result.data.birthday) {
+                            // Convert DD/MM/YYYY to YYYY-MM-DD for date input
+                            const parts = result.data.birthday.split('/');
+                            if (parts.length === 3) {
+                                document.getElementById('DateOfBirth').value = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                            }
+                        }
+                    }
+                } else {
+                    document.getElementById('ocrError').innerText = result.message || 'Lỗi nhận dạng';
+                    document.getElementById('ocrError').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('OCR Error:', error);
+                document.getElementById('ocrLoading').style.display = 'none';
+                document.getElementById('ocrError').innerText = 'Lỗi kết nối máy chủ. Vui lòng thử lại sau.';
+                document.getElementById('ocrError').style.display = 'block';
+            }
+        });
+    </script>
 }

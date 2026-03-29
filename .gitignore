@@ -108,4 +108,10 @@ desktop.ini
 *.swo
 *~
 
+################################
+# User Uploads
+################################
+Motel/wwwroot/uploads/cccd/*
+!Motel/wwwroot/uploads/cccd/.gitignore
+
 wwwroot/uploads/

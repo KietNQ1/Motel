@@ -10,15 +10,21 @@ namespace Motel.Controllers
         private readonly ITenantService _service;
         private readonly ILogger<TenantController> _logger;
         private readonly LandlordHelper _landlordHelper;
+        private readonly IWebHostEnvironment _env;
+        private readonly Motel.Data.MotelDbContext _context;
 
         public TenantController(
             ITenantService service, 
             ILogger<TenantController> logger,
-            LandlordHelper landlordHelper)
+            LandlordHelper landlordHelper,
+            IWebHostEnvironment env,
+            Motel.Data.MotelDbContext context)
         {
             _service = service;
             _logger = logger;
             _landlordHelper = landlordHelper;
+            _env = env;
+            _context = context;
         }
 
 [HttpGet]
@@ -70,6 +76,13 @@ namespace Motel.Controllers
                 TempData["Error"] = "Không tìm thấy người thuê.";
                 return RedirectToAction("Index", "Property");
             }
+
+            var (frontImage, backImage) = await _service.GetTenantCccdImagesAsync(id);
+            ViewBag.FrontImage = frontImage;
+            ViewBag.BackImage = backImage;
+
+            ViewBag.ResidenceProofImage = await _service.GetTenantResidenceProofImageAsync(id);
+
             return View(tenant);
         }
 
@@ -108,6 +121,102 @@ namespace Motel.Controllers
                 ModelState.AddModelError("", "Có lỗi xảy ra khi cập nhật.");
                 return View(vm);
             }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UploadResidenceProof(int tenantId, IFormFile proofImage)
+        {
+            if (proofImage == null || proofImage.Length == 0)
+            {
+                TempData["Error"] = "Vui lòng chọn ảnh minh chứng hợp lệ.";
+                return RedirectToAction(nameof(Details), new { id = tenantId });
+            }
+
+            try
+            {
+                var landlordId = await _landlordHelper.GetCurrentLandlordIdAsync(User);
+                var tenant = await _service.GetTenantDetailsAsync(landlordId, tenantId);
+                if (tenant == null)
+                {
+                    TempData["Error"] = "Không tìm thấy người thuê.";
+                    return RedirectToAction("Index", "Property");
+                }
+
+                // Ensure directory exists
+                string uploadFolder = Path.Combine(_env.WebRootPath, "uploads", "residence_proofs");
+                if (!Directory.Exists(uploadFolder))
+                {
+                    Directory.CreateDirectory(uploadFolder);
+                }
+
+                string ext = Path.GetExtension(proofImage.FileName);
+                string fileName = $"proof_T{tenantId}_{DateTime.Now.Ticks}{ext}";
+                string filePath = Path.Combine(uploadFolder, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await proofImage.CopyToAsync(stream);
+                }
+
+                string storagePath = $"/uploads/residence_proofs/{fileName}";
+
+                var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                int userId = int.TryParse(userIdStr, out var u) ? u : 0;
+                
+                // Fallback attempt to get UserId from Landlord if NameIdentifier parsing fails
+                if (userId == 0)
+                {
+                    var landlordObj = await _context.Landlords.FindAsync(landlordId);
+                    userId = landlordObj?.UserId ?? 1;
+                }
+
+                var storedFile = new Motel.Models.StoredFile
+                {
+                    LandlordId = landlordId,
+                    FileName = proofImage.FileName,
+                    MimeType = proofImage.ContentType,
+                    StoragePath = storagePath,
+                    UploadedAt = DateTime.Now,
+                    UploadedByUserId = userId
+                };
+                _context.StoredFiles.Add(storedFile);
+                await _context.SaveChangesAsync();
+
+                var refProof = new Motel.Models.StoredFileReference 
+                { 
+                    StoredFileId = storedFile.StoredFileId, 
+                    RefType = "tenant", 
+                    RefId = tenantId, 
+                    CreatedAt = DateTime.Now 
+                };
+                _context.StoredFileReferences.Add(refProof);
+                await _context.SaveChangesAsync();
+
+                TempData["Success"] = "Cập nhật xác minh tạm trú thành công.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error uploading residence proof");
+                TempData["Error"] = "Có lỗi xảy ra khi lưu tệp tin.";
+            }
+
+            return RedirectToAction(nameof(Details), new { id = tenantId });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> PrintCT01(int id)
+        {
+            var landlordId = await _landlordHelper.GetCurrentLandlordIdAsync(User);
+            var vm = await _service.GetCT01DataAsync(landlordId, id);
+            
+            if (vm == null)
+            {
+                TempData["Error"] = "Không thể lấy dữ liệu CT01.";
+                return RedirectToAction("Index", "Property");
+            }
+
+            return View(vm);
         }
     }
 }

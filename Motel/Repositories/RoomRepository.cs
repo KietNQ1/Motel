@@ -62,7 +62,9 @@ namespace Motel.Repositories
                     ContractId = ro.Tenant.Contracts
                         .Where(c => c.RoomId == roomId && !c.IsDeleted && c.Status == "active")
                         .Select(c => (int?)c.ContractId)
-                        .FirstOrDefault()
+                        .FirstOrDefault(),
+                    IsTemporaryResidenceRegistered = _db.StoredFileReferences
+                        .Any(r => r.RefType == "tenant" && r.RefId == ro.Tenant.TenantId && r.StoredFile.StoragePath.Contains("residence_proofs"))
                 }).OrderByDescending(t => t.IsPrimary).ThenBy(t => t.FullName).ToList()
             };
 
@@ -240,6 +242,22 @@ namespace Motel.Repositories
                     tenantEntities.Add(t);
                 }
 
+                await _db.SaveChangesAsync(ct);
+
+                // 1.5) Linking CCCD images
+                foreach (var (t, o) in tenantEntities.Zip(occupants))
+                {
+                    if (o.CccdFrontImageId.HasValue && o.CccdFrontImageId.Value > 0)
+                    {
+                        var refFront = new StoredFileReference { StoredFileId = o.CccdFrontImageId.Value, RefType = "tenant", RefId = t.TenantId, CreatedAt = DateTime.Now };
+                        _db.StoredFileReferences.Add(refFront);
+                    }
+                    if (o.CccdBackImageId.HasValue && o.CccdBackImageId.Value > 0)
+                    {
+                        var refBack = new StoredFileReference { StoredFileId = o.CccdBackImageId.Value, RefType = "tenant", RefId = t.TenantId, CreatedAt = DateTime.Now };
+                        _db.StoredFileReferences.Add(refBack);
+                    }
+                }
                 await _db.SaveChangesAsync(ct);
 
                 // 2) tạo contract cho TỪNG tenant

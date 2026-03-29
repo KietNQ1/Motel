@@ -100,9 +100,10 @@
                    class="rounded-lg px-3 py-2 text-sm font-medium text-text-sub dark:text-gray-400 transition hover:bg-primary/10 hover:text-primary dark:hover:text-primary">
                     Thanh toán
                 </a>
-                <a asp-controller="Tax" asp-action="Index"
+
+                <a asp-controller="Tax" asp-action="Index" 
                    class="rounded-lg px-3 py-2 text-sm font-medium text-text-sub dark:text-gray-400 transition hover:bg-primary/10 hover:text-primary dark:hover:text-primary">
-                    Thuế
+                    Ước tính thuế
                 </a>
             </nav>
 
@@ -130,7 +131,7 @@
                             <span class="material-symbols-outlined text-lg">person</span>
                             Hồ sơ cá nhân
                         </a>
-                        <a href="#" class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <a asp-controller="PaymentSettings" asp-action="Index" class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
                             <span class="material-symbols-outlined text-lg">settings</span>
                             Cài đặt
                         </a>
@@ -167,6 +168,7 @@
                 <a asp-controller="Contract" asp-action="Index" class="rounded-lg px-4 py-3 text-sm font-medium hover:bg-primary/10">Hợp đồng</a>
                 <a asp-controller="Invoice" asp-action="Index" class="rounded-lg px-4 py-3 text-sm font-medium hover:bg-primary/10">Hóa đơn</a>
                 <a asp-controller="Invoice" asp-action="History" class="rounded-lg px-4 py-3 text-sm font-medium hover:bg-primary/10">Thanh toán</a>
+                <a asp-controller="PaymentSettings" asp-action="Index" class="rounded-lg px-4 py-3 text-sm font-medium hover:bg-primary/10">Cài đặt thanh toán</a>
                 <a asp-controller="Tax" asp-action="Index" class="rounded-lg px-4 py-3 text-sm font-medium hover:bg-primary/10">Thuế</a>
             </nav>
         </div>

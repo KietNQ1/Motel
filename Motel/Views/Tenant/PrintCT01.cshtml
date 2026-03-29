@@ -1,0 +1,197 @@
+@model Motel.ViewModels.Tenant.CT01ViewModel
+@{
+    ViewData["Title"] = "Mẫu CT01";
+}
+
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Times+New+Roman&display=swap" rel="stylesheet">
+<style>
+    .ct01-content { font-family: "Times New Roman", Times, serif; }
+    
+    @@media print {
+        .no-print { display: none !important; }
+        nav, header, footer { display: none !important; }
+        html, body { background: white !important; margin: 0 !important; padding: 0 !important; overflow: visible !important; height: auto !important; }
+        main, .bg-slate-100, .max-w-7xl, .grid { display: block !important; width: 100% !important; overflow: visible !important; padding: 0 !important; margin: 0 !important; background: white !important; }
+        .print-container { box-shadow: none !important; border: none !important; margin: 0 !important; padding: 20px !important; width: 100% !important; overflow: visible !important; page-break-inside: avoid; }
+    }
+
+    /* Identity box styling */
+    .id-box-container {
+        display: inline-flex;
+        border: 1px solid black;
+        border-right: none;
+        margin-left: 10px;
+        vertical-align: middle;
+    }
+    .id-char {
+        width: 25px;
+        height: 30px;
+        border-right: 1px solid black;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+    }
+    
+    .ct01-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+        margin-bottom: 20px;
+    }
+
+    .ct01-table th, .ct01-table td {
+        border: 1px solid black;
+        padding: 8px;
+        text-align: center;
+    }
+</style>
+
+<div class="bg-slate-100 text-slate-800 p-4 md:p-8 rounded">
+    <div class="max-w-4xl mx-auto">
+        
+        <!-- Nút điều hướng -->
+        <div class="no-print flex flex-wrap items-center justify-between gap-2 mb-4">
+            <a asp-action="Details" asp-route-id="@Model.TenantId"
+               class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:border-primary">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                Quay lại chi tiết
+            </a>
+            
+            <button onclick="window.print()" class="rounded-xl bg-slate-900 text-white px-4 py-2 font-medium hover:bg-slate-700 transition">
+                🖨️ In Mẫu CT01
+            </button>
+        </div>
+
+        <div class="print-container bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-12 mb-10">
+            <div class="ct01-content text-[13pt] md:text-[14pt] leading-relaxed">
+                
+                <div class="text-center mb-6 text-[12pt]">
+                    <div>Mẫu CT01 ban hành kèm theo Thông tư số 66/2023/TT-BCA</div>
+                    <div>ngày 17/11/2023 của Bộ trưởng Bộ Công an</div>
+                </div>
+
+                <div class="text-center mt-3 mb-2">
+                    <div class="font-bold uppercase text-[15pt]">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+                    <div class="font-bold text-[14pt] underline underline-offset-4">Độc lập – Tự do – Hạnh phúc</div>
+                </div>
+
+                <div class="text-center mt-8 mb-6">
+                    <div class="font-bold uppercase text-[16pt]">TỜ KHAI THAY ĐỔI THÔNG TIN CƯ TRÚ</div>
+                </div>
+
+                <div class="text-center mb-6">
+                    Kính gửi<sup>(1)</sup>: ........................................................................................
+                </div>
+
+                <div class="mb-2">
+                    1. Họ, chữ đệm và tên: <span class="font-bold uppercase">@Model.FullName</span>
+                </div>
+
+                <div class="flex flex-wrap justify-between mb-2">
+                    <div class="w-full sm:w-2/3">
+                        2. Ngày, tháng, năm sinh: <span class="font-bold">@(Model.DateOfBirth?.ToString("dd/MM/yyyy") ?? "................")</span>
+                    </div>
+                    <div class="w-full sm:w-1/3">
+                        3. Giới tính: <span class="font-bold">@Model.Gender</span>
+                    </div>
+                </div>
+
+                <div class="mb-2 flex items-center flex-wrap">
+                    @{
+                        string idNo = (Model.IdentityNo ?? "").PadRight(12, ' ');
+                    }
+                    <span class="mr-2">4. Số định danh cá nhân:</span>
+                    <div class="id-box-container mt-1 sm:mt-0">
+                        @for(int i = 0; i < 12; i++)
+                        {
+                            <div class="id-char">@(i < idNo.Length && idNo[i] != ' ' ? idNo[i].ToString() : "")</div>
+                        }
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap justify-between mb-2 mt-3">
+                    <div class="w-full sm:w-1/2">
+                        5. Số điện thoại liên hệ: <span class="font-bold">@Model.Phone</span>
+                    </div>
+                    <div class="w-full sm:w-1/2">
+                        6. Email: <span class="font-bold">@Model.Email</span>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap justify-between mb-2 mt-2">
+                    <div class="w-full sm:w-2/3">
+                        7. Họ, chữ đệm và tên chủ hộ: <span class="font-bold uppercase">@Model.LandlordFullName</span>
+                    </div>
+                    <div class="w-full sm:w-1/3">
+                        8. Mối quan hệ với chủ hộ: <span class="font-bold uppercase">KHÁCH THUÊ</span>
+                    </div>
+                </div>
+
+                <div class="mb-2 flex items-center flex-wrap mt-2">
+                    @{
+                        string llIdNo = (Model.LandlordIdentityNo ?? "").PadRight(12, ' ');
+                    }
+                    <span class="mr-2">9. Số định danh cá nhân của chủ hộ:</span>
+                    <div class="id-box-container mt-1 sm:mt-0">
+                        @for(int i = 0; i < 12; i++)
+                        {
+                            <div class="id-char">@(i < llIdNo.Length && llIdNo[i] != ' ' ? llIdNo[i].ToString() : "")</div>
+                        }
+                    </div>
+                </div>
+
+                <div class="mt-4 mb-2">
+                    10. Nội dung đề nghị<sup>(2)</sup>: <span class="font-bold">Đăng ký tạm trú tại @Model.CurrentAddress</span>
+                </div>
+
+                <div class="mt-4 mb-2">
+                    11. Những thành viên trong hộ gia đình cùng thay đổi:
+                </div>
+
+                <table class="ct01-table text-[12pt]">
+                    <thead>
+                        <tr>
+                            <th style="width: 5%;">TT</th>
+                            <th style="width: 30%;">Họ, chữ đệm<br/>và tên</th>
+                            <th style="width: 15%;">Ngày, tháng,<br/>năm sinh</th>
+                            <th style="width: 10%;">Giới<br/>tính</th>
+                            <th style="width: 20%;">Số định danh<br/>cá nhân</th>
+                            <th style="width: 20%;">Mối quan hệ<br/>với chủ hộ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                        <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                        <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    </tbody>
+                </table>
+
+                <div class="flex flex-wrap justify-between text-center mt-10 text-[12pt] page-break-avoid">
+                    <div class="w-1/4 px-1">
+                        <div>..., ngày...tháng...năm...</div>
+                        <div class="font-bold uppercase mt-1">Ý KIẾN CỦA CHỦ HỘ<sup>(3)</sup></div>
+                        <div class="mt-20 font-bold">@Model.LandlordFullName</div>
+                    </div>
+                    <div class="w-1/4 px-1">
+                        <div>..., ngày...tháng...năm...</div>
+                        <div class="font-bold uppercase mt-1">Ý KIẾN CỦA CHỦ SỞ HỮU<br/>CHỖ Ở HỢP PHÁP<sup>(4)</sup></div>
+                    </div>
+                    <div class="w-1/4 px-1">
+                        <div>..., ngày...tháng...năm...</div>
+                        <div class="font-bold uppercase mt-1">Ý KIẾN CỦA CHA, MẸ<br/>HOẶC NGƯỜI GIÁM HỘ<sup>(5)</sup></div>
+                    </div>
+                    <div class="w-1/4 px-1">
+                        <div>..., ngày...tháng...năm...</div>
+                        <div class="font-bold uppercase mt-1">NGƯỜI KÊ KHAI<sup>(6)</sup></div>
+                        <div class="mt-20 font-bold">@Model.FullName</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>

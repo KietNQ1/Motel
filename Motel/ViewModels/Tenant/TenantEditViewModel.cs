@@ -33,6 +33,14 @@ namespace Motel.ViewModels.Tenant
         [Display(Name = "Nơi ĐKTT")]
         public string? PermanentAddress { get; set; }
 
+        public int? CccdFrontImageId { get; set; }
+        public int? CccdBackImageId { get; set; }
+
+        public int? ResidenceProofImageId { get; set; }
+
+        [Display(Name = "Đã đăng ký tạm trú")]
+        public bool IsTemporaryResidenceRegistered { get; set; }
+
         // redirect back after save
         public int? ReturnPropertyId { get; set; }
     }

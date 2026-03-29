@@ -2,6 +2,11 @@
 GO
 USE MotelDb;
 GO
+SELECT TOP(1)
+FROM Landlords
+WHERE UserId = @currentUserId AND IsDeleted = 0
+
+
 
 ALTER TABLE dbo.StoredFileReference
 DROP CONSTRAINT CK_StoredFileReference_RefType;

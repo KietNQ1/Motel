@@ -154,6 +154,7 @@ namespace Motel.Controllers
                     RoomName = room.RoomName,
                     RentPrice = room.RentPrice,
                     MaxOccupants = room.MaxOccupants,
+                    Status = room.Status,
                     PropertyId = room.PropertyId,
                     PropertyName = room.Property?.Name ?? "Nhà trọ", // Use navigation property or fallback
                     PropertyLevelFeeSettings = propertySettings.Select(f => new Motel.ViewModels.Property.PropertyFeeSettingItemViewModel
@@ -573,6 +574,80 @@ namespace Motel.Controllers
         {
             // TODO: Get from User.Claims when authentication is fully implemented
             return 1; // Hardcoded for development
+        }
+
+        // POST: Room/SetMaintenance/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SetMaintenance(int id)
+        {
+            try
+            {
+                var room = await _roomRepository.GetRoomByIdAsync(id);
+                if (room == null)
+                {
+                    TempData["Error"] = "Không tìm thấy phòng.";
+                    return RedirectToAction("Index", "Property");
+                }
+
+                if (room.Status == "occupied")
+                {
+                    TempData["Error"] = "Không thể chuyển sang bảo trì: phòng đang có người thuê.";
+                    return RedirectToAction(nameof(Edit), new { id });
+                }
+
+                if (room.Status == "maintenance")
+                {
+                    TempData["Error"] = "Phòng đang ở trạng thái bảo trì rồi.";
+                    return RedirectToAction(nameof(Edit), new { id });
+                }
+
+                room.Status = "maintenance";
+                await _roomRepository.UpdateRoomAsync(room);
+
+                TempData["Success"] = $"Phòng {room.RoomName} đã chuyển sang trạng thái bảo trì / sửa chữa.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error setting room {RoomId} to maintenance", id);
+                TempData["Error"] = "Có lỗi xảy ra. Vui lòng thử lại.";
+            }
+
+            return RedirectToAction(nameof(Edit), new { id });
+        }
+
+        // POST: Room/EndMaintenance/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EndMaintenance(int id)
+        {
+            try
+            {
+                var room = await _roomRepository.GetRoomByIdAsync(id);
+                if (room == null)
+                {
+                    TempData["Error"] = "Không tìm thấy phòng.";
+                    return RedirectToAction("Index", "Property");
+                }
+
+                if (room.Status != "maintenance")
+                {
+                    TempData["Error"] = "Phòng không ở trạng thái bảo trì.";
+                    return RedirectToAction(nameof(Edit), new { id });
+                }
+
+                room.Status = "available";
+                await _roomRepository.UpdateRoomAsync(room);
+
+                TempData["Success"] = $"Phòng {room.RoomName} đã hoàn tất bảo trì và trở về trạng thái sẵn sàng cho thuê.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error ending maintenance for room {RoomId}", id);
+                TempData["Error"] = "Có lỗi xảy ra. Vui lòng thử lại.";
+            }
+
+            return RedirectToAction(nameof(Edit), new { id });
         }
 
 

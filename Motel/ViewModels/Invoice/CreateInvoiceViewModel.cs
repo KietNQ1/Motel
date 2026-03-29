@@ -9,6 +9,8 @@ public sealed class CreateInvoiceViewModel
 
     /// <summary> Tên phòng (hiển thị khi tạo hóa đơn từ room detail). </summary>
     public string? RoomName { get; set; }
+    
+    public decimal RentPrice { get; set; }
 
     public List<InvoiceFeeItemVm> FeeItems { get; set; } = new();
 

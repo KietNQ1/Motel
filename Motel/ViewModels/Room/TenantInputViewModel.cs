@@ -28,5 +28,8 @@ namespace Motel.ViewModels.Room
         [StringLength(500)]
         [Display(Name = "Nơi ĐKTT")]
         public string? PermanentAddress { get; set; }
+
+        public int? CccdFrontImageId { get; set; }
+        public int? CccdBackImageId { get; set; }
     }
 }

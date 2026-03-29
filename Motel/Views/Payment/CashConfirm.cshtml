@@ -1,124 +1,73 @@
-﻿@{
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "Xác nhận thanh toán tiền mặt";
 }
 
-<!DOCTYPE html>
-<html class="" lang="vi">
-<head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<div class="mx-auto max-w-2xl px-4 py-8">
+    <h1 class="text-3xl font-extrabold mb-2 text-text-main dark:text-white">Xác nhận thanh toán tiền mặt</h1>
+    <p class="text-sm text-text-sub dark:text-gray-400 mb-8">
+        Chỉ dành cho <span class="font-semibold text-text-main dark:text-gray-200">chủ trọ</span>: xác nhận sau khi đã nhận đủ tiền mặt từ người thuê.
+    </p>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-[#e7d9cf] dark:border-gray-700 overflow-hidden">
+        <div class="p-8 flex flex-col items-center text-center">
+            <div class="w-20 h-20 rounded-full bg-primary/15 flex items-center justify-center mb-6">
+                <span class="material-symbols-outlined text-primary text-5xl">payments</span>
+            </div>
 
-<title>Xác nhận thanh toán tiền mặt</title>
-</head>
+            <div class="mb-8">
+                <p class="text-text-sub dark:text-gray-400">Số tiền thanh toán</p>
+                <h2 class="text-5xl font-extrabold text-primary mb-2">@ViewBag.Amount</h2>
+                <p class="text-lg font-medium text-text-main dark:text-gray-200">
+                    @ViewBag.RoomName — @ViewBag.TenantName
+                </p>
+            </div>
 
-<body class="font-display bg-slate-50 text-slate-900 min-h-screen">
+            <div class="w-full border-t border-b border-gray-100 dark:border-gray-700 py-6 space-y-4 mb-8 text-left">
+                <div class="flex justify-between text-sm">
+                    <span class="text-text-sub dark:text-gray-400">Mã tham chiếu</span>
+                    <span class="font-bold font-mono text-text-main dark:text-white">#INTENT-@ViewBag.PaymentIntentId</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-text-sub dark:text-gray-400">Phương thức</span>
+                    <span class="font-bold text-primary">Tiền mặt</span>
+                </div>
+            </div>
 
-<div class="relative flex flex-col min-h-screen w-full overflow-x-hidden">
+            <div class="w-full space-y-4">
+                <form asp-action="CashConfirmPost" asp-controller="Payment" method="post" class="w-full">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="paymentIntentId" value="@ViewBag.PaymentIntentId" />
+                    <button type="submit"
+                            class="w-full bg-primary hover:bg-primary-dark text-white font-bold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors">
+                        <span class="material-symbols-outlined">check_circle</span>
+                        Xác nhận đã nhận tiền
+                    </button>
+                </form>
 
-<header class="flex items-center justify-between border-b border-slate-200 bg-white px-10 py-4">
-<h2 class="text-xl font-bold text-slate-800">Rentify</h2>
-</header>
+                <form asp-action="CashConfirmReject" asp-controller="Payment" method="post" class="w-full"
+                      onsubmit="return confirm('Bạn xác nhận chưa nhận đủ tiền mặt? Yêu cầu sẽ bị hủy và người thuê có thể thanh toán lại.');">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="paymentIntentId" value="@ViewBag.PaymentIntentId" />
+                    <button type="submit"
+                            class="w-full bg-white dark:bg-gray-700 border-2 border-danger text-danger dark:text-red-400 font-bold py-4 px-6 rounded-xl flex items-center justify-center gap-2 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors">
+                        <span class="material-symbols-outlined">money_off</span>
+                        Chưa nhận tiền
+                    </button>
+                </form>
 
-<main class="flex-1 flex flex-col items-center px-4 py-12">
+                <a asp-controller="Invoice" asp-action="History"
+                   class="block w-full bg-white dark:bg-gray-700 border border-[#e7d9cf] dark:border-gray-600 text-text-main dark:text-gray-200 font-bold py-4 px-6 rounded-xl text-center hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                    Lịch sử giao dịch
+                </a>
+            </div>
 
-<div class="w-full max-w-2xl">
-
-<h1 class="text-3xl font-extrabold mb-6">Xác nhận thanh toán tiền mặt</h1>
-
-<div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-
-<div class="p-8 flex flex-col items-center text-center">
-
-<div class="w-20 h-20 rounded-full bg-orange-100 flex items-center justify-center mb-6">
-<span class="material-symbols-outlined text-orange-500 text-5xl">payments</span>
+            <div class="mt-8 p-4 bg-primary/10 dark:bg-primary/20 rounded-xl border border-primary/20 text-left w-full">
+                <p class="text-xs text-text-main dark:text-gray-300">
+                    Sau khi xác nhận, hệ thống sẽ tạo biên lai và đánh dấu hóa đơn đã thanh toán.
+                    Nếu chưa nhận đủ tiền, chọn <span class="font-semibold">Chưa nhận tiền</span> — yêu cầu sẽ hủy và người thuê có thể tạo lại.
+                </p>
+            </div>
+        </div>
+    </div>
 </div>
-
-<div class="mb-8">
-<p class="text-slate-600">Số tiền thanh toán</p>
-<h2 class="text-5xl font-extrabold text-orange-500 mb-2">
-@ViewBag.Amount
-</h2>
-
-<p class="text-lg font-medium text-slate-700">
-@ViewBag.RoomName — @ViewBag.TenantName
-</p>
-</div>
-
-<div class="w-full border-t border-b border-slate-100 py-6 space-y-4 mb-8">
-
-<div class="flex justify-between">
-<span class="text-slate-500">Mã tham chiếu</span>
-<span class="font-bold font-mono">
-#INTENT-@ViewBag.PaymentIntentId
-</span>
-</div>
-
-<div class="flex justify-between">
-<span class="text-slate-500">Phương thức</span>
-<span class="font-bold text-orange-500">
-Tiền mặt
-</span>
-</div>
-
-</div>
-
-<!-- FORM CONFIRM -->
-<form asp-action="CashConfirmPost" method="post" class="w-full">
-
-@Html.AntiForgeryToken()
-
-<input type="hidden" name="paymentIntentId" value="@ViewBag.PaymentIntentId" />
-
-<div class="flex flex-col sm:flex-row gap-4">
-
-<button type="submit"
-class="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 px-6 rounded-lg flex items-center justify-center gap-2">
-
-<span class="material-symbols-outlined">check_circle</span>
-Xác nhận đã nhận tiền
-
-</button>
-
-<a asp-controller="Invoice"
-asp-action="Details"
-asp-route-id="@ViewBag.InvoiceId"
-class="flex-1 bg-white border border-slate-300 text-slate-700 font-bold py-4 px-6 rounded-lg text-center">
-
-Hủy giao dịch
-
-</a>
-
-</div>
-
-</form>
-
-<div class="mt-8 p-4 bg-orange-50 rounded-lg border border-orange-100">
-
-<p class="text-xs text-orange-800">
-
-Sau khi xác nhận, hệ thống sẽ tạo biên lai và đánh dấu hóa đơn đã thanh toán.
-
-</p>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-</main>
-
-<footer class="py-6 border-t text-center text-sm text-slate-500">
-© 2024 Rentify
-</footer>
-
-</div>
-
-</body>
-</html>

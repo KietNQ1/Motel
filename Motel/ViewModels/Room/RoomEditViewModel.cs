@@ -23,6 +23,9 @@ namespace Motel.ViewModels.Room
         public int PropertyId { get; set; }
         public string PropertyName { get; set; } = string.Empty;
 
+        /// <summary>Current room status: available | occupied | maintenance</summary>
+        public string Status { get; set; } = string.Empty;
+
         // Settings applied at property level
         public List<PropertyFeeSettingItemViewModel> PropertyLevelFeeSettings { get; set; } = new();
 

@@ -1,4 +1,4 @@
-﻿namespace Motel.Services;
+namespace Motel.Services;
 
 public static class PaymentProviders
 {
@@ -10,6 +10,8 @@ public static class PaymentProviders
 public static class PaymentIntentStatus
 {
     public const string Pending = "pending";
+    /// <summary>Người thuê đã báo đã chuyển khoản; chờ chủ trọ xác nhận hoặc từ chối.</summary>
+    public const string AwaitingLandlord = "awaiting_landlord";
     public const string Succeeded = "succeeded";
     public const string Failed = "failed";
     public const string Expired = "expired";
@@ -21,6 +23,7 @@ public static class PaymentStatus
     public const string Succeeded = "succeeded";
     public const string Failed = "failed";
     public const string Refunded = "refunded";
+    public const string Rejected = "rejected";
 }
 public static class InvoiceStatus
 {

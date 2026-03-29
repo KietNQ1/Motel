@@ -91,6 +91,10 @@ builder.Services.AddScoped<LandlordHelper>();
 builder.Services.AddScoped<IRoomFurnitureService, RoomFurnitureService>();
 builder.Services.AddScoped<IChatRepository, ChatRepository>();
 
+// FptAi eKYC
+builder.Services.Configure<FptAiEkycOptions>(builder.Configuration.GetSection("FptAiEkyc"));
+builder.Services.AddHttpClient<IEkycService, FptAiEkycService>();
+
 //  Add SignalR
 builder.Services.AddSignalR();
 
