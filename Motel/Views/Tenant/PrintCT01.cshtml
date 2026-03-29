@@ -55,7 +55,7 @@
         
         <!-- Nút điều hướng -->
         <div class="no-print flex flex-wrap items-center justify-between gap-2 mb-4">
-            <a asp-action="Details" asp-route-id="@Model.TenantId"
+            <a asp-action="Details" asp-route-id="@Model.TenantId" asp-route-occupancyId="@Context.Request.Query["occupancyId"]"
                class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:border-primary">
                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
                 Quay lại chi tiết

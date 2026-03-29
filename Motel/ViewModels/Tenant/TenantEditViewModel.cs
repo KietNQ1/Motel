@@ -5,6 +5,7 @@ namespace Motel.ViewModels.Tenant
     public class TenantEditViewModel
     {
         public int TenantId { get; set; }
+        public int? OccupancyId { get; set; }
 
         [Required(ErrorMessage = "Vui lòng nhập họ tên")]
         [StringLength(150)]

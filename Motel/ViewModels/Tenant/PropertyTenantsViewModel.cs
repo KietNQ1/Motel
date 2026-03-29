@@ -5,6 +5,7 @@ namespace Motel.ViewModels.Tenant
 {
     public class TenantListItemViewModel
     {
+        public int OccupancyId { get; set; }
         public int TenantId { get; set; }
         public string FullName { get; set; } = null!;
         public string? Phone { get; set; }
