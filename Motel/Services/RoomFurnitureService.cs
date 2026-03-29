@@ -1,4 +1,4 @@
-﻿using Motel.Repositories.Interface;
+using Motel.Repositories.Interface;
 using Motel.Services.Interface;
 using Motel.ViewModels.Room;
 using Motel.Models;
@@ -9,17 +9,17 @@ namespace Motel.Services;
 public class RoomFurnitureService : IRoomFurnitureService
 {
     private readonly IRoomFurnitureRepository _repo;
-    private readonly IWebHostEnvironment _env;
     private readonly Motel.Data.MotelDbContext _context;
+    private readonly IFileService _fileService;
 
     public RoomFurnitureService(
         IRoomFurnitureRepository repo,
-        IWebHostEnvironment env,
-        Motel.Data.MotelDbContext context)
+        Motel.Data.MotelDbContext context,
+        IFileService fileService)
     {
         _repo = repo;
-        _env = env;
         _context = context;
+        _fileService = fileService;
     }
 
     public async Task<IEnumerable<RoomFurnitureViewModel>> GetFurnituresForRoomAsync(int roomId)
@@ -53,9 +53,6 @@ public class RoomFurnitureService : IRoomFurnitureService
 
     public async Task<bool> AddFurnitureAsync(FurnitureRowVM model, int roomId, int landlordId)
     {
-        //if (!await _repo.IsRoomOwnedByLandlordAsync(model.RoomId, landlordId))
-        //    return false;
-
         // tìm nội thất trùng
         var existingFurniture = await _repo.GetFurnitureByCatalogAsync(roomId, model.FurnitureCatalogId);
 
@@ -116,6 +113,8 @@ public class RoomFurnitureService : IRoomFurnitureService
         {
             await _repo.DeleteImagesAsync(model.DeleteImageIds);
             await _repo.SaveChangesAsync();
+            
+            await _fileService.DeleteFilesAsync(model.DeleteImageIds);
         }
 
         // upload ảnh mới
@@ -134,9 +133,6 @@ public class RoomFurnitureService : IRoomFurnitureService
         if (furniture == null)
             return false;
 
-        //if (!await _repo.IsRoomOwnedByLandlordAsync(furniture.RoomId, landlordId))
-        //    return false;
-
         await _repo.DeleteFurnitureAsync(furniture);
         await _repo.SaveChangesAsync();
 
@@ -145,31 +141,12 @@ public class RoomFurnitureService : IRoomFurnitureService
 
     private async Task UploadImagesAsync(List<IFormFile> images, int furnitureId, int landlordId)
     {
-        var uploadFolder = Path.Combine(_env.WebRootPath, "uploads");
-
-        if (!Directory.Exists(uploadFolder))
-            Directory.CreateDirectory(uploadFolder);
-
         foreach (var image in images)
         {
-            var fileName = Guid.NewGuid() + Path.GetExtension(image.FileName);
-            var physicalPath = Path.Combine(uploadFolder, fileName);
+            var storedFile = await _fileService.UploadAndSaveFileAsync(image, "room_furnitures", landlordId, 1);
 
-            using (var stream = new FileStream(physicalPath, FileMode.Create))
-            {
-                await image.CopyToAsync(stream);
-            }
-
-            var storedFile = new StoredFile
-            {
-                FileName = image.FileName,
-                StoragePath = "/uploads/" + fileName,
-                MimeType = image.ContentType,
-                LandlordId = landlordId,
-                UploadedByUserId = 1
-            };
-
-            await _repo.AddStoredFileAsync(storedFile);
+            if (storedFile == null)
+                continue;
 
             var fileRef = new StoredFileReference
             {

@@ -91,6 +91,11 @@ builder.Services.AddScoped<IRoomFurnitureService, RoomFurnitureService>();
 builder.Services.Configure<FptAiEkycOptions>(builder.Configuration.GetSection("FptAiEkyc"));
 builder.Services.AddHttpClient<IEkycService, FptAiEkycService>();
 
+// Cloudinary & File Service
+builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
+builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
+builder.Services.AddScoped<IFileService, FileService>();
+
 
 // Session (optional – KHÔNG bắt buộc cho Identity)
 builder.Services.AddSession(options =>

@@ -31,5 +31,14 @@ namespace Motel.ViewModels.Room
 
         // Settings applied at room level (overrides property level)
         public List<PropertyFeeSettingItemViewModel> RoomLevelFeeSettings { get; set; } = new();
+
+        // Images for Room Gallery
+        [Display(Name = "Hình ảnh hiện tại")]
+        public List<Motel.Models.StoredFile> ExistingImages { get; set; } = new();
+
+        public List<int> DeleteImageIds { get; set; } = new();
+
+        [Display(Name = "Thêm ảnh mới (Phòng ngủ, nha vệ sinh, bếp, ban công...)")]
+        public List<IFormFile>? NewImages { get; set; }
     }
 }

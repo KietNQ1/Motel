@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Motel.Data;
 using Motel.Helpers;
 using Motel.Models;
+using Motel.Services.Interface;
 using Motel.Services.Interfaces;
 using System.Security.Claims;
 
@@ -14,20 +15,17 @@ namespace Motel.Controllers.Api;
 public class EkycController : ControllerBase
 {
     private readonly IEkycService _ekycService;
-    private readonly MotelDbContext _context;
     private readonly LandlordHelper _landlordHelper;
-    private readonly IWebHostEnvironment _env;
+    private readonly IFileService _fileService;
 
     public EkycController(
         IEkycService ekycService,
-        MotelDbContext context,
         LandlordHelper landlordHelper,
-        IWebHostEnvironment env)
+        IFileService fileService)
     {
         _ekycService = ekycService;
-        _context = context;
         _landlordHelper = landlordHelper;
-        _env = env;
+        _fileService = fileService;
     }
 
     [HttpPost("scan")]
@@ -41,34 +39,10 @@ public class EkycController : ControllerBase
         if (landlordId <= 0 || !int.TryParse(userIdString, out int userId))
             return Unauthorized();
 
-        // Save file to wwwroot/uploads/cccd
-        var uploadFolder = Path.Combine(_env.WebRootPath, "uploads", "cccd");
-        if (!Directory.Exists(uploadFolder))
-            Directory.CreateDirectory(uploadFolder);
+        var storedFile = await _fileService.UploadAndSaveFileAsync(file, "cccd", landlordId, userId);
 
-        var ext = Path.GetExtension(file.FileName);
-        var fileName = $"{Guid.NewGuid()}{ext}";
-        var filePath = Path.Combine(uploadFolder, fileName);
-
-        using (var stream = new FileStream(filePath, FileMode.Create))
-        {
-            await file.CopyToAsync(stream);
-        }
-
-        var storagePath = $"/uploads/cccd/{fileName}";
-
-        var storedFile = new StoredFile
-        {
-            FileName = file.FileName,
-            MimeType = file.ContentType,
-            StoragePath = storagePath,
-            UploadedAt = DateTime.Now,
-            LandlordId = landlordId,
-            UploadedByUserId = userId
-        };
-
-        _context.StoredFiles.Add(storedFile);
-        await _context.SaveChangesAsync();
+        if (storedFile == null)
+            return StatusCode(500, new { message = "Failed to upload image" });
 
         // Call OCR
         var result = await _ekycService.ScanIdCardAsync(file);
@@ -79,7 +53,7 @@ public class EkycController : ControllerBase
                 success = false, 
                 message = "Không thể nhận dạng thẻ. Vui lòng thử lại với mặt trước ảnh rõ nét hơn.",
                 storedFileId = storedFile.StoredFileId,
-                storagePath = storagePath
+                storagePath = storedFile.StoragePath
             });
         }
 
@@ -87,7 +61,7 @@ public class EkycController : ControllerBase
         {
             success = true,
             storedFileId = storedFile.StoredFileId,
-            storagePath = storagePath,
+            storagePath = storedFile.StoragePath,
             data = result
         });
     }
@@ -103,35 +77,16 @@ public class EkycController : ControllerBase
         if (landlordId <= 0 || !int.TryParse(userIdString, out int userId))
             return Unauthorized();
 
-        var uploadFolder = Path.Combine(_env.WebRootPath, "uploads", "cccd");
-        if (!Directory.Exists(uploadFolder)) Directory.CreateDirectory(uploadFolder);
+        var frontFileRecord = await _fileService.UploadAndSaveFileAsync(frontFile, "cccd_front", landlordId, userId);
+        var backFileRecord = await _fileService.UploadAndSaveFileAsync(backFile, "cccd_back", landlordId, userId);
+        
+        if (frontFileRecord == null || backFileRecord == null)
+            return StatusCode(500, new { message = "Failed to upload images" });
 
-        // Helper func to save file
-        async Task<(int, string)> SaveFileAsync(IFormFile file, string suffix)
-        {
-            var ext = Path.GetExtension(file.FileName);
-            var fileName = $"{Guid.NewGuid()}_{suffix}{ext}";
-            var filePath = Path.Combine(uploadFolder, fileName);
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await file.CopyToAsync(stream);
-            }
-            var storedFile = new StoredFile
-            {
-                FileName = file.FileName,
-                MimeType = file.ContentType,
-                StoragePath = $"/uploads/cccd/{fileName}",
-                UploadedAt = DateTime.Now,
-                LandlordId = landlordId,
-                UploadedByUserId = userId
-            };
-            _context.StoredFiles.Add(storedFile);
-            await _context.SaveChangesAsync();
-            return (storedFile.StoredFileId, storedFile.StoragePath);
-        }
-
-        var (frontId, frontPath) = await SaveFileAsync(frontFile, "front");
-        var (backId, backPath) = await SaveFileAsync(backFile, "back");
+        var frontId = frontFileRecord.StoredFileId;
+        var frontPath = frontFileRecord.StoragePath;
+        var backId = backFileRecord.StoredFileId;
+        var backPath = backFileRecord.StoragePath;
 
         var result = await _ekycService.ScanBothIdCardsAsync(frontFile, backFile);
 
@@ -153,3 +108,4 @@ public class EkycController : ControllerBase
         });
     }
 }
+
