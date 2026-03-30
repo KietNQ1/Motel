@@ -325,7 +325,7 @@
                                         <i class="bi bi-file-text"></i> Hợp đồng
                                     </a>
                                 }
-                                <a asp-controller="Tenant" asp-action="PrintCT01" asp-route-id="@t.TenantId"
+                                <a asp-controller="Tenant" asp-action="PrintCT01" asp-route-id="@t.TenantId" asp-route-occupancyId="@t.OccupancyId"
                                    style="display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:5px 12px;border-radius:8px;background:#e0f2fe;color:#0369a1;font-size:.8rem;font-weight:600;text-decoration:none;border:1px solid #bae6fd;white-space:nowrap;"
                                    title="Tạo mẫu CT01">
                                     <i class="bi bi-printer"></i> Mẫu CT01

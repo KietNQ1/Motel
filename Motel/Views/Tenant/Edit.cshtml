@@ -208,7 +208,7 @@
     <nav class="breadcrumb-nav">
         <a asp-controller="Property" asp-action="Index">Nhà trọ của tôi</a>
         <span class="breadcrumb-sep">/</span>
-        <a asp-action="Details" asp-route-id="@Model.TenantId">Chi tiết người thuê</a>
+        <a asp-action="Details" asp-route-id="@Model.TenantId" asp-route-occupancyId="@Model.OccupancyId">Chi tiết người thuê</a>
         <span class="breadcrumb-sep">/</span>
         <span class="current">Chỉnh sửa</span>
     </nav>
@@ -221,6 +221,7 @@
     <form asp-action="Edit" method="post" id="editForm">
         @Html.AntiForgeryToken()
         <input type="hidden" asp-for="TenantId" />
+        <input type="hidden" asp-for="OccupancyId" />
 
         <div asp-validation-summary="ModelOnly" class="validation-summary"
              style="display:@(ViewData.ModelState.IsValid ? "none" : "block")"></div>
@@ -359,7 +360,7 @@
 
         <hr class="section-divider" />
         <div class="footer-actions">
-            <a asp-action="Details" asp-route-id="@Model.TenantId" class="btn-cancel">Hủy</a>
+            <a asp-action="Details" asp-route-id="@Model.TenantId" asp-route-occupancyId="@Model.OccupancyId" class="btn-cancel">Hủy</a>
             <button type="submit" class="btn-submit">
                 <span class="material-symbols-outlined" style="font-size:1.05rem;">save</span>
                 Lưu thay đổi

@@ -54,6 +54,7 @@ namespace Motel.Repositories
 
                 Tenants = room.RoomOccupancies.Select(ro => new TenantViewModel
                 {
+                    OccupancyId = ro.OccupancyId,
                     TenantId = ro.Tenant.TenantId,
                     FullName = ro.Tenant.FullName,
                     Phone = ro.Tenant.Phone,
@@ -63,8 +64,11 @@ namespace Motel.Repositories
                         .Where(c => c.RoomId == roomId && !c.IsDeleted && c.Status == "active")
                         .Select(c => (int?)c.ContractId)
                         .FirstOrDefault(),
-                    IsTemporaryResidenceRegistered = _db.StoredFileReferences
-                        .Any(r => r.RefType == "tenant" && r.RefId == ro.Tenant.TenantId && r.StoredFile.StoragePath.Contains("residence_proofs"))
+                    IsTemporaryResidenceRegistered = _db.StoredFiles
+                        .Where(f => f.StoragePath.Contains("residence_proofs"))
+                        .Any(f =>
+                            f.StoredFileReferences.Any(r => r.RefType == "tenant" && r.RefId == ro.Tenant.TenantId) &&
+                            f.StoredFileReferences.Any(r => r.RefType == "property" && r.RefId == room.Property.PropertyId))
                 }).OrderByDescending(t => t.IsPrimary).ThenBy(t => t.FullName).ToList()
             };
 

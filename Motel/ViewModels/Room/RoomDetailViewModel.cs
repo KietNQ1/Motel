@@ -55,6 +55,7 @@ namespace Motel.ViewModels.Room
 
     public class TenantViewModel
     {
+        public int OccupancyId { get; set; }
         public int TenantId { get; set; }
         public string FullName { get; set; } = string.Empty;
         public string? Phone { get; set; }
