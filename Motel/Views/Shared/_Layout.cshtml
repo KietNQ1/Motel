@@ -10,7 +10,7 @@
 }
 
 <!DOCTYPE html>
-<html lang="vi" x-data="{ darkMode: false }" :class="{ 'dark': darkMode }">
+<html lang="vi">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -20,12 +20,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
-                        primary: '#f97316',
-                        'primary-dark': '#ea580c',
+                        primary: '#d46211',
+                        'primary-dark': '#b04f0b',
                         secondary: '#efe7dd',
                         'background-light': '#fcfaf8',
                         'text-main': '#1b130d',
@@ -59,7 +58,7 @@
     <!-- Header - Landing style -->
     <header class="sticky top-0 z-50 w-full border-b border-[#e7d9cf] dark:border-gray-700 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md">
         <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 md:px-6">
-            <a asp-controller="Dashboard" asp-action="Index" class="flex items-center gap-2 shrink-0">
+            <a asp-controller="Home" asp-action="Index" class="flex items-center gap-2 shrink-0">
                 <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-white shadow-lg shadow-primary/25">
                     <span class="material-symbols-outlined text-2xl">apartment</span>
                 </div>
@@ -75,9 +74,9 @@
                    class="rounded-lg px-3 py-2 text-sm font-medium text-text-sub dark:text-gray-400 transition hover:bg-primary/10 hover:text-primary dark:hover:text-primary">
                     Tòa nhà
                 </a>
-                <a asp-controller="Room" asp-action="Index"
+                <a asp-controller="Notification" asp-action="Send"
                    class="rounded-lg px-3 py-2 text-sm font-medium text-text-sub dark:text-gray-400 transition hover:bg-primary/10 hover:text-primary dark:hover:text-primary">
-                    Phòng
+                    Thông báo
                 </a>
                 <a asp-controller="Tenant" asp-action="Index"
                    class="rounded-lg px-3 py-2 text-sm font-medium text-text-sub dark:text-gray-400 transition hover:bg-primary/10 hover:text-primary dark:hover:text-primary">
@@ -103,12 +102,6 @@
             </nav>
 
             <div class="flex items-center gap-2">
-                <button @@click="darkMode = !darkMode"
-                        class="flex h-10 w-10 items-center justify-center rounded-xl text-text-sub hover:bg-gray-100 dark:hover:bg-gray-700 transition">
-                    <span class="material-symbols-outlined" x-show="!darkMode">dark_mode</span>
-                    <span class="material-symbols-outlined" x-show="darkMode" x-cloak>light_mode</span>
-                </button>
-
                 <div x-data="{ userMenuOpen: false }" class="relative">
                     <button @@click="userMenuOpen = !userMenuOpen"
                             class="flex items-center gap-2 rounded-xl border border-[#e7d9cf] dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
@@ -191,7 +184,62 @@
         @RenderBody()
     </main>
 
-    <!-- Trợ lý ảo / Chatbot UI (chỉ UI, chưa kết nối backend) -->
+    <footer class="bg-background-light pt-16 pb-8 border-t border-[#e7d9cf]">
+        <div class="mx-auto max-w-7xl px-4 md:px-10">
+            <div class="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
+                <div>
+                    <a asp-controller="Home" asp-action="Index" class="mb-4 flex items-center gap-2">
+                        <div class="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-white">
+                            <span class="material-symbols-outlined text-lg">apartment</span>
+                        </div>
+                        <h2 class="text-lg font-bold text-text-main">Rentify</h2>
+                    </a>
+                    <p class="text-sm text-text-sub">
+                        Giải pháp quản lý nhà trọ, phòng trọ, căn hộ dịch vụ hàng đầu tại Việt Nam.
+                    </p>
+                </div>
+                <div>
+                    <h3 class="mb-4 font-bold text-text-main">Sản phẩm</h3>
+                    <ul class="space-y-2 text-sm text-text-sub">
+                        <li><a class="hover:text-primary" href="#">Tính năng</a></li>
+                        <li><a class="hover:text-primary" href="#">Bảng giá</a></li>
+                        <li><a class="hover:text-primary" href="#">Ứng dụng di động</a></li>
+                        <li><a class="hover:text-primary" href="#">Phần cứng IoT</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="mb-4 font-bold text-text-main">Hỗ trợ</h3>
+                    <ul class="space-y-2 text-sm text-text-sub">
+                        <li><a class="hover:text-primary" href="#">Trung tâm trợ giúp</a></li>
+                        <li><a class="hover:text-primary" href="#">Hướng dẫn sử dụng</a></li>
+                        <li><a class="hover:text-primary" href="#">Cộng đồng</a></li>
+                        <li><a class="hover:text-primary" href="#">Liên hệ</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="mb-4 font-bold text-text-main">Liên hệ</h3>
+                    <ul class="space-y-2 text-sm text-text-sub">
+                        <li class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-base">call</span>
+                            <span>0909 123 456</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-base">mail</span>
+                            <span>hotro@rentify.vn</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-base">location_on</span>
+                            <span>TP. Hồ Chí Minh, Việt Nam</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-16 border-t border-[#e7d9cf] pt-8 text-center text-sm text-text-sub">
+                <p>© 2024 Rentify. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
     <div class="fixed bottom-6 right-6 z-40" x-data="{ chatOpen: false }">
         <div x-show="chatOpen"
              x-transition:enter="transition ease-out duration-200"
