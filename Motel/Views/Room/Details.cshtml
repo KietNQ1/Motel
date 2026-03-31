@@ -163,20 +163,20 @@
             </span>
         </div>
         <div class="btn-actions">
-            <a asp-action="Edit" asp-route-id="@Model.RoomId" class="btn-secondary-custom">
+            <a id="lnk_editRoom" asp-action="Edit" asp-route-id="@Model.RoomId" class="btn-secondary-custom">
                 <i class="bi bi-pencil-square"></i> Chỉnh sửa
             </a>
             @if (!Model.HasTenant)
             {
-                <a asp-action="Rent" asp-route-id="@Model.RoomId" class="btn-primary-custom">
+                <a id="lnk_rentRoom" asp-action="Rent" asp-route-id="@Model.RoomId" class="btn-primary-custom">
                     <i class="bi bi-person-plus"></i> Cho thuê
                 </a>
             }
-            <form asp-action="Delete" method="post" class="d-inline"
+            <form id="form_deleteRoom" asp-action="Delete" method="post" class="d-inline"
                   onsubmit="return confirm('Bạn có chắc muốn xóa phòng này?');">
-                <input type="hidden" name="id" value="@Model.RoomId" />
-                <input type="hidden" name="propertyId" value="@Model.PropertyId" />
-                <button type="submit" class="btn-danger-custom">
+                <input id="input_deleteRoomId" type="hidden" name="id" value="@Model.RoomId" />
+                <input id="input_deletePropertyId" type="hidden" name="propertyId" value="@Model.PropertyId" />
+                <button id="btn_deleteRoom" type="submit" class="btn-danger-custom">
                     <i class="bi bi-trash"></i> Xóa phòng
                 </button>
             </form>
@@ -319,13 +319,13 @@
                             <div style="display:flex; flex-direction:column; gap:8px; flex-shrink:0;">
                                 @if (t.ContractId.HasValue)
                                 {
-                                    <a asp-controller="Contract" asp-action="Details" asp-route-id="@t.ContractId.Value"
+                                    <a id="lnk_contractDetails_@t.ContractId.Value" asp-controller="Contract" asp-action="Details" asp-route-id="@t.ContractId.Value"
                                        style="display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:5px 12px;border-radius:8px;background:#fef3c7;color:#92400e;font-size:.8rem;font-weight:600;text-decoration:none;border:1px solid #fde68a;white-space:nowrap;"
                                        title="Xem hợp đồng">
                                         <i class="bi bi-file-text"></i> Hợp đồng
                                     </a>
                                 }
-                                <a asp-controller="Tenant" asp-action="PrintCT01" asp-route-id="@t.TenantId"
+                                <a id="lnk_printCT01_@t.TenantId" asp-controller="Tenant" asp-action="PrintCT01" asp-route-id="@t.TenantId" asp-route-occupancyId="@t.OccupancyId"
                                    style="display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:5px 12px;border-radius:8px;background:#e0f2fe;color:#0369a1;font-size:.8rem;font-weight:600;text-decoration:none;border:1px solid #bae6fd;white-space:nowrap;"
                                    title="Tạo mẫu CT01">
                                     <i class="bi bi-printer"></i> Mẫu CT01
@@ -339,7 +339,7 @@
                     <div class="empty-state">
                         <i class="bi bi-person-slash"></i>
                         <p style="font-size:.9rem;">Phòng chưa có người thuê</p>
-                        <a asp-action="Rent" asp-route-id="@Model.RoomId" class="btn-primary-custom" style="margin:0 auto;display:inline-flex;">
+                        <a id="lnk_rentRoomEmpty" asp-action="Rent" asp-route-id="@Model.RoomId" class="btn-primary-custom" style="margin:0 auto;display:inline-flex;">
                             <i class="bi bi-person-plus"></i> Cho thuê ngay
                         </a>
                     </div>
@@ -454,7 +454,7 @@
 
                     @if (Model.ContractId.HasValue)
                     {
-                        <a asp-controller="Invoice" asp-action="Create"
+                        <a id="lnk_createInvoice" asp-controller="Invoice" asp-action="Create"
                            asp-route-roomId="@Model.RoomId"
                            asp-route-periodMonth="@Model.CurrentPeriodMonth"
                            class="btn-primary-custom" style="width:100%;justify-content:center;margin-top:14px;">
@@ -473,7 +473,7 @@
                         </div>
                         <span class="dcard-title">Cơ sở vật chất</span>
                     </div>
-                    <a asp-action="AddFurniture" asp-route-roomId="@Model.RoomId"
+                    <a id="lnk_addFurniture" asp-action="AddFurniture" asp-route-roomId="@Model.RoomId"
                        class="btn-secondary-custom" style="padding:6px 14px;font-size:.82rem;">
                         <i class="bi bi-plus"></i> Thêm
                     </a>
@@ -558,31 +558,31 @@
 </div>
 
 <!-- ── Furniture detail modal (inline preview, from Details.cshtml) ── -->
-<div id="furnitureModal" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.55);align-items:center;justify-content:center;">
+<div id="div_furnitureModal" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.55);align-items:center;justify-content:center;">
     <div style="background:#fff;border-radius:16px;max-width:580px;width:92%;padding:0;box-shadow:0 8px 32px rgba(0,0,0,.2);overflow:hidden;">
         <div style="display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid #f0f0f0;">
             <div>
-                <div id="fmName" style="font-size:1.05rem;font-weight:700;color:#111;"></div>
-                <div id="fmMeta" style="font-size:.82rem;color:#888;margin-top:2px;"></div>
+                <div id="div_fmName" style="font-size:1.05rem;font-weight:700;color:#111;"></div>
+                <div id="div_fmMeta" style="font-size:.82rem;color:#888;margin-top:2px;"></div>
             </div>
-            <button onclick="closeFurnitureModal()" style="background:none;border:none;font-size:1.6rem;color:#aaa;cursor:pointer;line-height:1;padding:4px 8px;border-radius:6px;" title="Đóng">&times;</button>
+            <button id="btn_closeFurnitureModal" onclick="closeFurnitureModal()" style="background:none;border:none;font-size:1.6rem;color:#aaa;cursor:pointer;line-height:1;padding:4px 8px;border-radius:6px;" title="Đóng">&times;</button>
         </div>
-        <div id="fmBody" style="padding:20px;max-height:70vh;overflow-y:auto;"></div>
+        <div id="div_fmBody" style="padding:20px;max-height:70vh;overflow-y:auto;"></div>
     </div>
 </div>
 
 <!-- ── Bootstrap image gallery modal (from DetailsMyfriend.cshtml) ── -->
-<div class="modal fade" id="imageGalleryModal">
+<div class="modal fade" id="modal_imageGallery">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-body text-center">
-                <img id="galleryImage" class="img-fluid rounded shadow" />
+                <img id="img_gallery" class="img-fluid rounded shadow" />
             </div>
             <div class="modal-footer justify-content-between">
-                <button class="btn btn-secondary" id="prevImage">
+                <button class="btn btn-secondary" id="btn_prevImage">
                     <i class="bi bi-arrow-left"></i>
                 </button>
-                <button class="btn btn-secondary" id="nextImage">
+                <button class="btn btn-secondary" id="btn_nextImage">
                     <i class="bi bi-arrow-right"></i>
                 </button>
             </div>
@@ -594,18 +594,18 @@
     <script>
         // ── Furniture detail modal ──
         function openFurnitureModal(name, qty, desc, images) {
-            document.getElementById('fmName').textContent = name;
+            document.getElementById('div_fmName').textContent = name;
             var meta = 'Số lượng: ' + qty;
             if (desc) meta += ' • ' + desc;
-            document.getElementById('fmMeta').textContent = meta;
+            document.getElementById('div_fmMeta').textContent = meta;
 
-            var body = document.getElementById('fmBody');
+            var body = document.getElementById('div_fmBody');
             if (!images || images.length === 0) {
                 body.innerHTML = '<div style="text-align:center;padding:32px;color:#bbb;">' +
                     '<i class="bi bi-image" style="font-size:2.5rem;display:block;margin-bottom:8px;"></i>' +
                     '<p style="font-size:.9rem;margin:0;">Chưa có ảnh</p></div>';
             } else {
-                var preview = '<img id="fmPreview" src="' + images[0] + '" style="width:100%;border-radius:12px;object-fit:contain;max-height:280px;margin-bottom:12px;" />';
+                var preview = '<img id="img_fmPreview" src="' + images[0] + '" style="width:100%;border-radius:12px;object-fit:contain;max-height:280px;margin-bottom:12px;" />';
                 var thumbs = '';
                 if (images.length > 1) {
                     thumbs = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px;">' +
@@ -617,19 +617,19 @@
                 body.innerHTML = preview + thumbs;
             }
 
-            document.getElementById('furnitureModal').style.display = 'flex';
+            document.getElementById('div_furnitureModal').style.display = 'flex';
         }
 
         function selectFmImg(url) {
-            var p = document.getElementById('fmPreview');
+            var p = document.getElementById('img_fmPreview');
             if (p) p.src = url;
         }
 
         function closeFurnitureModal() {
-            document.getElementById('furnitureModal').style.display = 'none';
+            document.getElementById('div_furnitureModal').style.display = 'none';
         }
 
-        document.getElementById('furnitureModal').addEventListener('click', function (e) {
+        document.getElementById('div_furnitureModal').addEventListener('click', function (e) {
             if (e.target === this) closeFurnitureModal();
         });
 
@@ -646,19 +646,19 @@
                 e.stopPropagation(); // don't also open furniture detail modal
                 galleryImages = JSON.parse(this.dataset.images);
                 currentIndex = 0;
-                document.getElementById("galleryImage").src = galleryImages[currentIndex];
-                new bootstrap.Modal(document.getElementById("imageGalleryModal")).show();
+                document.getElementById("img_gallery").src = galleryImages[currentIndex];
+                new bootstrap.Modal(document.getElementById("modal_imageGallery")).show();
             });
         });
 
-        document.getElementById("nextImage").onclick = function () {
+        document.getElementById("btn_nextImage").onclick = function () {
             if (currentIndex < galleryImages.length - 1) currentIndex++;
-            document.getElementById("galleryImage").src = galleryImages[currentIndex];
+            document.getElementById("img_gallery").src = galleryImages[currentIndex];
         };
 
-        document.getElementById("prevImage").onclick = function () {
+        document.getElementById("btn_prevImage").onclick = function () {
             if (currentIndex > 0) currentIndex--;
-            document.getElementById("galleryImage").src = galleryImages[currentIndex];
+            document.getElementById("img_gallery").src = galleryImages[currentIndex];
         };
     </script>
 }

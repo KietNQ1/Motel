@@ -24,6 +24,7 @@ namespace Motel.Controllers
         private readonly Motel.Data.MotelDbContext _db;
         private readonly IFeeSettingRepository _feeSettingRepository;
         private readonly IFeeTypeRepository _feeTypeRepository;
+        private readonly IFileService _fileService;
         
         public RoomController(
             IRoomRepository roomRepository, 
@@ -33,7 +34,8 @@ namespace Motel.Controllers
             IRoomFurnitureService furnitureService, 
             Motel.Data.MotelDbContext db,
             IFeeSettingRepository feeSettingRepository,
-            IFeeTypeRepository feeTypeRepository)
+            IFeeTypeRepository feeTypeRepository,
+            IFileService fileService)
         {
             _roomRepository = roomRepository;
             _roomService = roomService;
@@ -43,6 +45,7 @@ namespace Motel.Controllers
             _db = db;
             _feeSettingRepository = feeSettingRepository;
             _feeTypeRepository = feeTypeRepository;
+            _fileService = fileService;
         }
 
         // GET: Room/Details/5
@@ -148,6 +151,13 @@ namespace Motel.Controllers
                 var feeTypes = await _feeTypeRepository.GetAllAsync();
                 ViewBag.FeeTypes = feeTypes;
 
+                var existingImages = await _db.StoredFileReferences
+                    .Where(x => x.RefType == "room" && x.RefId == id)
+                    .Include(x => x.StoredFile)
+                    .Where(x => x.StoredFile != null)
+                    .Select(x => x.StoredFile)
+                    .ToListAsync();
+
                 var model = new RoomEditViewModel
                 {
                     RoomId = room.RoomId,
@@ -178,7 +188,8 @@ namespace Motel.Controllers
                         BaseAmount = f.BaseAmount,
                         EffectiveFrom = f.EffectiveFrom,
                         EffectiveTo = f.EffectiveTo
-                    }).ToList()
+                    }).ToList(),
+                    ExistingImages = existingImages
                 };
 
                 return View(model);
@@ -217,7 +228,46 @@ namespace Motel.Controllers
 
                 var success = await _roomRepository.UpdateRoomAsync(room);
 
-                if (success)
+                bool imagesChanged = false;
+
+                // Handle images deletion
+                if (model.DeleteImageIds != null && model.DeleteImageIds.Any())
+                {
+                    var refs = _db.StoredFileReferences.Where(x => x.RefType == "room" && x.RefId == room.RoomId && model.DeleteImageIds.Contains(x.StoredFileId));
+                    if (refs.Any())
+                    {
+                        _db.StoredFileReferences.RemoveRange(refs);
+                        await _db.SaveChangesAsync();
+                        await _fileService.DeleteFilesAsync(model.DeleteImageIds);
+                        imagesChanged = true;
+                    }
+                }
+
+                // Handle new images upload
+                if (model.NewImages != null && model.NewImages.Any())
+                {
+                    int landlordId = GetCurrentLandlordId();
+                    int userId = 1;
+                    foreach (var image in model.NewImages)
+                    {
+                        var storedFile = await _fileService.UploadAndSaveFileAsync(image, "room_photos", landlordId, userId);
+                        if (storedFile != null)
+                        {
+                            var reference = new Motel.Models.StoredFileReference
+                            {
+                                StoredFileId = storedFile.StoredFileId,
+                                RefType = "room",
+                                RefId = room.RoomId,
+                                CreatedAt = DateTime.Now
+                            };
+                            _db.StoredFileReferences.Add(reference);
+                            imagesChanged = true;
+                        }
+                    }
+                    await _db.SaveChangesAsync();
+                }
+
+                if (success || imagesChanged)
                 {
                     TempData["Success"] = "Cập nhật thông tin phòng thành công!";
                     return RedirectToAction(nameof(Edit), new { id = model.RoomId });
@@ -485,6 +535,28 @@ namespace Motel.Controllers
 
                 _db.Rooms.Add(newRoom);
                 await _db.SaveChangesAsync();
+
+                // 3. Upload images
+                if (model.Images != null && model.Images.Any())
+                {
+                    int userId = 1; // TODO: properly fetch from claims when auth is full
+                    foreach (var image in model.Images)
+                    {
+                        var storedFile = await _fileService.UploadAndSaveFileAsync(image, "room_photos", landlordId, userId);
+                        if (storedFile != null)
+                        {
+                            var reference = new StoredFileReference
+                            {
+                                StoredFileId = storedFile.StoredFileId,
+                                RefType = "room",
+                                RefId = newRoom.RoomId,
+                                CreatedAt = DateTime.Now
+                            };
+                            _db.StoredFileReferences.Add(reference);
+                        }
+                    }
+                    await _db.SaveChangesAsync();
+                }
 
                 TempData["Success"] = $"Thêm phòng '{model.RoomName}' thành công!";
                 return RedirectToAction("Details", "Property", new { id = model.PropertyId });

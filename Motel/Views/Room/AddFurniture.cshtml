@@ -22,35 +22,35 @@ Thêm Nội thất
 Quản lý và cập nhật danh sách trang thiết bị trong phòng của bạn.
 </p>
 
-<form asp-action="AddFurniture" method="post" enctype="multipart/form-data">
+<form id="form_addFurniture" asp-action="AddFurniture" method="post" enctype="multipart/form-data">
 
-<input type="hidden" asp-for="RoomId" />
+<input id="input_roomId" type="hidden" asp-for="RoomId" />
 
 <!-- Add New Furniture Section -->
-<div id="newFurnitureSection" class="mt-6 bg-gray-50 p-4 rounded-lg border hidden">
+<div id="div_newFurnitureSection" class="mt-6 bg-gray-50 p-4 rounded-lg border hidden">
 
     <h3 class="text-lg font-medium text-gray-800 mb-4">Thêm nội thất mới</h3>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
         <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Tên nội thất</label>
-            <input asp-for="NewFurnitureName"
+            <label id="lbl_newFurnitureName" class="block text-sm font-medium text-gray-700 mb-1">Tên nội thất</label>
+            <input id="input_newFurnitureName" asp-for="NewFurnitureName"
                    class="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-orange-400"
                    placeholder="Nhập tên nội thất mới" />
         </div>
 
         <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Số lượng</label>
-            <input asp-for="NewFurnitureQuantity"
+            <label id="lbl_newFurnitureQuantity" class="block text-sm font-medium text-gray-700 mb-1">Số lượng</label>
+            <input id="input_newFurnitureQuantity" asp-for="NewFurnitureQuantity"
                    type="number"
                    min="1"
                    class="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-orange-400" />
         </div>
 
         <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>
-            <select asp-for="NewFurnitureStatusId"
+            <label id="lbl_newFurnitureStatusId" class="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>
+            <select id="select_newFurnitureStatusId" asp-for="NewFurnitureStatusId"
                     class="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-orange-400">
                 <option value="">-- Chọn trạng thái --</option>
                 @foreach (var status in Model.Statuses)
@@ -61,8 +61,8 @@ Quản lý và cập nhật danh sách trang thiết bị trong phòng của b�
         </div>
 
         <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Ảnh minh họa</label>
-            <input asp-for="NewFurnitureImages"
+            <label id="lbl_newFurnitureImages" class="block text-sm font-medium text-gray-700 mb-1">Ảnh minh họa</label>
+            <input id="input_newFurnitureImages" asp-for="NewFurnitureImages"
                    type="file"
                    multiple
                    class="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded-md file:border file:text-sm file:font-medium file:bg-orange-50 file:text-orange-600 hover:file:bg-orange-100" />
@@ -75,28 +75,28 @@ Quản lý và cập nhật danh sách trang thiết bị trong phòng của b�
 <!-- Existing furniture table -->
 <div class="bg-white rounded-lg shadow-sm border overflow-hidden mt-6">
 
-<table class="w-full">
+<table id="tbl_furnitures" class="w-full">
 
 <thead class="bg-gray-50 border-b">
 <tr class="text-gray-500 text-sm text-left">
 
-<th class="p-4 w-20 text-center">
+<th id="th_select" class="p-4 w-20 text-center">
 Chọn
 </th>
 
-<th class="p-4">
+<th id="th_furnitureName" class="p-4">
 Tên nội thất
 </th>
 
-<th class="p-4 w-32">
+<th id="th_furnitureQuantity" class="p-4 w-32">
 Số lượng
 </th>
 
-<th class="p-4 w-40">
+<th id="th_furnitureStatus" class="p-4 w-40">
 Trạng thái
 </th>
 
-<th class="p-4 w-64">
+<th id="th_furnitureImages" class="p-4 w-64">
 Ảnh minh họa
 </th>
 
@@ -107,36 +107,40 @@ Trạng thái
 
 @for (int i = 0; i < Model.Furnitures.Count; i++)
 {
-<tr>
+<tr id="tr_furnitureCatalog_@Model.Furnitures[i].FurnitureCatalogId">
 
-<td class="p-4 text-center">
+<td id="td_select_@Model.Furnitures[i].FurnitureCatalogId" class="p-4 text-center">
 
-<input type="checkbox"
+<input id="cb_furniture_@Model.Furnitures[i].FurnitureCatalogId"
+       type="checkbox"
        asp-for="Furnitures[i].Selected"
        class="furniture-check accent-orange-500">
 
-<input type="hidden"
+<input id="input_furnitureId_@Model.Furnitures[i].FurnitureCatalogId"
+       type="hidden"
        asp-for="Furnitures[i].FurnitureCatalogId"
        value="@Model.Furnitures[i].FurnitureCatalogId" />
 
 </td>
 
-<td class="p-4 font-medium text-gray-700">
+<td id="td_furnitureName_@Model.Furnitures[i].FurnitureCatalogId" class="p-4 font-medium text-gray-700">
 @Model.Catalogs[i].Name
 </td>
 
-<td class="p-4">
+<td id="td_furnitureQuantity_@Model.Furnitures[i].FurnitureCatalogId" class="p-4">
 
-<input asp-for="Furnitures[i].Quantity"
+<input id="input_furnitureQuantity_@Model.Furnitures[i].FurnitureCatalogId"
+       asp-for="Furnitures[i].Quantity"
        min="1"
        disabled
        class="quantity w-16 border rounded-md px-2 py-1 focus:ring-2 focus:ring-orange-400">
 
 </td>
 
-<td class="p-4">
+<td id="td_furnitureStatus_@Model.Furnitures[i].FurnitureCatalogId" class="p-4">
 
-<select asp-for="Furnitures[i].FurnitureStatusId"
+<select id="select_furnitureStatusId_@Model.Furnitures[i].FurnitureCatalogId"
+        asp-for="Furnitures[i].FurnitureStatusId"
         disabled
         class="status border rounded-md px-3 py-1 focus:ring-2 focus:ring-orange-400">
 
@@ -151,9 +155,10 @@ Trạng thái
 
 </td>
 
-<td class="p-4">
+<td id="td_furnitureImages_@Model.Furnitures[i].FurnitureCatalogId" class="p-4">
 
-<input type="file"
+<input id="input_furnitureImages_@Model.Furnitures[i].FurnitureCatalogId"
+       type="file"
        name="Furnitures[@i].Images"
        multiple
        disabled
@@ -177,7 +182,7 @@ Trạng thái
 
 <div class="flex justify-between items-center mt-4">
     <button type="button"
-            id="btnAddFurniture"
+            id="btn_addFurniture"
             class="text-orange-600 hover:text-orange-800 font-medium">
         + Thêm nội thất mới
     </button>
@@ -185,13 +190,13 @@ Trạng thái
     <!-- Buttons -->
     <div class="flex justify-end gap-3">
 
-        <a asp-action="Details"
+        <a id="lnk_cancel_roomDetails" asp-action="Details"
            asp-route-id="@Model.RoomId"
            class="px-6 py-2 border rounded-lg text-gray-600 hover:bg-gray-50">
             Hủy bỏ
         </a>
 
-        <button type="submit"
+        <button id="btn_submit_addFurniture" type="submit"
                 class="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600">
             Lưu thay đổi
         </button>
@@ -306,7 +311,7 @@ document.querySelectorAll("tbody tr").forEach(row => setupFurnitureRow(row));
 
 // Helper to enable/disable inputs inside the new furniture section
 function setNewFurnitureSectionEnabled(enabled) {
-    const section = document.getElementById("newFurnitureSection");
+    const section = document.getElementById("div_newFurnitureSection");
     section.querySelectorAll("input, select, textarea").forEach(el => {
         el.disabled = !enabled;
     });
@@ -316,9 +321,9 @@ function setNewFurnitureSectionEnabled(enabled) {
 setNewFurnitureSectionEnabled(false);
 
 // Toggle new furniture section
-const addFurnitureBtn = document.getElementById("btnAddFurniture");
+const addFurnitureBtn = document.getElementById("btn_addFurniture");
 addFurnitureBtn.addEventListener("click", function() {
-    const section = document.getElementById("newFurnitureSection");
+    const section = document.getElementById("div_newFurnitureSection");
     const opening = section.classList.toggle("hidden");
 
     this.textContent = opening ? "+ Thêm nội thất mới" : "- Ẩn thêm nội thất mới";

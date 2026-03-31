@@ -45,13 +45,13 @@
                             <p class="text-sm text-gray-500">Không có hình ảnh</p>
                         }
                         <div class="mt-3 flex gap-2">
-                            <a asp-action="EditFurniture" asp-route-id="@f.FurnitureId" class="btn btn-sm btn-outline-primary">
+                            <a id="lnk_editFurniture_@f.FurnitureId" asp-action="EditFurniture" asp-route-id="@f.FurnitureId" class="btn btn-sm btn-outline-primary">
                                 <i class="bi bi-pencil"></i> Sửa
                             </a>
-                            <form asp-action="DeleteFurniture" method="post" class="d-inline">
-                                <input type="hidden" name="furnitureId" value="@f.FurnitureId" />
-                                <input type="hidden" name="roomId" value="@Model.RoomId" />
-                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Bạn có chắc muốn xóa nội thất này?')">
+                            <form id="form_deleteFurniture_@f.FurnitureId" asp-action="DeleteFurniture" method="post" class="d-inline">
+                                <input id="input_deleteFurnitureId_@f.FurnitureId" type="hidden" name="furnitureId" value="@f.FurnitureId" />
+                                <input id="input_deleteRoomId_@f.FurnitureId" type="hidden" name="roomId" value="@Model.RoomId" />
+                                <button id="btn_submit_deleteFurniture_@f.FurnitureId" type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Bạn có chắc muốn xóa nội thất này?')">
                                     <i class="bi bi-trash"></i> Xóa
                                 </button>
                             </form>
@@ -67,7 +67,7 @@
             <i class="bi bi-house-gear text-6xl text-gray-300 mb-4"></i>
             <h3 class="text-xl font-medium text-gray-600 mb-2">Phòng chưa có nội thất</h3>
             <p class="text-gray-500">Chưa có thông tin về nội thất trong phòng này.</p>
-            <a asp-action="AddFurniture" asp-route-roomId="@Model.RoomId" class="btn btn-primary mt-4">
+            <a id="btn_addFurniture" asp-action="AddFurniture" asp-route-roomId="@Model.RoomId" class="btn btn-primary mt-4">
                 <i class="bi bi-plus-circle"></i> Thêm nội thất
             </a>
         </div>
@@ -75,7 +75,7 @@
 
     <!-- Back Button -->
     <div class="mt-6 text-center">
-        <a asp-action="Details" asp-route-id="@Model.RoomId" class="btn btn-secondary">
+        <a id="lnk_backToDetails_@Model.RoomId" asp-action="Details" asp-route-id="@Model.RoomId" class="btn btn-secondary">
             <i class="bi bi-arrow-left"></i> Quay lại chi tiết phòng
         </a>
     </div>

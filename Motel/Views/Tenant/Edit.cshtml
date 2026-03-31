@@ -208,7 +208,7 @@
     <nav class="breadcrumb-nav">
         <a asp-controller="Property" asp-action="Index">Nhà trọ của tôi</a>
         <span class="breadcrumb-sep">/</span>
-        <a asp-action="Details" asp-route-id="@Model.TenantId">Chi tiết người thuê</a>
+        <a asp-action="Details" asp-route-id="@Model.TenantId" asp-route-occupancyId="@Model.OccupancyId">Chi tiết người thuê</a>
         <span class="breadcrumb-sep">/</span>
         <span class="current">Chỉnh sửa</span>
     </nav>
@@ -218,9 +218,10 @@
         <div class="subtitle">Cập nhật thông tin cá nhân và giấy tờ</div>
     </div>
 
-    <form asp-action="Edit" method="post" id="editForm">
+    <form id="form_editTenant" asp-action="Edit" method="post">
         @Html.AntiForgeryToken()
-        <input type="hidden" asp-for="TenantId" />
+        <input id="input_tenantId" type="hidden" asp-for="TenantId" />
+        <input id="input_occupancyId" type="hidden" asp-for="OccupancyId" />
 
         <div asp-validation-summary="ModelOnly" class="validation-summary"
              style="display:@(ViewData.ModelState.IsValid ? "none" : "block")"></div>
@@ -236,33 +237,33 @@
             <div class="card">
                 <div class="fields-grid">
                     <div class="field-group">
-                        <label asp-for="FullName"></label>
-                        <input asp-for="FullName" placeholder="Nhập họ và tên" />
+                        <label id="lbl_fullName" asp-for="FullName"></label>
+                        <input id="input_fullName" asp-for="FullName" placeholder="Nhập họ và tên" />
                         <span asp-validation-for="FullName" class="field-error"></span>
                     </div>
                     <div class="field-group">
-                        <label asp-for="Phone"></label>
-                        <input asp-for="Phone" placeholder="Nhập số điện thoại" />
+                        <label id="lbl_phone" asp-for="Phone"></label>
+                        <input id="input_phone" asp-for="Phone" placeholder="Nhập số điện thoại" />
                         <span asp-validation-for="Phone" class="field-error"></span>
                     </div>
                     <div class="field-group">
-                        <label asp-for="Email"></label>
-                        <input asp-for="Email" placeholder="Nhập email" />
+                        <label id="lbl_email" asp-for="Email"></label>
+                        <input id="input_email" asp-for="Email" placeholder="Nhập email" />
                         <span asp-validation-for="Email" class="field-error"></span>
                     </div>
                     <div class="field-group">
-                        <label asp-for="IdentityNo"></label>
-                        <input asp-for="IdentityNo" placeholder="Nhập số CMND/CCCD" />
+                        <label id="lbl_identityNo" asp-for="IdentityNo"></label>
+                        <input id="input_identityNo" asp-for="IdentityNo" placeholder="Nhập số CMND/CCCD" />
                         <span asp-validation-for="IdentityNo" class="field-error"></span>
                     </div>
                     <div class="field-group">
-                        <label asp-for="DateOfBirth"></label>
-                        <input asp-for="DateOfBirth" type="date" />
+                        <label id="lbl_dateOfBirth" asp-for="DateOfBirth"></label>
+                        <input id="input_dateOfBirth" asp-for="DateOfBirth" type="date" />
                         <span asp-validation-for="DateOfBirth" class="field-error"></span>
                     </div>
                     <div class="field-group">
-                        <label asp-for="PermanentAddress"></label>
-                        <input asp-for="PermanentAddress" placeholder="Nơi đăng ký thường trú" />
+                        <label id="lbl_permanentAddress" asp-for="PermanentAddress"></label>
+                        <input id="input_permanentAddress" asp-for="PermanentAddress" placeholder="Nơi đăng ký thường trú" />
                         <span asp-validation-for="PermanentAddress" class="field-error"></span>
                     </div>
                 </div>
@@ -279,8 +280,8 @@
                 </div>
             </div>
             <div class="card">
-                <input type="hidden" asp-for="CccdFrontImageId" id="frontId" />
-                <input type="hidden" asp-for="CccdBackImageId"  id="backId" />
+                <input type="hidden" asp-for="CccdFrontImageId" id="input_frontImageId" />
+                <input type="hidden" asp-for="CccdBackImageId"  id="input_backImageId" />
 
                 <div class="cccd-section">
                     <div class="cccd-section-label">
@@ -292,27 +293,27 @@
                         @* Mặt trước *@
                         <div>
                             <div class="cccd-drop-side-label">Mặt trước</div>
-                            <div class="drop-zone" id="dropFront"
+                            <div class="drop-zone" id="div_dropZoneFront"
                                  ondragover="dzDragOver(event)" ondragleave="dzDragLeave(event)"
                                  ondrop="dzDrop(event,'front')">
-                                <div class="drop-zone-empty" id="dzEmptyFront">
+                                <div class="drop-zone-empty" id="div_dzEmptyFront">
                                     <div class="drop-zone-icon">
                                         <span class="material-symbols-outlined">id_card</span>
                                     </div>
                                     <span class="dz-title">Kéo và thả ảnh của bạn</span>
                                     <span class="dz-or">hoặc</span>
                                     <div class="dz-btn-row">
-                                        <button type="button" class="dz-btn" onclick="dzTrigger('frontFile')">Tải ảnh lên</button>
-                                        <button type="button" class="dz-btn" onclick="dzTrigger('frontFile')">Chụp ảnh</button>
+                                        <button id="btn_upload_frontCccd" type="button" class="dz-btn" onclick="dzTrigger('input_cccdFrontFile')">Tải ảnh lên</button>
+                                        <button id="btn_capture_frontCccd" type="button" class="dz-btn" onclick="dzTrigger('input_cccdFrontFile')">Chụp ảnh</button>
                                     </div>
                                 </div>
-                                <div class="drop-zone-preview" id="dzPreviewFront">
-                                    <img id="dzImgFront" src="" alt="Mặt trước CCCD" />
-                                    <button type="button" class="dz-clear" onclick="dzClear('front')" title="Xóa ảnh">
+                                <div class="drop-zone-preview" id="div_dzPreviewFront">
+                                    <img id="img_dzFront" src="" alt="Mặt trước CCCD" />
+                                    <button id="btn_clear_frontCccd" type="button" class="dz-clear" onclick="dzClear('front')" title="Xóa ảnh">
                                         <span class="material-symbols-outlined">close</span>
                                     </button>
                                 </div>
-                                <input type="file" class="dz-file-input" id="frontFile" accept="image/*" capture="environment"
+                                <input type="file" class="dz-file-input" id="input_cccdFrontFile" accept="image/*" capture="environment"
                                        onchange="dzFileChosen(this,'front')" />
                             </div>
                         </div>
@@ -320,38 +321,38 @@
                         @* Mặt sau *@
                         <div>
                             <div class="cccd-drop-side-label">Mặt sau</div>
-                            <div class="drop-zone" id="dropBack"
+                            <div class="drop-zone" id="div_dropZoneBack"
                                  ondragover="dzDragOver(event)" ondragleave="dzDragLeave(event)"
                                  ondrop="dzDrop(event,'back')">
-                                <div class="drop-zone-empty" id="dzEmptyBack">
+                                <div class="drop-zone-empty" id="div_dzEmptyBack">
                                     <div class="drop-zone-icon">
                                         <span class="material-symbols-outlined">id_card</span>
                                     </div>
                                     <span class="dz-title">Kéo và thả ảnh của bạn</span>
                                     <span class="dz-or">hoặc</span>
                                     <div class="dz-btn-row">
-                                        <button type="button" class="dz-btn" onclick="dzTrigger('backFile')">Tải ảnh lên</button>
-                                        <button type="button" class="dz-btn" onclick="dzTrigger('backFile')">Chụp ảnh</button>
+                                        <button id="btn_upload_backCccd" type="button" class="dz-btn" onclick="dzTrigger('input_cccdBackFile')">Tải ảnh lên</button>
+                                        <button id="btn_capture_backCccd" type="button" class="dz-btn" onclick="dzTrigger('input_cccdBackFile')">Chụp ảnh</button>
                                     </div>
                                 </div>
-                                <div class="drop-zone-preview" id="dzPreviewBack">
-                                    <img id="dzImgBack" src="" alt="Mặt sau CCCD" />
-                                    <button type="button" class="dz-clear" onclick="dzClear('back')" title="Xóa ảnh">
+                                <div class="drop-zone-preview" id="div_dzPreviewBack">
+                                    <img id="img_dzBack" src="" alt="Mặt sau CCCD" />
+                                    <button id="btn_clear_backCccd" type="button" class="dz-clear" onclick="dzClear('back')" title="Xóa ảnh">
                                         <span class="material-symbols-outlined">close</span>
                                     </button>
                                 </div>
-                                <input type="file" class="dz-file-input" id="backFile" accept="image/*" capture="environment"
+                                <input type="file" class="dz-file-input" id="input_cccdBackFile" accept="image/*" capture="environment"
                                        onchange="dzFileChosen(this,'back')" />
                             </div>
                         </div>
                     </div>
 
                     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-                        <button type="button" class="btn-scan" onclick="processEkyc()" id="btnScan">
+                        <button type="button" class="btn-scan" onclick="processEkyc()" id="btn_scan_ekyc">
                             <span class="material-symbols-outlined">document_scanner</span>
                             Tải lên & Quét
                         </button>
-                        <div class="scan-msg" id="scanMsg"></div>
+                        <div class="scan-msg" id="div_scanMsg"></div>
                     </div>
                 </div>
             </div>
@@ -359,8 +360,8 @@
 
         <hr class="section-divider" />
         <div class="footer-actions">
-            <a asp-action="Details" asp-route-id="@Model.TenantId" class="btn-cancel">Hủy</a>
-            <button type="submit" class="btn-submit">
+            <a id="lnk_cancel_editTenant" asp-action="Details" asp-route-id="@Model.TenantId" asp-route-occupancyId="@Model.OccupancyId" class="btn-cancel">Hủy</a>
+            <button id="btn_submit_editTenant" type="submit" class="btn-submit">
                 <span class="material-symbols-outlined" style="font-size:1.05rem;">save</span>
                 Lưu thay đổi
             </button>
@@ -369,14 +370,14 @@
 </div>
 
 @* EKYC Modal *@
-<div class="ekyc-backdrop" id="ekycBackdrop">
+<div class="ekyc-backdrop" id="div_ekycBackdrop">
     <div class="ekyc-modal">
         <div class="ekyc-modal-header">
             <h5>
                 <span class="material-symbols-outlined">badge</span>
                 Thông tin trích xuất từ CCCD
             </h5>
-            <button class="ekyc-close" onclick="closeEkycModal()">
+            <button id="btn_close_ekycModalHeader" class="ekyc-close" onclick="closeEkycModal()">
                 <span class="material-symbols-outlined">close</span>
             </button>
         </div>
@@ -384,39 +385,39 @@
             <div class="ekyc-preview-row">
                 <div>
                     <div class="ekyc-preview-label">Mặt trước</div>
-                    <img id="ekycFrontImg" src="" alt="Mặt trước" />
+                    <img id="img_ekycFront" src="" alt="Mặt trước" />
                 </div>
                 <div>
                     <div class="ekyc-preview-label">Mặt sau</div>
-                    <img id="ekycBackImg" src="" alt="Mặt sau" />
+                    <img id="img_ekycBack" src="" alt="Mặt sau" />
                 </div>
             </div>
             <div class="ekyc-field">
                 <label>Họ tên</label>
-                <input type="text" id="ekycName" />
+                <input type="text" id="input_ekycName" />
             </div>
             <div class="ekyc-field">
                 <label>Số CCCD</label>
-                <input type="text" id="ekycId" />
+                <input type="text" id="input_ekycId" />
             </div>
             <div class="ekyc-field">
                 <label>Ngày sinh</label>
-                <input type="date" id="ekycDob" />
+                <input type="date" id="input_ekycDob" />
             </div>
             <div class="ekyc-field">
                 <label>Giới tính</label>
-                <input type="text" id="ekycGender" />
+                <input type="text" id="input_ekycGender" />
             </div>
             <div class="ekyc-field">
                 <label>Nơi cư trú (Nơi ĐKTT)</label>
-                <input type="text" id="ekycAddress" />
+                <input type="text" id="input_ekycAddress" />
             </div>
-            <input type="hidden" id="ekycFrontId" />
-            <input type="hidden" id="ekycBackId" />
+            <input type="hidden" id="input_ekycFrontId" />
+            <input type="hidden" id="input_ekycBackId" />
         </div>
         <div class="ekyc-modal-footer">
-            <button type="button" class="btn-cancel" style="padding:8px 18px;font-size:0.85rem;" onclick="closeEkycModal()">Đóng</button>
-            <button type="button" class="btn-submit" style="padding:8px 18px;font-size:0.85rem;" onclick="fillEkycData()">
+            <button id="btn_close_ekycModalFooter" type="button" class="btn-cancel" style="padding:8px 18px;font-size:0.85rem;" onclick="closeEkycModal()">Đóng</button>
+            <button id="btn_submit_ekycData" type="button" class="btn-submit" style="padding:8px 18px;font-size:0.85rem;" onclick="fillEkycData()">
                 <span class="material-symbols-outlined" style="font-size:1rem;">edit_note</span>
                 Điền thông tin
             </button>
@@ -443,7 +444,7 @@
             e.currentTarget.classList.remove('drag-over');
             const file = e.dataTransfer.files[0];
             if (!file || !file.type.startsWith('image/')) return;
-            const inputId = side === 'front' ? 'frontFile' : 'backFile';
+            const inputId = side === 'front' ? 'input_cccdFrontFile' : 'input_cccdBackFile';
             const dt = new DataTransfer();
             dt.items.add(file);
             document.getElementById(inputId).files = dt.files;
@@ -454,32 +455,32 @@
             const S = side === 'front' ? 'Front' : 'Back';
             const reader = new FileReader();
             reader.onload = e => {
-                document.getElementById('dzImg'     + S).src = e.target.result;
-                document.getElementById('dzEmpty'   + S).style.display = 'none';
-                document.getElementById('dzPreview' + S).style.display = 'block';
+                document.getElementById('img_dz' + S).src = e.target.result;
+                document.getElementById('div_dzEmpty' + S).style.display = 'none';
+                document.getElementById('div_dzPreview' + S).style.display = 'block';
             };
             reader.readAsDataURL(file);
         }
 
         function dzClear(side) {
             const S = side === 'front' ? 'Front' : 'Back';
-            const inputId = side === 'front' ? 'frontFile' : 'backFile';
+            const inputId = side === 'front' ? 'input_cccdFrontFile' : 'input_cccdBackFile';
             document.getElementById(inputId).value = '';
-            document.getElementById('dzImg'     + S).src = '';
-            document.getElementById('dzEmpty'   + S).style.display = '';
-            document.getElementById('dzPreview' + S).style.display = 'none';
+            document.getElementById('img_dz' + S).src = '';
+            document.getElementById('div_dzEmpty' + S).style.display = '';
+            document.getElementById('div_dzPreview' + S).style.display = 'none';
         }
 
         /* ── EKYC ── */
         function showScanMsg(text, type) {
-            const el = document.getElementById('scanMsg');
+            const el = document.getElementById('div_scanMsg');
             el.textContent = text;
             el.className = 'scan-msg ' + type;
         }
 
         async function processEkyc() {
-            const frontFile = document.getElementById('frontFile').files[0];
-            const backFile  = document.getElementById('backFile').files[0];
+            const frontFile = document.getElementById('input_cccdFrontFile').files[0];
+            const backFile  = document.getElementById('input_cccdBackFile').files[0];
 
             if (!frontFile || !backFile) {
                 showScanMsg('Vui lòng chọn cả ảnh mặt trước và mặt sau CCCD.', 'err');
@@ -487,14 +488,14 @@
             }
 
             const rFront = new FileReader();
-            rFront.onload = e => { document.getElementById('ekycFrontImg').src = e.target.result; };
+            rFront.onload = e => { document.getElementById('img_ekycFront').src = e.target.result; };
             rFront.readAsDataURL(frontFile);
             const rBack = new FileReader();
-            rBack.onload = e => { document.getElementById('ekycBackImg').src = e.target.result; };
+            rBack.onload = e => { document.getElementById('img_ekycBack').src = e.target.result; };
             rBack.readAsDataURL(backFile);
 
             showScanMsg('Đang tải lên và nhận dạng...', 'loading');
-            const btn = document.getElementById('btnScan');
+            const btn = document.getElementById('btn_scan_ekyc');
             btn.disabled = true;
 
             const formData = new FormData();
@@ -507,23 +508,23 @@
                 btn.disabled = false;
 
                 if (result.success) {
-                    document.getElementById('scanMsg').className = 'scan-msg'; // hide
-                    document.getElementById('ekycFrontId').value = result.frontId;
-                    document.getElementById('ekycBackId').value  = result.backId;
+                    document.getElementById('div_scanMsg').className = 'scan-msg'; // hide
+                    document.getElementById('input_ekycFrontId').value = result.frontId;
+                    document.getElementById('input_ekycBackId').value  = result.backId;
 
                     if (result.data) {
-                        document.getElementById('ekycName').value    = result.data.name    || '';
-                        document.getElementById('ekycId').value      = result.data.id      || '';
-                        document.getElementById('ekycAddress').value = result.data.address || '';
-                        document.getElementById('ekycGender').value  = result.data.gender  || '';
+                        document.getElementById('input_ekycName').value    = result.data.name    || '';
+                        document.getElementById('input_ekycId').value      = result.data.id      || '';
+                        document.getElementById('input_ekycAddress').value = result.data.address || '';
+                        document.getElementById('input_ekycGender').value  = result.data.gender  || '';
                         let dobVal = '';
                         if (result.data.birthday) {
                             const p = result.data.birthday.split('/');
                             if (p.length === 3) dobVal = `${p[2]}-${p[1]}-${p[0]}`;
                         }
-                        document.getElementById('ekycDob').value = dobVal;
+                        document.getElementById('input_ekycDob').value = dobVal;
                     }
-                    document.getElementById('ekycBackdrop').classList.add('open');
+                    document.getElementById('div_ekycBackdrop').classList.add('open');
                 } else {
                     showScanMsg(result.message || 'Lỗi nhận dạng', 'err');
                 }
@@ -534,24 +535,24 @@
         }
 
         function closeEkycModal() {
-            document.getElementById('ekycBackdrop').classList.remove('open');
+            document.getElementById('div_ekycBackdrop').classList.remove('open');
         }
 
         function fillEkycData() {
-            document.getElementById('frontId').value = document.getElementById('ekycFrontId').value;
-            document.getElementById('backId').value  = document.getElementById('ekycBackId').value;
+            document.getElementById('input_frontImageId').value = document.getElementById('input_ekycFrontId').value;
+            document.getElementById('input_backImageId').value  = document.getElementById('input_ekycBackId').value;
 
-            document.getElementById('FullName').value          = document.getElementById('ekycName').value;
-            document.getElementById('IdentityNo').value        = document.getElementById('ekycId').value;
-            document.getElementById('DateOfBirth').value       = document.getElementById('ekycDob').value;
-            document.getElementById('PermanentAddress').value  = document.getElementById('ekycAddress').value;
+            document.getElementById('input_fullName').value          = document.getElementById('input_ekycName').value;
+            document.getElementById('input_identityNo').value        = document.getElementById('input_ekycId').value;
+            document.getElementById('input_dateOfBirth').value       = document.getElementById('input_ekycDob').value;
+            document.getElementById('input_permanentAddress').value  = document.getElementById('input_ekycAddress').value;
 
             closeEkycModal();
             showScanMsg('Đã điền thông tin thành công!', 'ok');
         }
 
         // Close modal when clicking backdrop
-        document.getElementById('ekycBackdrop').addEventListener('click', function(e) {
+        document.getElementById('div_ekycBackdrop').addEventListener('click', function(e) {
             if (e.target === this) closeEkycModal();
         });
     </script>

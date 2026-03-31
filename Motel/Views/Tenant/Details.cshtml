@@ -111,7 +111,7 @@
 <div class="page-wrapper">
 
     <nav class="breadcrumb-nav">
-        <a asp-controller="Property" asp-action="Index">Nhà trọ của tôi</a>
+        <a id="lnk_breadcrumb_propertyIndex" asp-controller="Property" asp-action="Index">Nhà trọ của tôi</a>
         <span class="breadcrumb-sep">/</span>
         <span class="current">Chi tiết người thuê</span>
     </nav>
@@ -122,11 +122,11 @@
             <div class="subtitle">Thông tin cá nhân và giấy tờ tùy thân</div>
         </div>
         <div class="header-actions">
-            <a asp-action="Edit" asp-route-id="@Model.TenantId" class="btn-primary-solid">
+            <a id="lnk_edit_@Model.TenantId" asp-action="Edit" asp-route-id="@Model.TenantId" asp-route-occupancyId="@ViewBag.OccupancyId" class="btn-primary-solid">
                 <span class="material-symbols-outlined" style="font-size:1rem;">edit</span>
                 Chỉnh sửa
             </a>
-            <a asp-controller="Property" asp-action="Index" class="btn-outline">
+            <a id="lnk_back_propertyIndex" asp-controller="Property" asp-action="Index" class="btn-outline">
                 <span class="material-symbols-outlined" style="font-size:1rem;">arrow_back</span>
                 Quay lại
             </a>
@@ -215,7 +215,7 @@
                     {
                         <div class="cccd-img-wrap">
                             <div class="cccd-side-label">Mặt trước</div>
-                            <img src="@ViewBag.FrontImage" alt="Mặt trước CCCD" onclick="window.open(this.src,'_blank')" />
+                            <img id="img_cccdFront" src="@ViewBag.FrontImage" alt="Mặt trước CCCD" onclick="window.open(this.src,'_blank')" />
                             <span class="cccd-hint">Xem lớn</span>
                         </div>
                     }
@@ -223,7 +223,7 @@
                     {
                         <div class="cccd-img-wrap">
                             <div class="cccd-side-label">Mặt sau</div>
-                            <img src="@ViewBag.BackImage" alt="Mặt sau CCCD" onclick="window.open(this.src,'_blank')" />
+                            <img id="img_cccdBack" src="@ViewBag.BackImage" alt="Mặt sau CCCD" onclick="window.open(this.src,'_blank')" />
                             <span class="cccd-hint">Xem lớn</span>
                         </div>
                     }
@@ -241,7 +241,7 @@
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h6 class="text-primary mb-0">Hồ sơ đăng ký tạm trú</h6>
-                <a asp-action="PrintCT01" asp-route-id="@Model.TenantId" class="btn btn-sm btn-outline-info" style="display:inline-flex; align-items:center; gap:5px; padding: 6px 12px; border: 1px solid #17a2b8; border-radius: 6px; color: #17a2b8; text-decoration: none;">
+                <a id="lnk_printCT01_@Model.TenantId" asp-action="PrintCT01" asp-route-id="@Model.TenantId" asp-route-occupancyId="@ViewBag.OccupancyId" class="btn btn-sm btn-outline-info" style="display:inline-flex; align-items:center; gap:5px; padding: 6px 12px; border: 1px solid #17a2b8; border-radius: 6px; color: #17a2b8; text-decoration: none;">
                     <span class="material-symbols-outlined" style="font-size: 1rem;">print</span> Tạo mẫu CT01
                 </a>
             </div>
@@ -249,28 +249,30 @@
             @if (!string.IsNullOrEmpty(ViewBag.ResidenceProofImage as string))
             {
                 <div class="text-success mb-2 fw-bold" style="color: #1a7a4a; display:flex; align-items:center; gap:5px;"><span class="material-symbols-outlined" style="font-size: 1.1rem;">check_circle</span> Đã có minh chứng tạm trú</div>
-                <img src="@ViewBag.ResidenceProofImage" alt="Minh chứng tạm trú" class="img-fluid rounded border zoomable" style="cursor: pointer; max-height: 300px; object-fit: contain; width: 100%; border-radius: 10px; border: 1.5px solid var(--border);" onclick="window.open(this.src, '_blank')" />
+                <img id="img_residenceProof" src="@ViewBag.ResidenceProofImage" alt="Minh chứng tạm trú" class="img-fluid rounded border zoomable" style="cursor: pointer; max-height: 300px; object-fit: contain; width: 100%; border-radius: 10px; border: 1.5px solid var(--border);" onclick="window.open(this.src, '_blank')" />
                 
                 <!-- Form update existing proof -->
-                <form asp-action="UploadResidenceProof" method="post" enctype="multipart/form-data" class="mt-3" style="margin-top: 15px;">
+                <form id="form_updateResidenceProof" asp-action="UploadResidenceProof" method="post" enctype="multipart/form-data" class="mt-3" style="margin-top: 15px;">
                     @Html.AntiForgeryToken()
-                    <input type="hidden" name="tenantId" value="@Model.TenantId" />
+                    <input id="input_tenantId" type="hidden" name="tenantId" value="@Model.TenantId" />
+                    <input id="input_occupancyId" type="hidden" name="occupancyId" value="@ViewBag.OccupancyId" />
                     <div style="display: flex; gap: 8px;">
-                        <input type="file" class="form-control" name="proofImage" accept="image/*" required style="flex: 1; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px;">
-                        <button class="btn-primary-solid" type="submit" style="padding: 6px 16px;">Cập nhật ảnh</button>
+                        <input id="input_proofImageExisting" type="file" class="form-control" name="proofImage" accept="image/*" required style="flex: 1; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px;">
+                        <button id="btn_submit_updateProof" class="btn-primary-solid" type="submit" style="padding: 6px 16px;">Cập nhật ảnh</button>
                     </div>
                 </form>
             }
             else
             {
                 <div class="text-danger mb-2 fw-bold" style="color: #dc3545; display:flex; align-items:center; gap:5px;"><span class="material-symbols-outlined" style="font-size: 1.1rem;">cancel</span> Chưa có minh chứng tạm trú</div>
-                <form asp-action="UploadResidenceProof" method="post" enctype="multipart/form-data" style="background: #faf8f6; padding: 15px; border-radius: 10px; border: 1px solid var(--border); margin-top: 10px;">
+                <form id="form_uploadResidenceProof" asp-action="UploadResidenceProof" method="post" enctype="multipart/form-data" style="background: #faf8f6; padding: 15px; border-radius: 10px; border: 1px solid var(--border); margin-top: 10px;">
                     @Html.AntiForgeryToken()
-                    <input type="hidden" name="tenantId" value="@Model.TenantId" />
-                    <label class="small text-muted mb-2" style="display: block; margin-bottom: 8px; font-size: 0.85rem;">Tải lên ảnh xác nhận đăng ký tạm trú:</label>
+                    <input id="input_tenantIdNew" type="hidden" name="tenantId" value="@Model.TenantId" />
+                    <input id="input_occupancyIdNew" type="hidden" name="occupancyId" value="@ViewBag.OccupancyId" />
+                    <label id="lbl_proofImage" class="small text-muted mb-2" style="display: block; margin-bottom: 8px; font-size: 0.85rem;">Tải lên ảnh xác nhận đăng ký tạm trú:</label>
                     <div style="display: flex; gap: 8px;">
-                        <input type="file" class="form-control" name="proofImage" accept="image/*" required style="flex: 1; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px;">
-                        <button class="btn-primary-solid" type="submit" style="padding: 6px 16px;">Lưu minh chứng</button>
+                        <input id="input_proofImageNew" type="file" class="form-control" name="proofImage" accept="image/*" required style="flex: 1; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px;">
+                        <button id="btn_submit_uploadProof" class="btn-primary-solid" type="submit" style="padding: 6px 16px;">Lưu minh chứng</button>
                     </div>
                 </form>
             }

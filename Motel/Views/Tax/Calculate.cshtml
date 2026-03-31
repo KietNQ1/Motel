@@ -8,7 +8,7 @@
 <!-- HEADER -->
 <div class="mb-6">
     <div class="flex items-center gap-3">
-        <a asp-action="Index" 
+        <a id="lnk_back_taxIndex" asp-action="Index" 
            class="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 bg-white transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700">
             <svg class="h-5 w-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
@@ -53,15 +53,15 @@
             </div>
 
             <!-- FORM -->
-            <form asp-action="Calculate" method="post">
+            <form id="form_calculateTax" asp-action="Calculate" method="post">
                 @Html.AntiForgeryToken()
 
                 <!-- Year Selection -->
                 <div class="mb-6">
-                    <label asp-for="Year" class="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    <label id="lbl_year" asp-for="Year" class="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                         Chọn năm <span class="text-red-500">*</span>
                     </label>
-                    <select asp-for="Year"
+                    <select id="select_year" asp-for="Year"
                             class="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white">
                         @foreach (var year in Model.AvailableYears)
                         {
@@ -95,11 +95,11 @@
 
                 <!-- ACTIONS -->
                 <div class="flex items-center justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-800">
-                    <a asp-action="Index"
+                    <a id="lnk_cancel_taxIndex" asp-action="Index"
                        class="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700">
                         Hủy
                     </a>
-                    <button type="submit"
+                    <button id="btn_submit_calculate" type="submit"
                             class="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-primary to-primary-dark px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary/30 transition-all hover:shadow-xl hover:shadow-primary/40 hover:-translate-y-0.5">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>

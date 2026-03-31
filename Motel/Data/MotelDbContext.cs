@@ -14,56 +14,56 @@ public partial class MotelDbContext : IdentityDbContext<ApplicationUser, Identit
     {
     }
 
-    public virtual DbSet<ApplicationUser> AspNetUsers { get; set; }
+    public virtual DbSet<ApplicationUser> AspNetUsers { get; set; } = null!;
 
-    public virtual DbSet<Contract> Contracts { get; set; }
+    public virtual DbSet<Contract> Contracts { get; set; } = null!;
 
-    public virtual DbSet<Invoice> Invoices { get; set; }
+    public virtual DbSet<Invoice> Invoices { get; set; } = null!;
 
-    public virtual DbSet<InvoiceLine> InvoiceLines { get; set; }
+    public virtual DbSet<InvoiceLine> InvoiceLines { get; set; } = null!;
 
-    public virtual DbSet<Landlord> Landlords { get; set; }
+    public virtual DbSet<Landlord> Landlords { get; set; } = null!;
 
-    public virtual DbSet<MeterReading> MeterReadings { get; set; }
+    public virtual DbSet<MeterReading> MeterReadings { get; set; } = null!;
 
-    public virtual DbSet<Notification> Notifications { get; set; }
+    public virtual DbSet<Notification> Notifications { get; set; } = null!;
 
-    public virtual DbSet<Payment> Payments { get; set; }
+    public virtual DbSet<Payment> Payments { get; set; } = null!;
 
-    public virtual DbSet<PaymentIntent> PaymentIntents { get; set; }
+    public virtual DbSet<PaymentIntent> PaymentIntents { get; set; } = null!;
 
-    public virtual DbSet<Property> Properties { get; set; }
+    public virtual DbSet<Property> Properties { get; set; } = null!;
 
-    public virtual DbSet<Room> Rooms { get; set; }
+    public virtual DbSet<Room> Rooms { get; set; } = null!;
 
-    public virtual DbSet<RoomFurniture> RoomFurnitures { get; set; }
+    public virtual DbSet<RoomFurniture> RoomFurnitures { get; set; } = null!;
 
-    public virtual DbSet<RoomOccupancy> RoomOccupancies { get; set; }
+    public virtual DbSet<RoomOccupancy> RoomOccupancies { get; set; } = null!;
 
-    public virtual DbSet<FeeType> FeeTypes { get; set; }
+    public virtual DbSet<FeeType> FeeTypes { get; set; } = null!;
 
-    public virtual DbSet<FeeSetting> FeeSettings { get; set; }
+    public virtual DbSet<FeeSetting> FeeSettings { get; set; } = null!;
 
-    public virtual DbSet<StoredFile> StoredFiles { get; set; }
+    public virtual DbSet<StoredFile> StoredFiles { get; set; } = null!;
 
-    public virtual DbSet<StoredFileReference> StoredFileReferences { get; set; }
+    public virtual DbSet<StoredFileReference> StoredFileReferences { get; set; } = null!;
 
-    public virtual DbSet<Subscription> Subscriptions { get; set; }
+    public virtual DbSet<Subscription> Subscriptions { get; set; } = null!;
 
-    public virtual DbSet<TaxEstimation> TaxEstimations { get; set; }
+    public virtual DbSet<TaxEstimation> TaxEstimations { get; set; } = null!;
 
-    public virtual DbSet<TaxRule> TaxRules { get; set; }
+    public virtual DbSet<TaxRule> TaxRules { get; set; } = null!;
 
-    public virtual DbSet<Tenant> Tenants { get; set; }
+    public virtual DbSet<Tenant> Tenants { get; set; } = null!;
 
-    public virtual DbSet<Transaction> Transactions { get; set; }
+    public virtual DbSet<Transaction> Transactions { get; set; } = null!;
 
-    public virtual DbSet<FurnitureCatalog> FurnitureCatalogs { get; set; }
+    public virtual DbSet<FurnitureCatalog> FurnitureCatalogs { get; set; } = null!;
 
-    public DbSet<FurnitureStatus> FurnitureStatuses { get; set; }
+    public DbSet<FurnitureStatus> FurnitureStatuses { get; set; } = null!;
     public DbSet<ChatMessage> ChatMessages { get; set; }
 
-    public virtual DbSet<LandlordBankAccount> LandlordBankAccounts { get; set; }
+    public virtual DbSet<LandlordBankAccount> LandlordBankAccounts { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

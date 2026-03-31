@@ -266,9 +266,9 @@
 
         @* Breadcrumb *@
         <nav class="rc-breadcrumb" aria-label="Breadcrumb">
-            <a asp-controller="Property" asp-action="Index">Nhà trọ của tôi</a>
+            <a id="lnk_breadcrumb_propertyIndex" asp-controller="Property" asp-action="Index">Nhà trọ của tôi</a>
             <span class="msym">chevron_right</span>
-            <a asp-controller="Property" asp-action="Details" asp-route-id="@Model.PropertyId">@Model.PropertyName</a>
+            <a id="lnk_breadcrumb_propertyDetails" asp-controller="Property" asp-action="Details" asp-route-id="@Model.PropertyId">@Model.PropertyName</a>
             <span class="msym">chevron_right</span>
             <strong>Người thuê</strong>
         </nav>
@@ -279,7 +279,7 @@
                 <h1>Người thuê</h1>
                 <p>@Model.PropertyName</p>
             </div>
-            <a asp-controller="Property" asp-action="Details" asp-route-id="@Model.PropertyId"
+            <a id="lnk_back_propertyDetails" asp-controller="Property" asp-action="Details" asp-route-id="@Model.PropertyId"
                class="rc-btn-secondary">
                 <span class="msym">arrow_back</span>
                 Quay lại
@@ -321,18 +321,18 @@
             }
             else
             {
-                <div style="overflow-x:auto;">
-                    <table class="rc-table">
+                <div id="div_tenantsTableWrapper" style="overflow-x:auto;">
+                    <table id="tbl_tenants" class="rc-table">
                         <thead>
                             <tr>
-                                <th>Họ tên</th>
-                                <th>Số điện thoại</th>
-                                <th>CCCD / CMND</th>
-                                <th>Phòng</th>
-                                <th>Hợp đồng</th>
-                                <th>Tạm trú</th>
-                                <th>Trạng thái</th>
-                                <th class="text-end">Thao tác</th>
+                                <th id="th_fullName">Họ tên</th>
+                                <th id="th_phone">Số điện thoại</th>
+                                <th id="th_identityNo">CCCD / CMND</th>
+                                <th id="th_room">Phòng</th>
+                                <th id="th_contract">Hợp đồng</th>
+                                <th id="th_temporaryResidence">Tạm trú</th>
+                                <th id="th_status">Trạng thái</th>
+                                <th id="th_action" class="text-end">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -343,30 +343,30 @@
                                     ? "?"
                                     : tenant.FullName.Split(' ').Last().Substring(0, 1).ToUpper();
 
-                                <tr>
-                                    <td>
+                                <tr id="tr_tenant_@tenant.TenantId">
+                                    <td id="td_fullName_@tenant.TenantId">
                                         <div class="rc-name-cell">
                                             <div class="rc-avatar">@initials</div>
                                             <span class="name">@tenant.FullName</span>
                                         </div>
                                     </td>
-                                    <td style="color:var(--rc-on-surface-var)">
+                                    <td id="td_phone_@tenant.TenantId" style="color:var(--rc-on-surface-var)">
                                         @(string.IsNullOrEmpty(tenant.Phone) ? "—" : tenant.Phone)
                                     </td>
-                                    <td style="color:var(--rc-on-surface-var); font-variant-numeric:tabular-nums;">
+                                    <td id="td_identityNo_@tenant.TenantId" style="color:var(--rc-on-surface-var); font-variant-numeric:tabular-nums;">
                                         @(string.IsNullOrEmpty(tenant.IdentityNo) ? "—" : tenant.IdentityNo)
                                     </td>
-                                    <td>
-                                        <a asp-controller="Room" asp-action="Details" asp-route-id="@tenant.RoomId"
+                                    <td id="td_room_@tenant.TenantId">
+                                        <a id="lnk_roomDetails_@tenant.TenantId" asp-controller="Room" asp-action="Details" asp-route-id="@tenant.RoomId"
                                            class="rc-chip rc-chip-room">
                                             <span class="msym">meeting_room</span>
                                             @tenant.RoomName
                                         </a>
                                     </td>
-                                    <td>
+                                    <td id="td_contract_@tenant.TenantId">
                                         @if (tenant.ContractId.HasValue)
                                         {
-                                            <a asp-controller="Contract" asp-action="Details" asp-route-id="@tenant.ContractId"
+                                            <a id="lnk_contractDetails_@tenant.TenantId" asp-controller="Contract" asp-action="Details" asp-route-id="@tenant.ContractId"
                                                class="rc-chip rc-chip-contract">
                                                 <span class="msym">description</span>
                                                 @(tenant.StartDate?.ToString("dd/MM/yy") ?? "...") – @(tenant.EndDate?.ToString("dd/MM/yy") ?? "...")
@@ -374,41 +374,41 @@
                                         }
                                         else
                                         {
-                                            <span class="rc-chip-none">Không có HĐ</span>
+                                            <span id="txt_noContract_@tenant.TenantId" class="rc-chip-none">Không có HĐ</span>
                                         }
                                     </td>
-                                    <td>
+                                    <td id="td_temporaryResidence_@tenant.TenantId">
                                         @if (tenant.IsTemporaryResidenceRegistered)
                                         {
-                                            <span class="badge bg-success bg-opacity-10 text-success border border-success">
+                                            <span id="badge_registered_@tenant.TenantId" class="badge bg-success bg-opacity-10 text-success border border-success">
                                                 <i class="bi bi-check-circle"></i> Đã đăng ký
                                             </span>
                                         }
                                         else
                                         {
-                                            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning">
+                                            <span id="badge_unregistered_@tenant.TenantId" class="badge bg-warning bg-opacity-10 text-warning border border-warning">
                                                 <i class="bi bi-exclamation-triangle"></i> Chưa đăng ký
                                             </span>
                                         }
                                     </td>
-                                    <td>
+                                    <td id="td_status_@tenant.TenantId">
                                         @if (tenant.OccupancyStatus == "active")
                                         {
-                                            <span class="rc-chip rc-chip-active">
+                                            <span id="txt_statusActive_@tenant.TenantId" class="rc-chip rc-chip-active">
                                                 <span class="msym">check_circle</span>
                                                 Đang thuê
                                             </span>
                                         }
                                         else
                                         {
-                                            <span class="rc-chip rc-chip-inactive">
+                                            <span id="txt_statusInactive_@tenant.TenantId" class="rc-chip rc-chip-inactive">
                                                 <span class="msym">logout</span>
                                                 Đã rời đi
                                             </span>
                                         }
                                     </td>
-                                    <td class="text-end">
-                                        <a asp-controller="Tenant" asp-action="Details" asp-route-id="@tenant.TenantId"
+                                    <td id="td_action_@tenant.TenantId" class="text-end">
+                                        <a id="lnk_tenantDetails_@tenant.TenantId" asp-controller="Tenant" asp-action="Details" asp-route-id="@tenant.TenantId" asp-route-occupancyId="@tenant.OccupancyId"
                                            class="rc-btn-detail">
                                             <span class="msym">open_in_new</span>
                                             Chi tiết

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Motel.Helpers;
 using Motel.Services.Interfaces;
 using Motel.ViewModels.Tenant;
@@ -68,7 +69,7 @@ namespace Motel.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Details(int id)
+        public async Task<IActionResult> Details(int id, int? occupancyId = null)
         {
             var tenant = await _service.GetTenantDetailsAsync(await _landlordHelper.GetCurrentLandlordIdAsync(User), id);
             if (tenant == null)
@@ -81,15 +82,16 @@ namespace Motel.Controllers
             ViewBag.FrontImage = frontImage;
             ViewBag.BackImage = backImage;
 
-            ViewBag.ResidenceProofImage = await _service.GetTenantResidenceProofImageAsync(id);
+            ViewBag.OccupancyId = occupancyId;
+            ViewBag.ResidenceProofImage = await _service.GetTenantResidenceProofImageAsync(id, occupancyId);
 
             return View(tenant);
         }
 
         [HttpGet]
-        public async Task<IActionResult> Edit(int id)
+        public async Task<IActionResult> Edit(int id, int? occupancyId = null)
         {
-            var vm = await _service.BuildEditViewModelAsync(await _landlordHelper.GetCurrentLandlordIdAsync(User), id);
+            var vm = await _service.BuildEditViewModelAsync(await _landlordHelper.GetCurrentLandlordIdAsync(User), id, occupancyId);
             if (vm == null)
             {
                 TempData["Error"] = "Không tìm thấy người thuê.";
@@ -113,7 +115,7 @@ namespace Motel.Controllers
                     return RedirectToAction("Index", "Property");
                 }
                 TempData["Success"] = "Cập nhật người thuê thành công!";
-                return RedirectToAction(nameof(Details), new { id = vm.TenantId });
+                return RedirectToAction(nameof(Details), new { id = vm.TenantId, occupancyId = vm.OccupancyId });
             }
             catch (Exception ex)
             {
@@ -125,12 +127,12 @@ namespace Motel.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UploadResidenceProof(int tenantId, IFormFile proofImage)
+        public async Task<IActionResult> UploadResidenceProof(int tenantId, int? occupancyId, IFormFile proofImage)
         {
             if (proofImage == null || proofImage.Length == 0)
             {
                 TempData["Error"] = "Vui lòng chọn ảnh minh chứng hợp lệ.";
-                return RedirectToAction(nameof(Details), new { id = tenantId });
+                return RedirectToAction(nameof(Details), new { id = tenantId, occupancyId });
             }
 
             try
@@ -141,6 +143,21 @@ namespace Motel.Controllers
                 {
                     TempData["Error"] = "Không tìm thấy người thuê.";
                     return RedirectToAction("Index", "Property");
+                }
+
+                var activeOccupancy = await _context.RoomOccupancies
+                    .Include(o => o.Room)
+                    .ThenInclude(r => r.Property)
+                    .FirstOrDefaultAsync(o =>
+                        o.TenantId == tenantId &&
+                        o.Status == "active" &&
+                        (!occupancyId.HasValue || o.OccupancyId == occupancyId.Value) &&
+                        o.Room.Property.LandlordId == landlordId);
+
+                if (activeOccupancy == null)
+                {
+                    TempData["Error"] = "NgÆ°á»i thuÃª hiá»‡n khÃ´ng cÃ³ thá»‘ng tin á»Ÿ hiá»‡n táº¡i Ä‘á»ƒ Ä‘Äƒng kÃ½ táº¡m trÃº.";
+                    return RedirectToAction(nameof(Details), new { id = tenantId, occupancyId });
                 }
 
                 // Ensure directory exists
@@ -183,14 +200,22 @@ namespace Motel.Controllers
                 _context.StoredFiles.Add(storedFile);
                 await _context.SaveChangesAsync();
 
-                var refProof = new Motel.Models.StoredFileReference 
-                { 
-                    StoredFileId = storedFile.StoredFileId, 
-                    RefType = "tenant", 
-                    RefId = tenantId, 
-                    CreatedAt = DateTime.Now 
+                var tenantProofRef = new Motel.Models.StoredFileReference
+                {
+                    StoredFileId = storedFile.StoredFileId,
+                    RefType = "tenant",
+                    RefId = tenantId,
+                    CreatedAt = DateTime.Now
                 };
-                _context.StoredFileReferences.Add(refProof);
+                var propertyProofRef = new Motel.Models.StoredFileReference
+                {
+                    StoredFileId = storedFile.StoredFileId,
+                    RefType = "property",
+                    RefId = activeOccupancy.Room.PropertyId,
+                    CreatedAt = DateTime.Now
+                };
+                _context.StoredFileReferences.Add(tenantProofRef);
+                _context.StoredFileReferences.Add(propertyProofRef);
                 await _context.SaveChangesAsync();
 
                 TempData["Success"] = "Cập nhật xác minh tạm trú thành công.";
@@ -201,14 +226,14 @@ namespace Motel.Controllers
                 TempData["Error"] = "Có lỗi xảy ra khi lưu tệp tin.";
             }
 
-            return RedirectToAction(nameof(Details), new { id = tenantId });
+            return RedirectToAction(nameof(Details), new { id = tenantId, occupancyId });
         }
 
         [HttpGet]
-        public async Task<IActionResult> PrintCT01(int id)
+        public async Task<IActionResult> PrintCT01(int id, int? occupancyId = null)
         {
             var landlordId = await _landlordHelper.GetCurrentLandlordIdAsync(User);
-            var vm = await _service.GetCT01DataAsync(landlordId, id);
+            var vm = await _service.GetCT01DataAsync(landlordId, id, occupancyId);
             
             if (vm == null)
             {

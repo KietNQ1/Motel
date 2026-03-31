@@ -42,7 +42,7 @@ namespace Motel.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
+        [ValidateAntiForgeryToken]     
         public async Task<IActionResult> Login(string email, string password, string? returnUrl)
         {
             if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
@@ -57,16 +57,32 @@ namespace Motel.Controllers
                 isPersistent: false,
                 lockoutOnFailure: false);
 
+            if (result.IsLockedOut)
+            {
+                ModelState.AddModelError("", "Tài khoản của bạn đã bị khóa bởi quản trị viên.");
+                return View();
+            }
+
             if (!result.Succeeded)
             {
                 ModelState.AddModelError("", "Email hoặc mật khẩu không đúng");
                 return View();
             }
 
+            var user = await _userManager.FindByEmailAsync(email);
+            var roles = await _userManager.GetRolesAsync(user);
+
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                 return Redirect(returnUrl);
 
-            return RedirectToAction("Index", "Dashboard");
+            // Redirect theo role
+            if (roles.Contains("Admin"))
+                return RedirectToAction("Index", "User");
+
+            if (roles.Contains("Landlord"))
+                return RedirectToAction("Index", "Dashboard");
+
+            return RedirectToAction("Index", "Home");
         }
 
         // ================= PROFILE =================
@@ -100,7 +116,7 @@ namespace Motel.Controllers
         public async Task<IActionResult> Logout()
         {
             await _signInManager.SignOutAsync();
-            return RedirectToAction("Login");
+            return RedirectToAction("Index", "Home");
         }
 
         // ================= REGISTER =================
@@ -145,6 +161,10 @@ namespace Motel.Controllers
                 return View(model);
             }
 
+            // ADD ROLE
+            await _userManager.AddToRoleAsync(user, "Landlord");
+
+            // tạo landlord
             _db.Landlords.Add(new Landlord
             {
                 UserId = user.Id,
@@ -156,9 +176,8 @@ namespace Motel.Controllers
 
             await _signInManager.SignInAsync(user, false);
 
-            return RedirectToAction("Index", "Dashboard");
+            return RedirectToAction("Index", "Home");
         }
-
         // ================= FORGOT PASSWORD =================
 
         [HttpGet]
@@ -283,6 +302,12 @@ namespace Motel.Controllers
                 info.ProviderKey,
                 isPersistent: false);
 
+            if (signInResult.IsLockedOut)
+            {
+                ModelState.AddModelError("", "Tài khoản của bạn đã bị khóa bởi quản trị viên.");
+                return View("Login");
+            }
+
             if (signInResult.Succeeded)
             {
                 return RedirectToAction("Index", "Dashboard");
@@ -296,6 +321,13 @@ namespace Motel.Controllers
                 return RedirectToAction(nameof(Login));
 
             var user = await _userManager.FindByEmailAsync(email);
+
+            // Nếu user đã bị khóa
+            if (user != null && await _userManager.IsLockedOutAsync(user))
+            {
+                ModelState.AddModelError("", "Tài khoản của bạn đã bị khóa bởi quản trị viên.");
+                return View("Login");
+            }
 
             // Nếu user chưa tồn tại
             if (user == null)
@@ -314,7 +346,9 @@ namespace Motel.Controllers
                 if (!createResult.Succeeded)
                     return RedirectToAction(nameof(Login));
 
-                // tạo landlord
+                // ADD ROLE
+                await _userManager.AddToRoleAsync(user, "Landlord");
+
                 _db.Landlords.Add(new Landlord
                 {
                     UserId = user.Id,

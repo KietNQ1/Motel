@@ -7,7 +7,7 @@
     </p>
 
     <div class="mt-4 bg-white dark:bg-gray-800 shadow-sm rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+        <table id="tbl_vietQrRequests" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead class="bg-gray-50 dark:bg-gray-900/50">
                 <tr>
                     <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Hóa đơn</th>
@@ -32,7 +32,7 @@
                 foreach (var item in Model)
                 {
                     var isOverdue = (DateTime.UtcNow - item.CreatedAt).TotalDays > 2;
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <tr id="tr_vietQrRequest_@item.InvoiceId" class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                         <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">
                             #@item.InvoiceId
                             @if (isOverdue)
@@ -48,15 +48,15 @@
                         <td class="px-4 py-3 text-sm text-right font-semibold text-gray-900 dark:text-white">@item.Amount.ToString("N0") đ</td>
                         <td class="px-4 py-3 text-sm text-gray-500">@item.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
                         <td class="px-4 py-3 text-sm text-right space-x-2">
-                            <form asp-action="VietQrLandlordConfirm" asp-controller="Payment" method="post" class="inline">
+                            <form id="form_confirmVietQr_@item.PaymentIntentId" asp-action="VietQrLandlordConfirm" asp-controller="Payment" method="post" class="inline">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="paymentIntentId" value="@item.PaymentIntentId" />
-                                <button type="submit" class="inline-flex items-center px-3 py-1.5 rounded-md bg-green-600 text-white text-xs font-medium hover:bg-green-700">Xác nhận đã nhận tiền</button>
+                                <button id="btn_confirmVietQr_@item.PaymentIntentId" type="submit" class="inline-flex items-center px-3 py-1.5 rounded-md bg-green-600 text-white text-xs font-medium hover:bg-green-700">Xác nhận đã nhận tiền</button>
                             </form>
-                            <form asp-action="VietQrLandlordReject" asp-controller="Payment" method="post" class="inline">
+                            <form id="form_rejectVietQr_@item.PaymentIntentId" asp-action="VietQrLandlordReject" asp-controller="Payment" method="post" class="inline">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="paymentIntentId" value="@item.PaymentIntentId" />
-                                <button type="submit" class="inline-flex items-center px-3 py-1.5 rounded-md bg-red-600 text-white text-xs font-medium hover:bg-red-700">Từ chối</button>
+                                <button id="btn_rejectVietQr_@item.PaymentIntentId" type="submit" class="inline-flex items-center px-3 py-1.5 rounded-md bg-red-600 text-white text-xs font-medium hover:bg-red-700">Từ chối</button>
                             </form>
                         </td>
                     </tr>

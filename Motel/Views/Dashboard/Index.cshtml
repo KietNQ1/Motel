@@ -13,7 +13,7 @@
             <p class="mt-1.5 text-sm text-gray-600 dark:text-gray-400">Tổng quan và quản lý nhanh</p>
         </div>
         <div class="flex flex-wrap items-center gap-3">
-            <select id="propertyFilter" class="rounded-xl border-[#e7d9cf] bg-white px-4 py-2.5 text-sm font-medium text-text-main shadow-sm transition-all hover:border-primary/30 focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
+            <select id="select_propertyFilter_dashboard" class="rounded-xl border-[#e7d9cf] bg-white px-4 py-2.5 text-sm font-medium text-text-main shadow-sm transition-all hover:border-primary/30 focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
                 <option value="">Tất cả tòa nhà</option>
                 @foreach (var property in Model.Properties)
                 {
@@ -21,14 +21,14 @@
                     <option value="@property.PropertyId" selected="@isSelected">@property.Name - @property.Address</option>
                 }
             </select>
-            <select id="monthFilter" class="rounded-xl border-[#e7d9cf] bg-white px-4 py-2.5 text-sm font-medium text-text-main shadow-sm transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
+            <select id="select_monthFilter_dashboard" class="rounded-xl border-[#e7d9cf] bg-white px-4 py-2.5 text-sm font-medium text-text-main shadow-sm transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
                 @for (var m = 1; m <= 12; m++)
                 {
                     var sel = ViewBag.SelectedMonth != null && (int)ViewBag.SelectedMonth == m;
                     <option value="@m" selected="@sel">Tháng @m</option>
                 }
             </select>
-            <select id="yearFilter" class="rounded-xl border-[#e7d9cf] bg-white px-4 py-2.5 text-sm font-medium text-text-main shadow-sm transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
+            <select id="select_yearFilter_dashboard" class="rounded-xl border-[#e7d9cf] bg-white px-4 py-2.5 text-sm font-medium text-text-main shadow-sm transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
                 @for (var y = DateTime.Now.Year; y >= DateTime.Now.Year - 5; y--)
                 {
                     var sel = ViewBag.SelectedYear != null && (int)ViewBag.SelectedYear == y;
@@ -156,7 +156,7 @@
                     </svg>
                 </a>
             </div>
-            <div id="revenueChart" class="h-[320px] p-5"></div>
+            <div id="div_revenueChart_dashboard" class="h-[320px] p-5"></div>
         </div>
     </div>
 
@@ -171,7 +171,7 @@
                 </h3>
                 <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Phân bố tình trạng</p>
             </div>
-            <div id="roomStatusChart" class="h-[290px] p-5"></div>
+            <div id="div_roomStatusChart_dashboard" class="h-[290px] p-5"></div>
         </div>
 
         <!-- RECENT INVOICES -->
@@ -309,17 +309,17 @@
 <script>
     function applyFilters() {
         const url = new URL(window.location.href);
-        const propertyId = document.getElementById('propertyFilter').value;
-        const month = document.getElementById('monthFilter').value;
-        const year = document.getElementById('yearFilter').value;
+        const propertyId = document.getElementById('select_propertyFilter_dashboard').value;
+        const month = document.getElementById('select_monthFilter_dashboard').value;
+        const year = document.getElementById('select_yearFilter_dashboard').value;
         if (propertyId) url.searchParams.set('propertyId', propertyId); else url.searchParams.delete('propertyId');
         url.searchParams.set('month', month);
         url.searchParams.set('year', year);
         window.location.href = url.toString();
     }
-    document.getElementById('propertyFilter').addEventListener('change', applyFilters);
-    document.getElementById('monthFilter').addEventListener('change', applyFilters);
-    document.getElementById('yearFilter').addEventListener('change', applyFilters);
+    document.getElementById('select_propertyFilter_dashboard').addEventListener('change', applyFilters);
+    document.getElementById('select_monthFilter_dashboard').addEventListener('change', applyFilters);
+    document.getElementById('select_yearFilter_dashboard').addEventListener('change', applyFilters);
 
     // Main Revenue Chart (12 months)
     const revenueOptions = {
@@ -392,7 +392,7 @@
         }
     };
 
-    const revenueChart = new ApexCharts(document.querySelector("#revenueChart"), revenueOptions);
+    const revenueChart = new ApexCharts(document.querySelector("#div_revenueChart_dashboard"), revenueOptions);
     revenueChart.render();
 
     // Room Status Donut Chart
@@ -452,7 +452,7 @@
         stroke: { width: 0 }
     };
 
-    const roomStatusChart = new ApexCharts(document.querySelector("#roomStatusChart"), roomStatusOptions);
+    const roomStatusChart = new ApexCharts(document.querySelector("#div_roomStatusChart_dashboard"), roomStatusOptions);
     roomStatusChart.render();
 </script>
 }

@@ -213,14 +213,14 @@
       </div>
 
       <div class="mt-6 flex flex-col gap-3">
-        <button onclick="window.print()"
+        <button id="btn_print_contractDetails" onclick="window.print()"
                 class="rounded-xl bg-slate-900 text-white px-4 py-2.5 font-medium hover:bg-slate-700 transition text-center">
           🖨️ Tải / In hợp đồng
         </button>
 
         @if (Model.Status == "active")
         {
-            <form asp-action="End" method="post">
+            <form id="form_endContract" asp-action="End" method="post">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="contractId" value="@Model.ContractId" />
                 <button type="submit"
@@ -295,7 +295,7 @@
           <p>- Tiền thuê phòng Bên B thanh toán cho Bên A vào ngày <strong id="viewBillingDay"></strong> hàng tháng. Chậm nhất ngày 10 hàng tháng phải thanh toán cho Bên A.</p>
           <p>- Vào thời điểm kết thúc thời hạn thuê Bên A sẽ hoàn lại cho Bên B số tiền đặt cọc sau khi đã khấu trừ khoản tiền chi phí để khắc phục thiệt hại (nếu có).</p>
           <!-- Dynamic fee lines -->
-          <div id="viewFeeLines"></div>
+          <div id="div_viewFeeLines_contractDetails"></div>
 
           <h2 class="font-bold text-lg uppercase">Điều 4. Trách nhiệm và nghĩa vụ của các bên cho thuê phòng</h2>
           <p><strong>* Trách nhiệm và nghĩa vụ của Bên Cho Thuê:</strong></p>

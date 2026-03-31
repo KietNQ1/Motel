@@ -54,7 +54,7 @@ builder.Services
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Account/Login";
-    options.AccessDeniedPath = "/Account/Denied";
+    options.AccessDeniedPath = "/Home/Index";
     options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
     options.SlidingExpiration = true;
 });
@@ -103,8 +103,11 @@ builder.Services.AddScoped<IRoomFurnitureService, RoomFurnitureService>();
 builder.Services.Configure<FptAiEkycOptions>(builder.Configuration.GetSection("FptAiEkyc"));
 builder.Services.AddHttpClient<IEkycService, FptAiEkycService>();
 
-//  Add SignalR
-builder.Services.AddSignalR();
+// Cloudinary & File Service
+builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
+builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
+builder.Services.AddScoped<IFileService, FileService>();
+
 
 // Session (optional – KHÔNG bắt buộc cho Identity)
 builder.Services.AddSession(options =>

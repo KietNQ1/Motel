@@ -1,4 +1,4 @@
-﻿@model Motel.ViewModels.User.UserEditViewModel
+@model Motel.ViewModels.User.UserEditViewModel
 
 @{
     ViewData["Title"] = "Edit User";
@@ -6,51 +6,54 @@
 
 <h2 class="page-title">Edit User</h2>
 
-<div class="form-container">
+<div id="div_editUserContainer" class="form-container">
 
-    <form method="post" class="user-form">
+    <form id="form_editUser" method="post" class="user-form">
         @Html.AntiForgeryToken()
 
         <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="Email" />
+        <input type="hidden" asp-for="FullName" />
+        <input type="hidden" asp-for="CreatedAt" />
 
         <div class="form-group">
-            <label>Email</label>
-            <input value="@Model.Email" disabled class="input disabled" />
+            <label id="lbl_email">Email</label>
+            <input id="input_email" value="@Model.Email" disabled class="input disabled" />
         </div>
 
         <div class="form-group">
-            <label>Full Name</label>
-            <input value="@Model.FullName" disabled class="input disabled" />
+            <label id="lbl_fullName">Full Name</label>
+            <input id="input_fullName" value="@Model.FullName" disabled class="input disabled" />
         </div>
 
         <div class="form-group">
-            <label>Phone Number</label>
-            <input asp-for="PhoneNumber" class="input" />
+            <label id="lbl_phoneNumber">Phone Number</label>
+            <input id="input_phoneNumber" asp-for="PhoneNumber" class="input" />
         </div>
 
         <div class="form-group">
-            <label>Created Date</label>
-            <input value="@Model.CreatedAt.ToString("dd/MM/yyyy")" disabled class="input disabled" />
+            <label id="lbl_createdAt">Created Date</label>
+            <input id="input_createdAt" value="@Model.CreatedAt.ToString("dd/MM/yyyy")" disabled class="input disabled" />
         </div>
 
         <div class="form-group checkbox-group">
-            <label>
-                <input type="checkbox" asp-for="IsLocked" />
+            <label id="lbl_isLocked">
+                <input id="chk_isLocked" type="checkbox" asp-for="IsLocked" />
                 Lock Account
             </label>
         </div>
 
         <div class="form-group">
-            <label>New Password (optional)</label>
-            <input asp-for="NewPassword" type="password" class="input" placeholder="Leave blank if not changing password" />
+            <label id="lbl_newPassword">New Password (optional)</label>
+            <input id="input_newPassword" asp-for="NewPassword" type="password" class="input" placeholder="Leave blank if not changing password" />
         </div>
 
         <div class="form-actions">
-            <button type="submit" class="btn btn-save">
+            <button id="btn_submit_editUser" type="submit" class="btn btn-save">
                 Save
             </button>
 
-            <a asp-action="Index" class="btn btn-cancel">
+            <a id="lnk_cancel_editUser" asp-action="Index" class="btn btn-cancel">
                 Cancel
             </a>
         </div>
