@@ -10,7 +10,7 @@
         Tối đa <strong>@Model.MaxOccupants</strong> người ở (bao gồm người thuê chính).
     </div>
 
-    <form asp-action="Create" method="post">
+    <form id="form_createContract" asp-action="Create" method="post">
         @Html.AntiForgeryToken()
 
         <input type="hidden" asp-for="RoomId" />
@@ -22,7 +22,7 @@
 
         <div class="mb-3">
             <label asp-for="TenantId" class="form-label">Người thuê chính</label>
-            <select asp-for="TenantId" asp-items="Model.TenantOptions" class="form-select">
+            <select id="select_tenant_createContract" asp-for="TenantId" asp-items="Model.TenantOptions" class="form-select">
                 <option value="">-- Chọn người thuê --</option>
             </select>
             <div class="form-text">
@@ -79,9 +79,9 @@
         </div>
 
         <div class="d-flex gap-2 mt-3">
-            <a asp-controller="Property" asp-action="Details" asp-route-id="@Model.PropertyId"
+            <a id="lnk_cancel_createContract" asp-controller="Property" asp-action="Details" asp-route-id="@Model.PropertyId"
                class="btn btn-secondary">Hủy</a>
-            <button type="submit" class="btn btn-success">Tạo hợp đồng</button>
+            <button id="btn_submit_createContract" type="submit" class="btn btn-success">Tạo hợp đồng</button>
         </div>
     </form>
 </div>

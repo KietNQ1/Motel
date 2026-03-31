@@ -43,8 +43,8 @@
 </head>
 <body class="flex flex-col min-h-screen text-slate-800">
 
-    <header class="w-full px-6 lg:px-20 py-4 flex items-center justify-between border-b border-primary/10 bg-white/50 backdrop-blur-sm">
-        <a href="/Account/Login" class="flex items-center gap-2">
+    <header id="sec_forgotHeader" class="w-full px-6 lg:px-20 py-4 flex items-center justify-between border-b border-primary/10 bg-white/50 backdrop-blur-sm">
+        <a id="lnk_loginBrand_forgot" href="/Account/Login" class="flex items-center gap-2">
             <div class="w-10 h-10 bg-primary text-white p-1.5 rounded-xl flex items-center justify-center shadow-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
                     <path d="M11.47 3.84a.75.75 0 011.06 0l8.69 8.69a.75.75 0 101.06-1.06l-8.689-8.69a2.25 2.25 0 00-3.182 0l-8.69 8.69a.75.75 0 001.061 1.06l8.69-8.69z" />
@@ -60,7 +60,7 @@
 
     <main class="flex-1 flex flex-col justify-center items-center py-8 px-4">
         
-        <div class="bg-white w-full max-w-[420px] rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-8 sm:p-10 border border-slate-100/50">
+        <div id="card_forgotPassword" class="bg-white w-full max-w-[420px] rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-8 sm:p-10 border border-slate-100/50">
             
             <div class="mb-8 text-center">
                 <div class="w-16 h-16 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-4">
@@ -72,8 +72,8 @@
 
             @if (!ViewData.ModelState.IsValid)
             {
-                <div class="mb-6 p-4 bg-red-50 text-red-600 rounded-xl text-sm border border-red-100">
-                    <ul class="list-disc list-inside space-y-1">
+                <div id="div_validationSummary_forgot" class="mb-6 p-4 bg-red-50 text-red-600 rounded-xl text-sm border border-red-100">
+                    <ul id="list_validationErrors_forgot" class="list-disc list-inside space-y-1">
                         @foreach (var e in ViewData.ModelState.Values.SelectMany(v => v.Errors))
                         {
                             <li>@e.ErrorMessage</li>
@@ -82,7 +82,7 @@
                 </div>
             }
 
-            <form asp-action="ForgotPassword" method="post" class="space-y-5">
+            <form id="form_forgotPassword" asp-action="ForgotPassword" method="post" class="space-y-5">
                 @Html.AntiForgeryToken()
 
                 <!-- Email -->
@@ -92,15 +92,15 @@
                         <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                             <span class="material-symbols-outlined text-xl">mail</span>
                         </div>
-                        <input asp-for="Email" required placeholder="name@company.com" 
+                        <input id="input_email_forgot" asp-for="Email" required placeholder="name@company.com" 
                                class="block w-full rounded-xl border-slate-200 bg-slate-50/50 py-3 pl-11 text-sm focus:border-primary focus:ring-primary focus:bg-white transition-colors" />
                     </div>
-                    <span asp-validation-for="Email" class="text-sm text-red-500 block"></span>
+                    <span id="txt_emailValidation_forgot" asp-validation-for="Email" class="text-sm text-red-500 block"></span>
                 </div>
 
                 <!-- Submit Button -->
                 <div class="pt-2">
-                    <button type="submit" class="w-full bg-primary hover:bg-primary-hover text-white font-bold py-3 px-4 rounded-xl transition-colors shadow-sm shadow-primary/20 flex items-center justify-center gap-2">
+                    <button id="btn_submit_forgotPassword" type="submit" class="w-full bg-primary hover:bg-primary-hover text-white font-bold py-3 px-4 rounded-xl transition-colors shadow-sm shadow-primary/20 flex items-center justify-center gap-2">
                         Gửi liên kết khôi phục
                         <span class="material-symbols-outlined text-xl">arrow_forward</span>
                     </button>
@@ -108,7 +108,7 @@
             </form>
 
             <div class="mt-8 text-center text-sm">
-                <a href="/Account/Login" class="text-slate-500 hover:text-primary transition-colors flex items-center justify-center gap-1 font-semibold">
+                <a id="lnk_loginFooter_forgot" href="/Account/Login" class="text-slate-500 hover:text-primary transition-colors flex items-center justify-center gap-1 font-semibold">
                     <span class="material-symbols-outlined text-lg">arrow_back</span>
                     Quay lại Đăng nhập
                 </a>
