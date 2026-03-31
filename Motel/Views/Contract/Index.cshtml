@@ -16,10 +16,10 @@
 
 <!-- Filters -->
 <div class="mb-6 rounded-2xl border border-[#e7d9cf] dark:border-gray-700 bg-white dark:bg-gray-800/50 p-4">
-    <form method="get" asp-action="Index" class="flex flex-wrap items-end gap-3">
+    <form id="form_filterContracts" method="get" asp-action="Index" class="flex flex-wrap items-end gap-3">
         <div>
             <label class="mb-1 block text-xs font-medium text-gray-500">Tòa nhà</label>
-            <select name="propertyId" class="rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm">
+            <select id="select_property_contractIndex" name="propertyId" class="rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm">
                 <option value="">Tất cả</option>
                 @foreach (var p in properties)
                 {
@@ -29,11 +29,11 @@
         </div>
         <div class="flex items-center gap-2">
             <label class="flex items-center gap-2 text-sm">
-                <input type="checkbox" name="expiringOnly" value="true" @(expiringOnly ? "checked" : "") onchange="this.form.submit()" class="rounded border-gray-400" />
+                <input id="chk_expiringOnly_contractIndex" type="checkbox" name="expiringOnly" value="true" @(expiringOnly ? "checked" : "") onchange="this.form.submit()" class="rounded border-gray-400" />
                 Chỉ sắp hết hạn (30 ngày)
             </label>
         </div>
-        <button type="submit" class="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-dark">Lọc</button>
+        <button id="btn_submit_contractFilters" type="submit" class="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-dark">Lọc</button>
     </form>
 </div>
 
@@ -52,7 +52,7 @@
 <!-- Table -->
 <div class="overflow-hidden rounded-2xl border border-[#e7d9cf] dark:border-gray-700 bg-white dark:bg-gray-800/50 shadow-sm">
     <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+        <table id="tbl_contracts" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead class="bg-gray-50 dark:bg-gray-900/50">
                 <tr>
                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-600 dark:text-gray-400">Phòng · Tòa nhà</th>

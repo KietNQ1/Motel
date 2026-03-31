@@ -572,7 +572,7 @@
                     }
                     else
                     {
-                        <table class="rc-table">
+                        <table id="tbl_invoiceLines" class="rc-table">
                             <thead>
                                 <tr>
                                     <th style="width:18%">Loại phí</th>
@@ -635,7 +635,7 @@
                 }
                 else
                 {
-                    <a class="rc-btn-primary"
+                    <a id="lnk_payNow_invoiceDetails" class="rc-btn-primary"
                        asp-controller="Payment"
                        asp-action="CreateIntent"
                        asp-route-invoiceId="@Model.InvoiceId">
@@ -645,7 +645,7 @@
                 }
 
                 @* New invoice *@
-                <a class="rc-btn-secondary"
+                <a id="lnk_createNewInvoice_invoiceDetails" class="rc-btn-secondary"
                    asp-controller="Invoice"
                    asp-action="Create"
                    asp-route-contractId="@Model.ContractId">

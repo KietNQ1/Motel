@@ -64,7 +64,7 @@
         </div>
 
         <!-- Login Card -->
-        <div class="bg-white w-full max-w-[420px] rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-8 sm:p-10 border border-slate-100/50">
+        <div id="card_login" class="bg-white w-full max-w-[420px] rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-8 sm:p-10 border border-slate-100/50">
             
             <div class="mb-8">
                 <h2 class="text-2xl font-bold text-slate-900 mb-2">Đăng nhập vào Rentify</h2>
@@ -83,13 +83,13 @@
                 </div>
             }
 
-            <form method="post" class="space-y-5">
+            <form id="form_login" method="post" class="space-y-5">
                 
                 <!-- Email -->
                 <div class="space-y-1.5">
                     <label class="block text-sm font-semibold text-slate-700">Email</label>
                     <div class="relative">
-                        <input type="email" name="email" required placeholder="name@company.com" 
+                        <input id="input_email_login" type="email" name="email" required placeholder="name@company.com" 
                                class="block w-full rounded-xl border-slate-200 bg-slate-50/50 py-3 px-4 text-sm focus:border-primary focus:ring-primary focus:bg-white transition-colors" />
                     </div>
                 </div>
@@ -98,14 +98,14 @@
                 <div class="space-y-1.5">
                     <div class="flex items-center justify-between">
                         <label class="block text-sm font-semibold text-slate-700">Mật khẩu</label>
-                        <a asp-controller="Account" asp-action="Forgot" class="text-sm font-semibold text-primary hover:text-primary-hover transition-colors">
+                        <a id="lnk_forgotPassword_login" asp-controller="Account" asp-action="Forgot" class="text-sm font-semibold text-primary hover:text-primary-hover transition-colors">
                             Quên mật khẩu?
                         </a>
                     </div>
                     <div class="relative">
                         <input type="password" name="password" required placeholder="••••••••" id="password_input"
                                class="block w-full rounded-xl border-slate-200 bg-slate-50/50 py-3 pl-4 input-with-icon-right text-sm focus:border-primary focus:ring-primary focus:bg-white transition-colors" />
-                        <button type="button" onclick="togglePassword()" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none">
+                        <button id="btn_togglePassword_login" type="button" onclick="togglePassword()" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none">
                             <svg id="eye_icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -116,7 +116,7 @@
 
                 <!-- Submit Button -->
                 <div class="pt-2">
-                    <button type="submit" class="w-full bg-primary hover:bg-primary-hover text-white font-bold py-3 px-4 rounded-xl transition-colors shadow-sm shadow-primary/20">
+                    <button id="btn_submit_login" type="submit" class="w-full bg-primary hover:bg-primary-hover text-white font-bold py-3 px-4 rounded-xl transition-colors shadow-sm shadow-primary/20">
                         Đăng nhập
                     </button>
                 </div>
@@ -131,10 +131,10 @@
                 </div>
             </div>
 
-            <form asp-action="ExternalLogin" method="post">
+            <form id="form_externalLogin" asp-action="ExternalLogin" method="post">
                 @Html.AntiForgeryToken()
-                <input type="hidden" name="provider" value="Google" />
-                <button type="submit" class="w-full bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold py-3 px-4 rounded-xl transition-colors flex items-center justify-center gap-3">
+                <input id="input_provider_externalLogin" type="hidden" name="provider" value="Google" />
+                <button id="btn_submit_googleLogin" type="submit" class="w-full bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold py-3 px-4 rounded-xl transition-colors flex items-center justify-center gap-3">
                     <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
                         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                         <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -150,7 +150,7 @@
         <!-- Footer Links -->
         <div class="mt-8 text-center text-sm text-slate-500">
             Chưa có tài khoản? 
-            <a href="/Account/Register" class="font-bold text-primary hover:text-primary-hover transition-colors">Đăng ký ngay</a>
+            <a id="lnk_register_login" href="/Account/Register" class="font-bold text-primary hover:text-primary-hover transition-colors">Đăng ký ngay</a>
         </div>
 
     </div>
