@@ -12,6 +12,9 @@
         @Html.AntiForgeryToken()
 
         <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="Email" />
+        <input type="hidden" asp-for="FullName" />
+        <input type="hidden" asp-for="CreatedAt" />
 
         <div class="form-group">
             <label id="lbl_email">Email</label>

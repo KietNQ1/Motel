@@ -1,6 +1,6 @@
 @{
     ViewData["Title"] = "Gửi Thông Báo";
-    Layout = "_Layout";
+  
 }
 
 <!DOCTYPE html>
@@ -212,8 +212,8 @@
                     console.log("Property data:", data);
                     $("#select_property_notification").html('<option value="">Chọn cơ sở</option>');
                     data.forEach(p => {
-                        $("#select_property_notification").append(
-                            `<option value="${p.propertyId}">${p.propertyName}</option>`
+                        $("#propertySelect").append(
+                            `<option value="${p.propertyId}">${p.name}</option>`
                         );
                     });
                 })

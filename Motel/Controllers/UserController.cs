@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Motel.Models;
@@ -7,6 +8,7 @@ using Motel.ViewModels.User;
 
 namespace Motel.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class UserController : Controller
     {
         private readonly UserManager<ApplicationUser> _userManager;
@@ -84,11 +86,6 @@ namespace Motel.Controllers
 
             // Update phone
             user.PhoneNumber = model.PhoneNumber;
-            // Update lock status
-            if (model.IsLocked)
-                user.LockoutEnd = DateTimeOffset.MaxValue;
-            else
-                user.LockoutEnd = null;
 
             var result = await _userManager.UpdateAsync(user);
 
@@ -98,6 +95,17 @@ namespace Motel.Controllers
                     ModelState.AddModelError("", e.Description);
 
                 return View(model);
+            }
+
+            // Update lock status safely using UserManager APIs
+            await _userManager.SetLockoutEnabledAsync(user, true);
+            if (model.IsLocked)
+            {
+                await _userManager.SetLockoutEndDateAsync(user, DateTimeOffset.UtcNow.AddYears(100));
+            }
+            else
+            {
+                await _userManager.SetLockoutEndDateAsync(user, null);
             }
 
             if (!string.IsNullOrEmpty(model.NewPassword))
