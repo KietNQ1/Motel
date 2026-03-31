@@ -9,22 +9,22 @@ namespace Motel.Repositories
     public sealed class RoomRepository : IRoomRepository
     {
         private readonly MotelDbContext _db;
-        public RoomRepository(MotelDbContext db) => _db = db;
-        public Task<Room?> GetRoomByIdAsync(int roomId, CancellationToken ct = default)
-            => _db.Rooms
-                .FirstOrDefaultAsync(r => r.RoomId == roomId && !r.IsDeleted, ct);
+        public RoomRepository(MotelDbContext db)
+        {
+            _db = db;
+        }
 
-        // =========================
-        // ROOM DETAIL VIEW
-        // =========================
+        public async Task<Room?> GetRoomByIdAsync(int roomId, CancellationToken ct = default)
+        {
+            return await _db.Rooms.FirstOrDefaultAsync(r => r.RoomId == roomId && !r.IsDeleted, ct);
+        }
+
         public async Task<RoomDetailViewModel?> GetRoomDetailAsync(int roomId, CancellationToken ct = default)
         {
             var room = await _db.Rooms
                 .Include(r => r.Property)
-                // lấy contract active (nếu có) + tenant
                 .Include(r => r.Contracts.Where(c => !c.IsDeleted && c.Status == "active"))
                     .ThenInclude(c => c.Tenant)
-                // lấy danh sách người đang ở
                 .Include(r => r.RoomOccupancies.Where(ro => ro.Status == "active"))
                     .ThenInclude(ro => ro.Tenant)
                 .Include(r => r.MeterReadings.OrderByDescending(m => m.PeriodMonth).Take(2))
@@ -32,9 +32,8 @@ namespace Motel.Repositories
 
             if (room == null) return null;
 
-            // vì unique index đảm bảo mỗi room chỉ 1 contract active, nên FirstOrDefault là đủ
             var contract = room.Contracts.FirstOrDefault();
-            var hasTenant = contract != null; // đã filter active ở Include
+            var hasTenant = contract != null;
 
             var viewModel = new RoomDetailViewModel
             {
@@ -45,13 +44,11 @@ namespace Motel.Repositories
                 MaxOccupants = room.MaxOccupants,
                 PropertyName = room.Property.Name,
                 PropertyId = room.Property.PropertyId,
-
                 HasTenant = hasTenant,
                 ContractId = contract?.ContractId,
                 ContractStartDate = contract?.StartDate,
                 ContractEndDate = contract?.EndDate,
                 DepositAmount = contract?.DepositAmount,
-
                 Tenants = room.RoomOccupancies.Select(ro => new TenantViewModel
                 {
                     OccupancyId = ro.OccupancyId,
@@ -116,9 +113,11 @@ namespace Motel.Repositories
             return viewModel;
         }
 
-        // =========================
-        // UPDATE ROOM
-        // =========================
+        public async Task<List<Room>> GetRoomsByLandlordAsync(int landlordId)
+        {
+            return await _db.Rooms.Where(r => r.Property.LandlordId == landlordId && !r.IsDeleted).ToListAsync();
+        }
+
         public async Task<bool> UpdateRoomAsync(Room room, CancellationToken ct = default)
         {
             try
@@ -133,9 +132,6 @@ namespace Motel.Repositories
             }
         }
 
-        // =========================
-        // DELETE ROOM (SOFT)
-        // =========================
         public async Task<bool> DeleteRoomAsync(int roomId, CancellationToken ct = default)
         {
             try
@@ -172,21 +168,18 @@ namespace Motel.Repositories
             }
         }
 
-        // =========================
-        // RENT ROOM
-        // =========================
         public async Task<bool> RentRoomAsync(
-    int roomId,
-    int landlordId,
-    int recordedByUserId,
-    List<TenantInputViewModel> occupants,
-    int primaryIndex,
-    decimal depositAmount,
-    DateOnly startDate,
-    DateOnly endDate,
-    int? initialElectric,
-    int? initialWater,
-    CancellationToken ct = default)
+            int roomId,
+            int landlordId,
+            int recordedByUserId,
+            List<TenantInputViewModel> occupants,
+            int primaryIndex,
+            decimal depositAmount,
+            DateOnly startDate,
+            DateOnly endDate,
+            int? initialElectric,
+            int? initialWater,
+            CancellationToken ct = default)
         {
             await using var transaction = await _db.Database.BeginTransactionAsync(ct);
 
@@ -198,18 +191,15 @@ namespace Motel.Repositories
                 if (room == null) return false;
                 if (room.Status != "available") return false;
 
-                // chặn nếu tenant này đã có contract active trong phòng này
                 var hasActiveContract = await _db.Contracts
                     .AnyAsync(c => c.RoomId == roomId && !c.IsDeleted && c.Status == "active", ct);
 
                 if (hasActiveContract) return false;
 
-                // validate số người
                 if (occupants == null || occupants.Count == 0) return false;
                 if (primaryIndex < 0 || primaryIndex >= occupants.Count) return false;
                 if (room.MaxOccupants > 0 && occupants.Count > room.MaxOccupants) return false;
 
-                // 1) tạo hoặc lấy lại tenants theo CCCD
                 var tenantEntities = new List<Tenant>();
                 foreach (var o in occupants)
                 {
@@ -218,7 +208,6 @@ namespace Motel.Repositories
                     {
                         t = await _db.Tenants.FirstOrDefaultAsync(x => x.LandlordId == landlordId && x.IdentityNo == o.IdentityNo && !x.IsDeleted, ct);
                     }
-                    
                     if (t == null)
                     {
                         t = new Tenant
@@ -248,7 +237,6 @@ namespace Motel.Repositories
 
                 await _db.SaveChangesAsync(ct);
 
-                // 1.5) Linking CCCD images
                 foreach (var (t, o) in tenantEntities.Zip(occupants))
                 {
                     if (o.CccdFrontImageId.HasValue && o.CccdFrontImageId.Value > 0)
@@ -264,7 +252,6 @@ namespace Motel.Repositories
                 }
                 await _db.SaveChangesAsync(ct);
 
-                // 2) tạo contract cho TỪNG tenant
                 var contracts = tenantEntities.Select(t => new Contract
                 {
                     RoomId = roomId,
@@ -278,7 +265,6 @@ namespace Motel.Repositories
                 }).ToList();
                 _db.Contracts.AddRange(contracts);
 
-                // 3) tạo occupancies
                 var occupancies = tenantEntities.Select((t, idx) => new RoomOccupancy
                 {
                     RoomId = roomId,
@@ -292,10 +278,8 @@ namespace Motel.Repositories
 
                 _db.RoomOccupancies.AddRange(occupancies);
 
-                // 4) update room status
                 room.Status = "occupied";
 
-                // 5) meter reading ban đầu (PeriodMonth theo StartDate)
                 if (initialElectric.HasValue || initialWater.HasValue)
                 {
                     var periodMonth = startDate.Year * 100 + startDate.Month;

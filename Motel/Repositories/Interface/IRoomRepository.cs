@@ -10,7 +10,7 @@ namespace Motel.Repositories.Interface
         Task<bool> UpdateRoomAsync(Room room, CancellationToken ct = default);
         Task<bool> DeleteRoomAsync(int roomId, CancellationToken ct = default);
         Task<bool> RestoreRoomAsync(int roomId);
-
+        Task<List<Room>> GetRoomsByLandlordAsync(int landlordId);
         Task<bool> RentRoomAsync(
             int roomId,
             int landlordId,

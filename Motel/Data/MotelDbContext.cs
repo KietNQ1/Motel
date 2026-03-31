@@ -61,6 +61,7 @@ public partial class MotelDbContext : IdentityDbContext<ApplicationUser, Identit
     public virtual DbSet<FurnitureCatalog> FurnitureCatalogs { get; set; } = null!;
 
     public DbSet<FurnitureStatus> FurnitureStatuses { get; set; } = null!;
+    public DbSet<ChatMessage> ChatMessages { get; set; }
 
     public virtual DbSet<LandlordBankAccount> LandlordBankAccounts { get; set; } = null!;
 
@@ -558,6 +559,14 @@ public partial class MotelDbContext : IdentityDbContext<ApplicationUser, Identit
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
+        modelBuilder.Entity<ChatMessage>(entity =>
+    {
+        entity.HasOne(d => d.User)
+            .WithMany(p => p.ChatMessages)
+            .HasForeignKey(d => d.UserId)
+            .OnDelete(DeleteBehavior.Cascade); // Xóa User sẽ xóa sạch tin nhắn của họ
+    });
+    
         OnModelCreatingPartial(modelBuilder);
     }
 

@@ -10,7 +10,8 @@
 }
 
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" x-data="{ darkMode: false }" :class="{ 'dark': darkMode }">
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -18,7 +19,7 @@
 
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
+     <script>
         tailwind.config = {
             theme: {
                 extend: {
@@ -45,27 +46,36 @@
 
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
+          rel="stylesheet" />
+
+    <!-- SignalR -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.11/signalr.min.js"></script>
 
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.0/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.51.0/dist/apexcharts.min.js"></script>
 
+    
+    
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
 </head>
+
 <body class="bg-background-light dark:bg-gray-900 text-text-main font-display min-h-screen">
     <!-- Header - Landing style -->
-    <header class="sticky top-0 z-50 w-full border-b border-[#e7d9cf] dark:border-gray-700 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md">
+    <header
+        class="sticky top-0 z-50 w-full border-b border-[#e7d9cf] dark:border-gray-700 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md">
         <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 md:px-6">
-            <a asp-controller="Home" asp-action="Index" class="flex items-center gap-2 shrink-0">
-                <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-white shadow-lg shadow-primary/25">
+            <a asp-controller="Dashboard" asp-action="Index" class="flex items-center gap-2 shrink-0">
+                <div
+                    class="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-white shadow-lg shadow-primary/25">
                     <span class="material-symbols-outlined text-2xl">apartment</span>
                 </div>
                 <span class="text-xl font-bold tracking-tight text-text-main dark:text-white">Rentify</span>
             </a>
 
-            <nav class="hidden md:flex items-center gap-1">
+             <nav class="hidden md:flex items-center gap-1">
                 <a asp-controller="Dashboard" asp-action="Index"
                    class="rounded-lg px-3 py-2 text-sm font-medium text-text-sub dark:text-gray-400 transition hover:bg-primary/10 hover:text-primary dark:hover:text-primary">
                     Dashboard
@@ -102,30 +112,39 @@
             </nav>
 
             <div class="flex items-center gap-2">
+                <button @@click="darkMode = !darkMode"
+                    class="flex h-10 w-10 items-center justify-center rounded-xl text-text-sub hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                    <span class="material-symbols-outlined" x-show="!darkMode">dark_mode</span>
+                    <span class="material-symbols-outlined" x-show="darkMode" x-cloak>light_mode</span>
+                </button>
+
                 <div x-data="{ userMenuOpen: false }" class="relative">
                     <button @@click="userMenuOpen = !userMenuOpen"
-                            class="flex items-center gap-2 rounded-xl border border-[#e7d9cf] dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-semibold text-white">
+                        class="flex items-center gap-2 rounded-xl border border-[#e7d9cf] dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                        <div
+                            class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-semibold text-white">
                             @initials
                         </div>
-                        <span class="hidden text-sm font-medium text-text-main dark:text-gray-300 sm:block max-w-[120px] truncate">@fullName</span>
+                        <span
+                        class="hidden text-sm font-medium text-text-main dark:text-gray-300 sm:block max-w-[120px] truncate">@fullName</span>
                         <span class="material-symbols-outlined text-lg text-text-sub">expand_more</span>
                     </button>
-                    <div x-show="userMenuOpen"
-                         @@click.away="userMenuOpen = false"
-                         x-transition
+                    <div x-show="userMenuOpen" @@click.away="userMenuOpen = false" x-transition
                          class="absolute right-0 mt-2 w-52 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 py-1 shadow-xl">
-                        <a asp-controller="Account" asp-action="Profile" class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <a asp-controller="Account" asp-action="Profile"
+                               class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
                             <span class="material-symbols-outlined text-lg">person</span>
                             Hồ sơ cá nhân
                         </a>
-                        <a asp-controller="PaymentSettings" asp-action="Index" class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <a asp-controller="PaymentSettings" asp-action="Index"
+                               class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
                             <span class="material-symbols-outlined text-lg">settings</span>
                             Cài đặt
                         </a>
                         <hr class="my-1 border-gray-200 dark:border-gray-700" />
                         <form asp-controller="Account" asp-action="Logout" method="post">
-                            <button type="submit" class="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20">
+                            <button type="submit"
+                                    class="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20">
                                 <span class="material-symbols-outlined text-lg">logout</span>
                                 Đăng xuất
                             </button>
@@ -133,31 +152,37 @@
                     </div>
                 </div>
 
-                <button class="md:hidden rounded-xl p-2 text-text-main dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                        aria-label="Menu"
-                        @@click="$dispatch('toggle-mobile-nav')">
+                <button
+                    class="md:hidden rounded-xl p-2 text-text-main dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    aria-label="Menu" @@click="$dispatch('toggle-mobile-nav')">
                     <span class="material-symbols-outlined">menu</span>
                 </button>
             </div>
         </div>
 
         <!-- Mobile nav (dropdown under header) -->
-        <div x-data="{ mobileOpen: false }"
-             @@toggle-mobile-nav.window="mobileOpen = !mobileOpen"
+        <div x-data="{ mobileOpen: false }" @@toggle-mobile-nav.window="mobileOpen = !mobileOpen"
              class="border-t border-[#e7d9cf] dark:border-gray-700 bg-white dark:bg-gray-800 md:hidden"
-             x-show="mobileOpen"
-             x-cloak
-             x-transition>
+             x-show="mobileOpen" x-cloak x-transition>
             <nav class="flex flex-col gap-0.5 p-3">
-                <a asp-controller="Dashboard" asp-action="Index" class="rounded-lg px-4 py-3 text-sm font-medium hover:bg-primary/10">Dashboard</a>
-                <a asp-controller="Property" asp-action="Index" class="rounded-lg px-4 py-3 text-sm font-medium hover:bg-primary/10">Tòa nhà</a>
-                <a asp-controller="Room" asp-action="Index" class="rounded-lg px-4 py-3 text-sm font-medium hover:bg-primary/10">Phòng</a>
-                <a asp-controller="Tenant" asp-action="Index" class="rounded-lg px-4 py-3 text-sm font-medium hover:bg-primary/10">Người thuê</a>
-                <a asp-controller="Contract" asp-action="Index" class="rounded-lg px-4 py-3 text-sm font-medium hover:bg-primary/10">Hợp đồng</a>
-                <a asp-controller="Invoice" asp-action="Index" class="rounded-lg px-4 py-3 text-sm font-medium hover:bg-primary/10">Hóa đơn</a>
-                <a asp-controller="Invoice" asp-action="History" class="rounded-lg px-4 py-3 text-sm font-medium hover:bg-primary/10">Thanh toán</a>
-                <a asp-controller="PaymentSettings" asp-action="Index" class="rounded-lg px-4 py-3 text-sm font-medium hover:bg-primary/10">Cài đặt thanh toán</a>
-                <a asp-controller="Tax" asp-action="Index" class="rounded-lg px-4 py-3 text-sm font-medium hover:bg-primary/10">Thuế</a>
+                <a asp-controller="Dashboard" asp-action="Index"
+                   class="rounded-lg px-4 py-3 text-sm font-medium hover:bg-primary/10">Dashboard</a>
+                <a asp-controller="Property" asp-action="Index"
+                   class="rounded-lg px-4 py-3 text-sm font-medium hover:bg-primary/10">Tòa nhà</a>
+                <a asp-controller="Room" asp-action="Index"
+                   class="rounded-lg px-4 py-3 text-sm font-medium hover:bg-primary/10">Phòng</a>
+                <a asp-controller="Tenant" asp-action="Index"
+                   class="rounded-lg px-4 py-3 text-sm font-medium hover:bg-primary/10">Người thuê</a>
+                <a asp-controller="Contract" asp-action="Index"
+                   class="rounded-lg px-4 py-3 text-sm font-medium hover:bg-primary/10">Hợp đồng</a>
+                <a asp-controller="Invoice" asp-action="Index"
+                   class="rounded-lg px-4 py-3 text-sm font-medium hover:bg-primary/10">Hóa đơn</a>
+                <a asp-controller="Invoice" asp-action="History"
+                   class="rounded-lg px-4 py-3 text-sm font-medium hover:bg-primary/10">Thanh toán</a>
+                <a asp-controller="PaymentSettings" asp-action="Index"
+                   class="rounded-lg px-4 py-3 text-sm font-medium hover:bg-primary/10">Cài đặt thanh toán</a>
+                <a asp-controller="Tax" asp-action="Index"
+                   class="rounded-lg px-4 py-3 text-sm font-medium hover:bg-primary/10">Thuế</a>
             </nav>
         </div>
     </header>
@@ -184,7 +209,187 @@
         @RenderBody()
     </main>
 
-    <footer class="bg-background-light pt-16 pb-8 border-t border-[#e7d9cf]">
+    <!-- Chatbot UI điều khiển bởi Alpine.js -->
+    <div x-data="chatBot()" x-init="init()" class="fixed bottom-6 right-6 z-50">
+        <!-- Nút bấm mở chat -->
+        <button @@click="chatOpen = !chatOpen"
+            class="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-2xl hover:scale-110 transition-transform">
+            <span class="material-symbols-outlined text-3xl" x-show="!chatOpen">smart_toy</span>
+            <span class="material-symbols-outlined text-3xl" x-show="chatOpen" x-cloak>close</span>
+        </button>
+
+        <!-- Cửa sổ Chat -->
+        <div x-show="chatOpen" x-transition x-cloak x-effect="chatOpen && $nextTick(() => scrollDown())"
+             class="absolute bottom-20 right-0 w-[350px] md:w-[400px] h-[500px] rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-2xl flex flex-col overflow-hidden">
+        
+            <!-- Header -->
+            <div class="bg-primary p-4 text-white flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined">robot_2</span>
+                    <span class="font-bold">Trợ lý Rentify AI</span>
+                </div>
+                <button @@click="chatOpen = false" class="hover:opacity-80">
+                    <span class="material-symbols-outlined">remove</span>
+                </button>
+            </div>
+
+            <!-- Nội dung tin nhắn -->
+            <div id="chat-box" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-gray-900/50">
+                <template x-for="msg in messages">
+                    <div :class="msg.role === 'user' ? 'flex justify-end' : 'flex justify-start'">
+                        <div :class="msg.role === 'user' ? 'bg-primary text-white rounded-l-xl rounded-tr-xl' : 'bg-white dark:bg-gray-700 text-text-main dark:text-white rounded-r-xl rounded-tl-xl border border-gray-100 dark:border-gray-600'"
+                             class="max-w-[85%] p-3 text-sm shadow-sm" x-text="msg.content">
+                        </div>
+                    </div>
+                </template>
+                <!-- Hiệu ứng chờ -->
+                <div x-show="loading" class="flex justify-start">
+                    <div class="bg-gray-200 dark:bg-gray-700 rounded-xl p-3 animate-pulse text-xs text-gray-500">Đang
+                        trả lời...</div>
+                    </div>
+                </div>
+
+                <!-- Nhập liệu -->
+                <div class="p-3 border-t border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800">
+                    <div class="flex gap-2">
+                        <input type="text" x-model="userInput" @@keyup.enter="send()"
+                               placeholder="Hỏi về tiền điện, hợp đồng..."
+                               class="flex-1 bg-gray-100 dark:bg-gray-700 border-none rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-primary dark:text-white">
+                        <button @@click="send()" :disabled="loading"
+                            class="p-2 bg-primary text-white rounded-xl hover:bg-primary-dark disabled:opacity-50 transition-colors">
+                            <span class="material-symbols-outlined">send</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function chatBot() {
+            return {
+            chatOpen: false,
+            messages: [],
+            userInput: '',
+            loading: false,
+            connection: null,
+
+            // Watch chatOpen to auto scroll when opened
+            get watch() {
+            return {
+            chatOpen: (value) => {
+            if (value) setTimeout(() => this.scrollDown(), 100);
+            }
+            }
+            },
+
+            init() {
+            if (window.__chatInitialized) return; // 👈 chặn lần 2
+            window.__chatInitialized = true;
+            console.log("init chatBot");
+
+            fetch('/api/Chat/history')
+            .then(res => {
+            if (!res.ok) throw new Error("Server error");
+            return res.json();
+            })
+            .then(data => {
+            this.messages = data.map(m => ({
+            role: m.role,
+            content: m.content
+            }));
+            this.scrollDown();
+            })
+            .catch(e => {
+            this.messages.push({ role: 'model', content: 'Xin lỗi, tôi gặp sự cố kết nối máy chủ.' });
+            });
+
+            // Đảm bảo chỉ tạo 1 connection duy nhất trên mỗi tab
+            if (window.__chatSignalRConnection) {
+            this.connection = window.__chatSignalRConnection;
+            // Luôn off trước khi on để tránh lặp callback
+            this.connection.off("ReceiveBotMessage");
+            this.connection.off("ReceiveUserMessage");
+            this.connection.on("ReceiveBotMessage", (content) => {
+            this.messages.push({ role: 'model', content: content });
+            this.loading = false;
+            this.scrollDown();
+            });
+            this.connection.on("ReceiveUserMessage", (content) => {
+            this.messages.push({ role: 'user', content: content });
+            this.scrollDown();
+            });
+            window.__chatSignalRConnectionInitialized = true;
+            return;
+            }
+
+            if (typeof signalR === 'undefined') {
+            console.error("Thư viện SignalR chưa được tải!");
+            return;
+            }
+            // Khởi tạo SignalR
+            console.log("create SignalR connection");
+            this.connection = new signalR.HubConnectionBuilder()
+            .withUrl("/chatHub")
+            .build();
+
+            this.connection.on("ReceiveBotMessage", (content) => {
+            this.messages.push({ role: 'model', content: content });
+            this.loading = false;
+            this.scrollDown();
+            });
+            this.connection.on("ReceiveUserMessage", (content) => {
+            this.messages.push({ role: 'user', content: content });
+            this.scrollDown();
+            });
+
+            this.connection.start()
+            .then(() => {
+            window.__chatSignalRConnection = this.connection;
+            window.__chatSignalRConnectionInitialized = true;
+            })
+            .catch(err => console.error("SignalR Connection Error: ", err));
+            },
+
+            async send() {
+            if (!this.userInput.trim() || this.loading) return;
+
+            const text = this.userInput;
+            this.userInput = '';
+            this.loading = true;
+            this.scrollDown();
+
+            try {
+            const response = await fetch('/api/Chat/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+            Message: text,
+            ConnectionId: this.connection.connectionId
+            })
+            });
+            if (!response.ok) throw new Error("Server error");
+            } catch (e) {
+            this.messages.push({ role: 'model', content: 'Xin lỗi, tôi gặp sự cố kết nối máy chủ.' });
+            this.loading = false;
+            }
+            },
+
+            scrollDown() {
+            setTimeout(() => {
+            const box = document.getElementById('chat-box');
+            if (box) box.scrollTop = box.scrollHeight;
+            }, 100);
+            }
+            }
+            }
+        </script>
+
+        <script src="~/lib/jquery/dist/jquery.min.js"></script>
+        <script src="~/js/site.js" asp-append-version="true"></script>
+
+        @await RenderSectionAsync("Scripts", required: false)
+    </body>
+ <footer class="bg-background-light pt-16 pb-8 border-t border-[#e7d9cf]">
         <div class="mx-auto max-w-7xl px-4 md:px-10">
             <div class="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
                 <div>
@@ -239,57 +444,4 @@
             </div>
         </div>
     </footer>
-
-    <div class="fixed bottom-6 right-6 z-40" x-data="{ chatOpen: false }">
-        <div x-show="chatOpen"
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0 translate-y-4"
-             x-transition:enter-end="opacity-100 translate-y-0"
-             x-transition:leave="transition ease-in duration-150"
-             x-transition:leave-start="opacity-100 translate-y-0"
-             x-transition:leave-end="opacity-0 translate-y-4"
-             class="absolute bottom-14 right-0 w-[360px] max-w-[calc(100vw-2rem)] rounded-2xl border border-[#e7d9cf] dark:border-gray-600 bg-white dark:bg-gray-800 shadow-xl overflow-hidden"
-             style="max-height: 28rem;">
-            <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-700 bg-primary/10 dark:bg-primary/20 px-4 py-3">
-                <div class="flex items-center gap-2">
-                    <span class="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-white">
-                        <span class="material-symbols-outlined text-lg">smart_toy</span>
-                    </span>
-                    <span class="font-semibold text-gray-900 dark:text-white">Trợ lý ảo</span>
-                </div>
-                <button @@click="chatOpen = false" class="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700">
-                    <span class="material-symbols-outlined">close</span>
-                </button>
-            </div>
-            <div class="h-64 overflow-y-auto p-4 space-y-3 bg-gray-50/50 dark:bg-gray-900/30">
-                <div class="flex gap-2">
-                    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-white text-xs">TL</span>
-                    <div class="rounded-2xl rounded-tl-sm bg-white dark:bg-gray-700 px-3 py-2 text-sm shadow-sm">
-                        Xin chào! Tôi là trợ lý ảo của Rentify. Bạn có thể hỏi về hóa đơn, hợp đồng, phòng trọ... Tính năng đang được phát triển.
-                    </div>
-                </div>
-            </div>
-            <div class="border-t border-gray-100 dark:border-gray-700 p-3">
-                <div class="flex gap-2">
-                    <input type="text"
-                           placeholder="Nhập tin nhắn..."
-                           class="flex-1 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20"
-                           disabled />
-                    <button type="button" class="rounded-xl bg-primary px-4 py-2.5 text-white hover:bg-primary-dark disabled:opacity-50" disabled title="Đang phát triển">
-                        <span class="material-symbols-outlined text-lg">send</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-        <button @@click="chatOpen = !chatOpen"
-                class="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg shadow-primary/30 hover:bg-primary-dark transition-all hover:scale-105">
-            <span class="material-symbols-outlined text-2xl" x-show="!chatOpen">chat</span>
-            <span class="material-symbols-outlined text-2xl" x-show="chatOpen" x-cloak>close</span>
-        </button>
-    </div>
-
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
-</body>
 </html>

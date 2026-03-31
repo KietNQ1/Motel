@@ -7,11 +7,16 @@ using Motel.Models;
 using Motel.Repositories;
 using Motel.Repositories.Interface;
 using Motel.Services;
+using Motel.Hubs;
 using Motel.Services.Interface;
 using Motel.Services.Interfaces;
+using Microsoft.AspNetCore.SignalR;
 
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Cấu hình SignalR sử dụng UserId làm UserIdentifier
+builder.Services.AddSingleton<IUserIdProvider, UserIdProviderById>();
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
@@ -72,6 +77,10 @@ builder.Services.AddScoped<IContractRepository, ContractRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<ITaxRepository, TaxRepository>();
 builder.Services.AddScoped<IRoomFurnitureRepository, RoomFurnitureRepository>();
+builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<IChatRepository, ChatRepository>();
+builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 
 // Services
 
@@ -83,9 +92,12 @@ builder.Services.AddScoped<IContractService, ContractService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<ITaxService, TaxService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IChatService, ChatService>();
+builder.Services.AddHttpClient<IGeminiService, GeminiService>();
 // Helpers
 builder.Services.AddScoped<LandlordHelper>();
 builder.Services.AddScoped<IRoomFurnitureService, RoomFurnitureService>();
+
 
 // FptAi eKYC
 builder.Services.Configure<FptAiEkycOptions>(builder.Configuration.GetSection("FptAiEkyc"));
@@ -96,6 +108,7 @@ builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection(
 builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
 builder.Services.AddScoped<IFileService, FileService>();
 
+builder.Services.AddSignalR();
 
 // Session (optional – KHÔNG bắt buộc cho Identity)
 builder.Services.AddSession(options =>
@@ -104,6 +117,7 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
+
 
 var app = builder.Build();
 
@@ -144,5 +158,8 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+
+app.MapHub<ChatHub>("/chatHub");
 
 app.Run();
