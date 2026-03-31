@@ -4,8 +4,8 @@ namespace Motel.Repositories.Interface;
 
 public interface IMeterReadingRepository
 {
+    Task<List<MeterReading>> GetMeterReadingsByUserIdAsync(int userId);
     Task<MeterReading?> GetByRoomAndPeriodAsync(int roomId, int periodMonth, CancellationToken ct = default);
-    
     /// <summary>
     /// Lưu chỉ số điện/nước (UPSERT qua stored procedure sp_SaveMeterReading).
     /// Nếu đã có bản ghi cho phòng + tháng → UPDATE, chưa có → INSERT.

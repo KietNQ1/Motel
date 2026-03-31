@@ -12,6 +12,15 @@ public sealed class MeterReadingRepository : IMeterReadingRepository
 
     public MeterReadingRepository(MotelDbContext db) => _db = db;
 
+    public async Task<List<MeterReading>> GetMeterReadingsByUserIdAsync(int userId)
+    {
+        // Lọc theo LandlordId của phòng
+        return await _db.MeterReadings
+            .Include(m => m.Room)
+            .Where(m => m.Room.Property.LandlordId == userId)
+            .ToListAsync();
+    }
+
     public Task<MeterReading?> GetByRoomAndPeriodAsync(int roomId, int periodMonth, CancellationToken ct = default)
         => _db.MeterReadings
             .AsNoTracking()
