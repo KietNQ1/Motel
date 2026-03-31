@@ -24,6 +24,7 @@ namespace Motel.Controllers
         private readonly Motel.Data.MotelDbContext _db;
         private readonly IFeeSettingRepository _feeSettingRepository;
         private readonly IFeeTypeRepository _feeTypeRepository;
+        private readonly IFileService _fileService;
         
         public RoomController(
             IRoomRepository roomRepository, 
@@ -33,7 +34,8 @@ namespace Motel.Controllers
             IRoomFurnitureService furnitureService, 
             Motel.Data.MotelDbContext db,
             IFeeSettingRepository feeSettingRepository,
-            IFeeTypeRepository feeTypeRepository)
+            IFeeTypeRepository feeTypeRepository,
+            IFileService fileService)
         {
             _roomRepository = roomRepository;
             _roomService = roomService;
@@ -43,6 +45,7 @@ namespace Motel.Controllers
             _db = db;
             _feeSettingRepository = feeSettingRepository;
             _feeTypeRepository = feeTypeRepository;
+            _fileService = fileService;
         }
 
         // GET: Room/Details/5
@@ -148,12 +151,20 @@ namespace Motel.Controllers
                 var feeTypes = await _feeTypeRepository.GetAllAsync();
                 ViewBag.FeeTypes = feeTypes;
 
+                var existingImages = await _db.StoredFileReferences
+                    .Where(x => x.RefType == "room" && x.RefId == id)
+                    .Include(x => x.StoredFile)
+                    .Where(x => x.StoredFile != null)
+                    .Select(x => x.StoredFile)
+                    .ToListAsync();
+
                 var model = new RoomEditViewModel
                 {
                     RoomId = room.RoomId,
                     RoomName = room.RoomName,
                     RentPrice = room.RentPrice,
                     MaxOccupants = room.MaxOccupants,
+                    Status = room.Status,
                     PropertyId = room.PropertyId,
                     PropertyName = room.Property?.Name ?? "Nhà trọ", // Use navigation property or fallback
                     PropertyLevelFeeSettings = propertySettings.Select(f => new Motel.ViewModels.Property.PropertyFeeSettingItemViewModel
@@ -177,7 +188,8 @@ namespace Motel.Controllers
                         BaseAmount = f.BaseAmount,
                         EffectiveFrom = f.EffectiveFrom,
                         EffectiveTo = f.EffectiveTo
-                    }).ToList()
+                    }).ToList(),
+                    ExistingImages = existingImages
                 };
 
                 return View(model);
@@ -216,7 +228,46 @@ namespace Motel.Controllers
 
                 var success = await _roomRepository.UpdateRoomAsync(room);
 
-                if (success)
+                bool imagesChanged = false;
+
+                // Handle images deletion
+                if (model.DeleteImageIds != null && model.DeleteImageIds.Any())
+                {
+                    var refs = _db.StoredFileReferences.Where(x => x.RefType == "room" && x.RefId == room.RoomId && model.DeleteImageIds.Contains(x.StoredFileId));
+                    if (refs.Any())
+                    {
+                        _db.StoredFileReferences.RemoveRange(refs);
+                        await _db.SaveChangesAsync();
+                        await _fileService.DeleteFilesAsync(model.DeleteImageIds);
+                        imagesChanged = true;
+                    }
+                }
+
+                // Handle new images upload
+                if (model.NewImages != null && model.NewImages.Any())
+                {
+                    int landlordId = GetCurrentLandlordId();
+                    int userId = 1;
+                    foreach (var image in model.NewImages)
+                    {
+                        var storedFile = await _fileService.UploadAndSaveFileAsync(image, "room_photos", landlordId, userId);
+                        if (storedFile != null)
+                        {
+                            var reference = new Motel.Models.StoredFileReference
+                            {
+                                StoredFileId = storedFile.StoredFileId,
+                                RefType = "room",
+                                RefId = room.RoomId,
+                                CreatedAt = DateTime.Now
+                            };
+                            _db.StoredFileReferences.Add(reference);
+                            imagesChanged = true;
+                        }
+                    }
+                    await _db.SaveChangesAsync();
+                }
+
+                if (success || imagesChanged)
                 {
                     TempData["Success"] = "Cập nhật thông tin phòng thành công!";
                     return RedirectToAction(nameof(Edit), new { id = model.RoomId });
@@ -485,6 +536,28 @@ namespace Motel.Controllers
                 _db.Rooms.Add(newRoom);
                 await _db.SaveChangesAsync();
 
+                // 3. Upload images
+                if (model.Images != null && model.Images.Any())
+                {
+                    int userId = 1; // TODO: properly fetch from claims when auth is full
+                    foreach (var image in model.Images)
+                    {
+                        var storedFile = await _fileService.UploadAndSaveFileAsync(image, "room_photos", landlordId, userId);
+                        if (storedFile != null)
+                        {
+                            var reference = new StoredFileReference
+                            {
+                                StoredFileId = storedFile.StoredFileId,
+                                RefType = "room",
+                                RefId = newRoom.RoomId,
+                                CreatedAt = DateTime.Now
+                            };
+                            _db.StoredFileReferences.Add(reference);
+                        }
+                    }
+                    await _db.SaveChangesAsync();
+                }
+
                 TempData["Success"] = $"Thêm phòng '{model.RoomName}' thành công!";
                 return RedirectToAction("Details", "Property", new { id = model.PropertyId });
             }
@@ -573,6 +646,80 @@ namespace Motel.Controllers
         {
             // TODO: Get from User.Claims when authentication is fully implemented
             return 1; // Hardcoded for development
+        }
+
+        // POST: Room/SetMaintenance/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SetMaintenance(int id)
+        {
+            try
+            {
+                var room = await _roomRepository.GetRoomByIdAsync(id);
+                if (room == null)
+                {
+                    TempData["Error"] = "Không tìm thấy phòng.";
+                    return RedirectToAction("Index", "Property");
+                }
+
+                if (room.Status == "occupied")
+                {
+                    TempData["Error"] = "Không thể chuyển sang bảo trì: phòng đang có người thuê.";
+                    return RedirectToAction(nameof(Edit), new { id });
+                }
+
+                if (room.Status == "maintenance")
+                {
+                    TempData["Error"] = "Phòng đang ở trạng thái bảo trì rồi.";
+                    return RedirectToAction(nameof(Edit), new { id });
+                }
+
+                room.Status = "maintenance";
+                await _roomRepository.UpdateRoomAsync(room);
+
+                TempData["Success"] = $"Phòng {room.RoomName} đã chuyển sang trạng thái bảo trì / sửa chữa.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error setting room {RoomId} to maintenance", id);
+                TempData["Error"] = "Có lỗi xảy ra. Vui lòng thử lại.";
+            }
+
+            return RedirectToAction(nameof(Edit), new { id });
+        }
+
+        // POST: Room/EndMaintenance/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EndMaintenance(int id)
+        {
+            try
+            {
+                var room = await _roomRepository.GetRoomByIdAsync(id);
+                if (room == null)
+                {
+                    TempData["Error"] = "Không tìm thấy phòng.";
+                    return RedirectToAction("Index", "Property");
+                }
+
+                if (room.Status != "maintenance")
+                {
+                    TempData["Error"] = "Phòng không ở trạng thái bảo trì.";
+                    return RedirectToAction(nameof(Edit), new { id });
+                }
+
+                room.Status = "available";
+                await _roomRepository.UpdateRoomAsync(room);
+
+                TempData["Success"] = $"Phòng {room.RoomName} đã hoàn tất bảo trì và trở về trạng thái sẵn sàng cho thuê.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error ending maintenance for room {RoomId}", id);
+                TempData["Error"] = "Có lỗi xảy ra. Vui lòng thử lại.";
+            }
+
+            return RedirectToAction(nameof(Edit), new { id });
         }
 
 

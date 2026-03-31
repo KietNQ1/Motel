@@ -21,5 +21,8 @@ namespace Motel.ViewModels.Room
         
         // This is only used for guiding the validation back to the right context if it fails
         public int Floor { get; set; }
+
+        [Display(Name = "Hình ảnh phòng (Bao gồm: phòng ngủ, nhà vệ sinh, nhà bếp, ban công...)")]
+        public List<IFormFile>? Images { get; set; }
     }
 }

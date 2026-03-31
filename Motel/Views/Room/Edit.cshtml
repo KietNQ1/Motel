@@ -45,7 +45,7 @@
             <i class="bi bi-info-circle-fill text-primary"></i> Thông tin cơ bản
         </div>
 
-        <form asp-action="Edit" method="post" class="basic-info-form">
+        <form asp-action="Edit" method="post" class="basic-info-form" enctype="multipart/form-data">
             <input type="hidden" asp-for="RoomId" />
             <input type="hidden" asp-for="PropertyId" />
             <input type="hidden" asp-for="PropertyName" />
@@ -69,12 +69,99 @@
                 <span asp-validation-for="MaxOccupants" class="field-error"></span>
             </div>
 
+            <div class="field-group mt-3" style="border-top: 1px dashed #ddd; padding-top: 16px;">
+                <label>Hình ảnh phòng <small class="text-muted">(Phòng ngủ, nhà vệ sinh, nhà bếp, ban công...)</small></label>
+                
+                @if (Model.ExistingImages != null && Model.ExistingImages.Any())
+                {
+                    <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px;">
+                        @foreach (var img in Model.ExistingImages)
+                        {
+                            <div style="position: relative; width: 120px; height: 120px; border-radius: 8px; overflow: hidden; border: 1px solid #ddd; background: #fafafa;">
+                                <img src="@img.StoragePath" style="width: 100%; height: 100%; object-fit: cover;" alt="Room Image" />
+                                <div style="position: absolute; top: 0; right: 0; background: rgba(255, 255, 255, 0.9); padding: 4px; border-bottom-left-radius: 6px;">
+                                    <label style="font-size: 0.8rem; margin: 0; cursor: pointer;">
+                                        <input type="checkbox" name="DeleteImageIds" value="@img.StoredFileId" style="margin-right: 4px;" />Xóa
+                                    </label>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+
+                <label style="font-size: 0.85rem;">Tải thêm ảnh mới</label>
+                <input asp-for="NewImages" type="file" multiple accept="image/*" />
+            </div>
+
             <div class="form-action-right">
                 <button type="submit" class="btn-orange">
                     <i class="bi bi-save"></i> Lưu thông tin
                 </button>
             </div>
         </form>
+    </div>
+
+    @{
+        string currentStatus = Model.Status ?? "available";
+        string statusLabel = currentStatus switch {
+            "available"   => "Phòng trống",
+            "occupied"    => "Đang cho thuê",
+            "maintenance" => "Đang sửa chữa / bảo trì",
+            _             => currentStatus
+        };
+        string statusClass = currentStatus switch {
+            "available"   => "status-pill available",
+            "occupied"    => "status-pill occupied",
+            "maintenance" => "status-pill maintenance",
+            _             => "status-pill"
+        };
+    }
+
+    <!-- Card: Trạng thái phòng -->
+    <div class="settings-card mt-4">
+        <div class="settings-section-title">
+            <i class="bi bi-wrench-adjustable-circle-fill text-warning"></i> Trạng thái phòng
+        </div>
+
+        <div class="status-row">
+            <div class="status-info">
+                <span>Trạng thái hiện tại:</span>
+                <span class="@statusClass">@statusLabel</span>
+            </div>
+
+            <div class="status-actions">
+                @if (currentStatus == "available")
+                {
+                    <!-- available → có thể chuyển sang maintenance -->
+                    <form asp-action="SetMaintenance" asp-route-id="@Model.RoomId" method="post" class="d-inline-form"
+                          onsubmit="return confirm('Xác nhận chuyển phòng @Model.RoomName sang trạng thái đang sửa chữa? Phòng sẽ không thể cho thuê trong thời gian này.');">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn-maintenance">
+                            <i class="bi bi-tools"></i> Chuyển sang sửa chữa
+                        </button>
+                    </form>
+                }
+                else if (currentStatus == "maintenance")
+                {
+                    <!-- maintenance → có thể kết thúc, trả về available -->
+                    <form asp-action="EndMaintenance" asp-route-id="@Model.RoomId" method="post" class="d-inline-form"
+                          onsubmit="return confirm('Xác nhận hoàn tất sửa chữa và mở lại phòng @Model.RoomName cho thuê?');">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn-end-maintenance">
+                            <i class="bi bi-check2-circle"></i> Hoàn tất sửa chữa
+                        </button>
+                    </form>
+                }
+                else if (currentStatus == "occupied")
+                {
+                    <!-- occupied → không cho phép bảo trì khi đang có người thuê -->
+                    <span class="status-note">
+                        <i class="bi bi-info-circle"></i>
+                        Phòng đang có người thuê. Kết thúc hợp đồng trước khi chuyển sang sửa chữa.
+                    </span>
+                }
+            </div>
+        </div>
     </div>
 
     <!-- Card: Phụ phí riêng rẽ cho phòng -->
@@ -536,6 +623,83 @@
         .border { border: 1px solid #e5e7eb; }
         .small { font-size: 0.85rem; }
         .form-select, .form-control { width: 100%; box-sizing: border-box; }
+
+        /* ── Status card ── */
+        .status-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 14px;
+        }
+        .status-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.93rem;
+            color: #444;
+            font-weight: 500;
+        }
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            font-weight: 600;
+        }
+        .status-pill.available   { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+        .status-pill.occupied    { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+        .status-pill.maintenance { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+
+        .status-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+        .btn-maintenance {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1.5px solid #fcd34d;
+            border-radius: 8px;
+            padding: 9px 18px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: background .18s, color .18s;
+        }
+        .btn-maintenance:hover { background: #f59e0b; color: #fff; border-color: #f59e0b; }
+
+        .btn-end-maintenance {
+            background: #f0fdf4;
+            color: #15803d;
+            border: 1.5px solid #86efac;
+            border-radius: 8px;
+            padding: 9px 18px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: background .18s, color .18s;
+        }
+        .btn-end-maintenance:hover { background: #16a34a; color: #fff; border-color: #16a34a; }
+
+        .status-note {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.83rem;
+            color: #6b7280;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 8px 14px;
+        }
+        .d-inline-form { display: inline; }
+
     </style>
 }
 

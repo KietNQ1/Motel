@@ -23,10 +23,22 @@ namespace Motel.ViewModels.Room
         public int PropertyId { get; set; }
         public string PropertyName { get; set; } = string.Empty;
 
+        /// <summary>Current room status: available | occupied | maintenance</summary>
+        public string Status { get; set; } = string.Empty;
+
         // Settings applied at property level
         public List<PropertyFeeSettingItemViewModel> PropertyLevelFeeSettings { get; set; } = new();
 
         // Settings applied at room level (overrides property level)
         public List<PropertyFeeSettingItemViewModel> RoomLevelFeeSettings { get; set; } = new();
+
+        // Images for Room Gallery
+        [Display(Name = "Hình ảnh hiện tại")]
+        public List<Motel.Models.StoredFile> ExistingImages { get; set; } = new();
+
+        public List<int> DeleteImageIds { get; set; } = new();
+
+        [Display(Name = "Thêm ảnh mới (Phòng ngủ, nha vệ sinh, bếp, ban công...)")]
+        public List<IFormFile>? NewImages { get; set; }
     }
 }

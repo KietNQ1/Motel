@@ -107,3 +107,9 @@ desktop.ini
 *.swp
 *.swo
 *~
+
+################################
+# User Uploads
+################################
+Motel/wwwroot/uploads/cccd/*
+!Motel/wwwroot/uploads/cccd/.gitignore
