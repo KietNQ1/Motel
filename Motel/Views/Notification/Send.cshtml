@@ -1,6 +1,6 @@
 @{
     ViewData["Title"] = "Gửi Thông Báo";
-    Layout = null;
+  
 }
 
 <!DOCTYPE html>
@@ -213,7 +213,7 @@
                     $("#propertySelect").html('<option value="">Chọn cơ sở</option>');
                     data.forEach(p => {
                         $("#propertySelect").append(
-                            `<option value="${p.propertyId}">${p.propertyName}</option>`
+                            `<option value="${p.propertyId}">${p.name}</option>`
                         );
                     });
                 })

@@ -1,4 +1,4 @@
-﻿@model Motel.ViewModels.User.UserEditViewModel
+@model Motel.ViewModels.User.UserEditViewModel
 
 @{
     ViewData["Title"] = "Edit User";
@@ -12,6 +12,9 @@
         @Html.AntiForgeryToken()
 
         <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="Email" />
+        <input type="hidden" asp-for="FullName" />
+        <input type="hidden" asp-for="CreatedAt" />
 
         <div class="form-group">
             <label>Email</label>

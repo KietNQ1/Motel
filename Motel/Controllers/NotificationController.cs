@@ -1,17 +1,22 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Motel.Services.Interfaces;
-using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Motel.Helpers;
 using Motel.Services.Interface;
+using Motel.Services.Interfaces;
 namespace Motel.Controllers
 {
+    [Authorize]
     public class NotificationController : Controller
     {
         private readonly INotificationService _notificationService;
+        private readonly LandlordHelper _landlordHelper;
 
         public NotificationController(
-            INotificationService notificationService)
+            INotificationService notificationService,
+            LandlordHelper landlordHelper)
         {
             _notificationService = notificationService;
+            _landlordHelper = landlordHelper;
         }
 
         [HttpGet]
@@ -26,7 +31,9 @@ namespace Motel.Controllers
             string title,
             string content)
         {
-            int landlordId = 1;
+            var landlordId = await _landlordHelper.GetCurrentLandlordIdAsync(User);
+            if (landlordId == 0)
+                return Unauthorized("Bạn không có quyền thực hiện thao tác này.");
 
             await _notificationService.SendToPropertyAsync(
                 landlordId,
@@ -43,7 +50,9 @@ namespace Motel.Controllers
             string title,
             string content)
         {
-            int landlordId = 1;
+            var landlordId = await _landlordHelper.GetCurrentLandlordIdAsync(User);
+            if (landlordId == 0)
+                return Unauthorized("Bạn không có quyền thực hiện thao tác này.");
 
             await _notificationService.SendToRoomAsync(
                 landlordId,
@@ -60,7 +69,9 @@ namespace Motel.Controllers
             string title,
             string content)
         {
-            int landlordId = 1;
+            var landlordId = await _landlordHelper.GetCurrentLandlordIdAsync(User);
+            if (landlordId == 0)
+                return Unauthorized("Bạn không có quyền thực hiện thao tác này.");
 
             await _notificationService.SendToTenantAsync(
                 landlordId,
