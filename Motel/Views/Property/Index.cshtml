@@ -380,17 +380,17 @@
                         <!-- Card Body -->
                         <div class="prop-body">
                             <div class="prop-title-row">
-                                <a asp-action="@(property.HasRooms ? "Details" : "ConfigureRooms")" asp-route-id="@property.PropertyId" class="prop-title">
+                                <a id="lnk_propertyDetails_@property.PropertyId" asp-action="@(property.HasRooms ? "Details" : "ConfigureRooms")" asp-route-id="@property.PropertyId" class="prop-title">
                                     @property.Name
                                 </a>
                                 
                                 <div class="prop-kebab">
                                     <i class="bi bi-three-dots-vertical"></i>
                                     <div class="prop-menu">
-                                        <a asp-action="@(property.HasRooms ? "Details" : "ConfigureRooms")" asp-route-id="@property.PropertyId">
+                                        <a id="lnk_propertyView_@property.PropertyId" asp-action="@(property.HasRooms ? "Details" : "ConfigureRooms")" asp-route-id="@property.PropertyId">
                                             <i class="bi bi-eye me-2" style="color: #3b82f6;"></i> Xem chi tiết
                                         </a>
-                                        <a asp-action="Settings" asp-route-id="@property.PropertyId">
+                                        <a id="lnk_propertySettings_@property.PropertyId" asp-action="Settings" asp-route-id="@property.PropertyId">
                                             <i class="bi bi-gear me-2" style="color: #64748b;"></i> Cài đặt
                                         </a>
                                     </div>
@@ -420,7 +420,7 @@
         <!-- Add New Property Card -->
         <div class="prop-col">
             <div class="add-new-wrapper">
-                <a asp-action="Create" class="add-new-card">
+                <a id="lnk_createProperty" asp-action="Create" class="add-new-card">
                     <div class="add-icon-wrapper">
                         <i class="bi bi-house-add"></i>
                     </div>

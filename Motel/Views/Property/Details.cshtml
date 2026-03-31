@@ -372,18 +372,18 @@
     <!-- Breadcrumb & Top Actions -->
     <div class="top-header">
         <div class="breadcrumb-nav">
-            <a asp-action="Index">Danh sách nhà trọ</a>
+            <a id="lnk_backToProperties" asp-action="Index">Danh sách nhà trọ</a>
             <span class="separator"><i class="bi bi-chevron-right" style="font-size: 10px;"></i></span>
             <span class="active">Chi tiết nhà trọ</span>
         </div>
         <div class="action-group">
-            <a asp-action="Index" class="btn-custom btn-back">
+            <a id="btn_backToProperties" asp-action="Index" class="btn-custom btn-back">
                 <i class="bi bi-arrow-left"></i> Quay lại
             </a>
-            <a asp-action="Settings" asp-route-id="@Model.PropertyId" class="btn-custom btn-settings">
+            <a id="lnk_settingsProperty" asp-action="Settings" asp-route-id="@Model.PropertyId" class="btn-custom btn-settings">
                 <i class="bi bi-gear"></i> Cài đặt nhà trọ
             </a>
-            <a asp-controller="Tenant" asp-action="Index" asp-route-propertyId="@Model.PropertyId" class="btn-custom btn-back">
+            <a id="lnk_tenantsProperty" asp-controller="Tenant" asp-action="Index" asp-route-propertyId="@Model.PropertyId" class="btn-custom btn-back">
                 <i class="bi bi-people"></i> Người thuê
             </a>
         </div>
@@ -430,7 +430,7 @@
         <div class="alert custom-alert" style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px; text-align: center; padding: 40px;">
             <i class="bi bi-exclamation-triangle text-amber-500 fs-1 mb-3"></i>
             <h6 class="fw-bold">Nhà trọ này chưa có phòng nào</h6>
-            <a asp-action="ConfigureRooms" asp-route-id="@Model.PropertyId" class="btn btn-primary mt-2">Thiết lập phòng ngay</a>
+            <a id="lnk_configureRooms" asp-action="ConfigureRooms" asp-route-id="@Model.PropertyId" class="btn btn-primary mt-2">Thiết lập phòng ngay</a>
         </div>
     }
     else
@@ -481,7 +481,7 @@
 
                             var formattedPrice = (room.RentPrice / 1000000).ToString("0.0"); // e.g. 8.0 or 4.5
 
-                            <a asp-controller="Room" asp-action="Details" asp-route-id="@room.RoomId" class="room-card @rcClass">
+                            <a id="lnk_roomDetails_@room.RoomId" asp-controller="Room" asp-action="Details" asp-route-id="@room.RoomId" class="room-card @rcClass">
                                 <div class="rc-header">
                                     <h5 class="room-number">@room.RoomName</h5>
                                     <span class="rc-badge @bbClass">@statusText</span>

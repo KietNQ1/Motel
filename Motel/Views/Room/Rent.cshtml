@@ -571,14 +571,14 @@
         </div>
     </div>
 
-    <form asp-action="Rent" method="post" id="rentForm">
+    <form id="form_rentRoom" asp-action="Rent" method="post">
         @Html.AntiForgeryToken()
 
-        <input type="hidden" asp-for="RoomId" />
-        <input type="hidden" asp-for="RoomName" />
-        <input type="hidden" asp-for="RentPrice" />
-        <input type="hidden" asp-for="PropertyName" />
-        <input type="hidden" asp-for="MaxOccupants" />
+        <input id="input_roomId" type="hidden" asp-for="RoomId" />
+        <input id="input_roomName" type="hidden" asp-for="RoomName" />
+        <input id="input_rentPrice" type="hidden" asp-for="RentPrice" />
+        <input id="input_propertyName" type="hidden" asp-for="PropertyName" />
+        <input id="input_maxOccupants" type="hidden" asp-for="MaxOccupants" />
 
         <div asp-validation-summary="All" class="text-danger" style="margin-top:16px;"></div>
 
@@ -592,7 +592,7 @@
                 <span class="max-badge">Tối đa: @Model.MaxOccupants người</span>
             </div>
 
-            <div id="occupantsContainer">
+            <div id="div_occupantsContainer">
                 @for (int i = 0; i < Model.Occupants.Count; i++)
                 {
                     <div class="card occupant-card occupant-item">
@@ -604,11 +604,11 @@
                                 </div>
                             </div>
                             <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                                <label class="primary-radio-label">
-                                    <input type="radio" name="PrimaryIndex" value="@i" @(Model.PrimaryIndex == i ? "checked" : "") />
+                                <label id="lbl_primaryIndex_@i" class="primary-radio-label">
+                                    <input id="radio_primaryIndex_@i" type="radio" name="PrimaryIndex" value="@i" @(Model.PrimaryIndex == i ? "checked" : "") />
                                     Tenant chính
                                 </label>
-                                <button type="button" class="btn-remove" onclick="removeOccupant(this)">
+                                <button id="btn_removeOccupant_@i" type="button" class="btn-remove" onclick="removeOccupant(this)">
                                     <span class="material-symbols-outlined" style="font-size:1rem;">delete</span> Xóa
                                 </button>
                             </div>
@@ -616,29 +616,29 @@
 
                         <div class="fields-grid">
                             <div class="field-group">
-                                <label>Họ tên</label>
-                                <input type="text" name="Occupants[@i].FullName" value="@Model.Occupants[i].FullName" placeholder="Nhập họ và tên" />
+                                <label id="lbl_fullName_@i">Họ tên</label>
+                                <input id="input_fullName_@i" type="text" name="Occupants[@i].FullName" value="@Model.Occupants[i].FullName" placeholder="Nhập họ và tên" />
                             </div>
                             <div class="field-group">
-                                <label>SĐT</label>
-                                <input type="tel" name="Occupants[@i].Phone" value="@Model.Occupants[i].Phone" placeholder="Nhập số điện thoại" />
+                                <label id="lbl_phone_@i">SĐT</label>
+                                <input id="input_phone_@i" type="tel" name="Occupants[@i].Phone" value="@Model.Occupants[i].Phone" placeholder="Nhập số điện thoại" />
                             </div>
                             <div class="field-group">
-                                <label>Email</label>
-                                <input type="email" name="Occupants[@i].Email" value="@Model.Occupants[i].Email" placeholder="Nhập email" />
+                                <label id="lbl_email_@i">Email</label>
+                                <input id="input_email_@i" type="email" name="Occupants[@i].Email" value="@Model.Occupants[i].Email" placeholder="Nhập email" />
                             </div>
                             <div class="field-group">
-                                <label>CMND / CCCD</label>
-                                <input type="text" name="Occupants[@i].IdentityNo" value="@Model.Occupants[i].IdentityNo" placeholder="Nhập số CMND/CCCD" />
+                                <label id="lbl_identityNo_@i">CMND / CCCD</label>
+                                <input id="input_identityNo_@i" type="text" name="Occupants[@i].IdentityNo" value="@Model.Occupants[i].IdentityNo" placeholder="Nhập số CMND/CCCD" />
                             </div>
                             <div class="field-group">
-                                <label>Ngày sinh</label>
-                                <input type="date" name="Occupants[@i].DateOfBirth"
+                                <label id="lbl_dateOfBirth_@i">Ngày sinh</label>
+                                <input id="input_dateOfBirth_@i" type="date" name="Occupants[@i].DateOfBirth"
                                        value="@(Model.Occupants[i].DateOfBirth.HasValue ? Model.Occupants[i].DateOfBirth.Value.ToString("yyyy-MM-dd") : "")" />
                             </div>
                             <div class="field-group">
-                                <label>Nơi ĐKTT</label>
-                                <input type="text" id="Address_@i" name="Occupants[@i].PermanentAddress" value="@Model.Occupants[i].PermanentAddress" placeholder="Địa chỉ thường trú" />
+                                <label id="lbl_permanentAddress_@i">Nơi ĐKTT</label>
+                                <input id="input_permanentAddress_@i" type="text" name="Occupants[@i].PermanentAddress" value="@Model.Occupants[i].PermanentAddress" placeholder="Địa chỉ thường trú" />
                             </div>
                         </div>
 
@@ -649,34 +649,34 @@
                                 Tải lên CCCD để tự động điền thông tin
                             </div>
 
-                            <input type="hidden" name="Occupants[@i].CccdFrontImageId" id="frontId_@i" value="@Model.Occupants[i].CccdFrontImageId" />
-                            <input type="hidden" name="Occupants[@i].CccdBackImageId"  id="backId_@i"  value="@Model.Occupants[i].CccdBackImageId" />
+                            <input type="hidden" name="Occupants[@i].CccdFrontImageId" id="input_frontId_@i" value="@Model.Occupants[i].CccdFrontImageId" />
+                            <input type="hidden" name="Occupants[@i].CccdBackImageId"  id="input_backId_@i"  value="@Model.Occupants[i].CccdBackImageId" />
 
                             <div class="cccd-drop-row">
                                 <!-- Mặt trước -->
                                 <div>
                                     <div class="cccd-drop-side-label">Mặt trước</div>
-                                    <div class="drop-zone" id="dropFront_@i"
+                                    <div class="drop-zone" id="div_dropFront_@i"
                                          ondragover="dzDragOver(event)" ondragleave="dzDragLeave(event)"
                                          ondrop="dzDrop(event,'front',@i)">
-                                        <div class="drop-zone-empty" id="dzEmptyFront_@i">
+                                        <div class="drop-zone-empty" id="div_dzEmptyFront_@i">
                                             <div class="drop-zone-icon">
                                                 <span class="material-symbols-outlined">id_card</span>
                                             </div>
                                             <span class="dz-title">Kéo và thả ảnh của bạn</span>
                                             <span class="dz-or">hoặc</span>
                                             <div class="dz-btn-row">
-                                                <button type="button" class="dz-btn" onclick="dzTrigger('frontFile_@i')">Tải ảnh lên</button>
-                                                <button type="button" class="dz-btn" onclick="dzTrigger('frontFile_@i')">Chụp ảnh</button>
+                                                <button id="btn_uploadFrontFile_@i" type="button" class="dz-btn" onclick="dzTrigger('input_frontFile_@i')">Tải ảnh lên</button>
+                                                <button id="btn_captureFrontFile_@i" type="button" class="dz-btn" onclick="dzTrigger('input_frontFile_@i')">Chụp ảnh</button>
                                             </div>
                                         </div>
-                                        <div class="drop-zone-preview" id="dzPreviewFront_@i">
-                                            <img id="dzImgFront_@i" src="" alt="Mặt trước CCCD" />
-                                            <button type="button" class="dz-clear" onclick="dzClear('front',@i)" title="Xóa ảnh">
+                                        <div class="drop-zone-preview" id="div_dzPreviewFront_@i">
+                                            <img id="img_dzImgFront_@i" src="" alt="Mặt trước CCCD" />
+                                            <button id="btn_clearFrontFile_@i" type="button" class="dz-clear" onclick="dzClear('front',@i)" title="Xóa ảnh">
                                                 <span class="material-symbols-outlined">close</span>
                                             </button>
                                         </div>
-                                        <input type="file" class="dz-file-input" id="frontFile_@i" accept="image/*" capture="environment"
+                                        <input type="file" class="dz-file-input" id="input_frontFile_@i" accept="image/*" capture="environment"
                                                onchange="dzFileChosen(this,'front',@i)" />
                                     </div>
                                 </div>
@@ -684,45 +684,45 @@
                                 <!-- Mặt sau -->
                                 <div>
                                     <div class="cccd-drop-side-label">Mặt sau</div>
-                                    <div class="drop-zone" id="dropBack_@i"
+                                    <div class="drop-zone" id="div_dropBack_@i"
                                          ondragover="dzDragOver(event)" ondragleave="dzDragLeave(event)"
                                          ondrop="dzDrop(event,'back',@i)">
-                                        <div class="drop-zone-empty" id="dzEmptyBack_@i">
+                                        <div class="drop-zone-empty" id="div_dzEmptyBack_@i">
                                             <div class="drop-zone-icon">
                                                 <span class="material-symbols-outlined">id_card</span>
                                             </div>
                                             <span class="dz-title">Kéo và thả ảnh của bạn</span>
                                             <span class="dz-or">hoặc</span>
                                             <div class="dz-btn-row">
-                                                <button type="button" class="dz-btn" onclick="dzTrigger('backFile_@i')">Tải ảnh lên</button>
-                                                <button type="button" class="dz-btn" onclick="dzTrigger('backFile_@i')">Chụp ảnh</button>
+                                                <button id="btn_uploadBackFile_@i" type="button" class="dz-btn" onclick="dzTrigger('input_backFile_@i')">Tải ảnh lên</button>
+                                                <button id="btn_captureBackFile_@i" type="button" class="dz-btn" onclick="dzTrigger('input_backFile_@i')">Chụp ảnh</button>
                                             </div>
                                         </div>
-                                        <div class="drop-zone-preview" id="dzPreviewBack_@i">
-                                            <img id="dzImgBack_@i" src="" alt="Mặt sau CCCD" />
-                                            <button type="button" class="dz-clear" onclick="dzClear('back',@i)" title="Xóa ảnh">
+                                        <div class="drop-zone-preview" id="div_dzPreviewBack_@i">
+                                            <img id="img_dzImgBack_@i" src="" alt="Mặt sau CCCD" />
+                                            <button id="btn_clearBackFile_@i" type="button" class="dz-clear" onclick="dzClear('back',@i)" title="Xóa ảnh">
                                                 <span class="material-symbols-outlined">close</span>
                                             </button>
                                         </div>
-                                        <input type="file" class="dz-file-input" id="backFile_@i" accept="image/*" capture="environment"
+                                        <input type="file" class="dz-file-input" id="input_backFile_@i" accept="image/*" capture="environment"
                                                onchange="dzFileChosen(this,'back',@i)" />
                                     </div>
                                 </div>
                             </div>
 
                             <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-                                <button type="button" class="btn-scan" onclick="processEkyc(@i)" id="btnScan_@i">
+                                <button type="button" class="btn-scan" onclick="processEkyc(@i)" id="btn_scanCccd_@i">
                                     <span class="material-symbols-outlined">document_scanner</span>
                                     Tải lên & Quét
                                 </button>
-                                <div class="scan-msg" id="scanMsg_@i"></div>
+                                <div class="scan-msg" id="div_scanMsg_@i"></div>
                             </div>
                         </div>
                     </div>
                 }
             </div>
 
-            <button type="button" class="btn-add-person" onclick="addOccupant()">
+            <button id="btn_addOccupant" type="button" class="btn-add-person" onclick="addOccupant()">
                 <span class="material-symbols-outlined">person_add</span>
                 Thêm người ở
             </button>
@@ -739,19 +739,19 @@
             <div class="card">
                 <div class="fields-grid">
                     <div class="field-group">
-                        <label asp-for="StartDate">Ngày bắt đầu hợp đồng</label>
-                        <input asp-for="StartDate" type="date" />
+                        <label id="lbl_startDate" asp-for="StartDate">Ngày bắt đầu hợp đồng</label>
+                        <input id="input_startDate" asp-for="StartDate" type="date" />
                         <span asp-validation-for="StartDate" class="text-danger"></span>
                     </div>
                     <div class="field-group">
-                        <label asp-for="EndDate">Ngày kết thúc hợp đồng</label>
-                        <input asp-for="EndDate" type="date" />
+                        <label id="lbl_endDate" asp-for="EndDate">Ngày kết thúc hợp đồng</label>
+                        <input id="input_endDate" asp-for="EndDate" type="date" />
                         <span asp-validation-for="EndDate" class="text-danger"></span>
                     </div>
                     <div class="field-group">
-                        <label asp-for="DepositAmount">Tiền cọc</label>
+                        <label id="lbl_depositAmount" asp-for="DepositAmount">Tiền cọc</label>
                         <div class="input-suffix">
-                            <input asp-for="DepositAmount" type="number" asp-format="{0:0}" step="100000" placeholder="Ví dụ: 2500000" />
+                            <input id="input_depositAmount" asp-for="DepositAmount" type="number" asp-format="{0:0}" step="100000" placeholder="Ví dụ: 2500000" />
                             <span class="suffix">₫</span>
                         </div>
                         <span asp-validation-for="DepositAmount" class="text-danger"></span>
@@ -772,23 +772,23 @@
             <div class="card">
                 <div class="fields-grid" style="grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));">
                     <div class="field-group">
-                        <label asp-for="InitialElectricReading">
+                        <label id="lbl_initialElectricReading" asp-for="InitialElectricReading">
                             <span class="meter-icon">
                                 <span class="material-symbols-outlined" style="color:#f59e0b;">bolt</span>
                                 Chỉ số điện ban đầu (kWh)
                             </span>
                         </label>
-                        <input asp-for="InitialElectricReading" type="number" min="0" placeholder="Nhập chỉ số điện hiện tại" />
+                        <input id="input_initialElectricReading" asp-for="InitialElectricReading" type="number" min="0" placeholder="Nhập chỉ số điện hiện tại" />
                         <span asp-validation-for="InitialElectricReading" class="text-danger"></span>
                     </div>
                     <div class="field-group">
-                        <label asp-for="InitialWaterReading">
+                        <label id="lbl_initialWaterReading" asp-for="InitialWaterReading">
                             <span class="meter-icon">
                                 <span class="material-symbols-outlined" style="color:#3b82f6;">water_drop</span>
                                 Chỉ số nước ban đầu (m³)
                             </span>
                         </label>
-                        <input asp-for="InitialWaterReading" type="number" min="0" placeholder="Nhập chỉ số nước hiện tại" />
+                        <input id="input_initialWaterReading" asp-for="InitialWaterReading" type="number" min="0" placeholder="Nhập chỉ số nước hiện tại" />
                         <span asp-validation-for="InitialWaterReading" class="text-danger"></span>
                     </div>
                 </div>
@@ -798,8 +798,8 @@
         <!-- Footer -->
         <hr class="section-divider" />
         <div class="footer-actions">
-            <a asp-action="Details" asp-route-id="@Model.RoomId" class="btn-cancel">Hủy</a>
-            <button type="submit" class="btn-submit">
+            <a id="lnk_cancelRent" asp-action="Details" asp-route-id="@Model.RoomId" class="btn-cancel">Hủy</a>
+            <button id="btn_submitRent" type="submit" class="btn-submit">
                 <span class="material-symbols-outlined" style="font-size:1.1rem;">assignment_turned_in</span>
                 Xác nhận cho thuê
             </button>
@@ -807,15 +807,15 @@
     </form>
 
     <!-- EKYC Modal (unchanged) -->
-    <div id="ekycModal" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div id="div_ekycModal" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
         <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
             <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
                 <div class="relative transform overflow-hidden rounded-xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
                     <div class="bg-white dark:bg-gray-800 px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
                         <div class="flex items-center justify-between mb-4 border-b pb-3 dark:border-gray-700">
-                            <h3 class="text-lg font-bold text-primary" id="modal-title">Thông tin trích xuất từ CCCD</h3>
-                            <button type="button" onclick="closeEkycModal()" class="text-gray-400 hover:text-gray-500">
+                            <h3 class="text-lg font-bold text-primary" id="lbl_ekycModalTitle">Thông tin trích xuất từ CCCD</h3>
+                            <button id="btn_closeEkycModalIcon" type="button" onclick="closeEkycModal()" class="text-gray-400 hover:text-gray-500">
                                 <span class="material-symbols-outlined">close</span>
                             </button>
                         </div>
@@ -823,41 +823,41 @@
                             <div class="mb-2 grid grid-cols-2 gap-3">
                                 <div>
                                     <span class="block text-xs font-bold text-gray-500 text-center mb-1">Mặt trước</span>
-                                    <img id="ekycFrontImg" src="" class="w-full rounded border border-gray-200 object-contain bg-gray-50" style="height:120px;" />
+                                    <img id="img_ekycFrontImg" src="" class="w-full rounded border border-gray-200 object-contain bg-gray-50" style="height:120px;" />
                                 </div>
                                 <div>
                                     <span class="block text-xs font-bold text-gray-500 text-center mb-1">Mặt sau</span>
-                                    <img id="ekycBackImg" src="" class="w-full rounded border border-gray-200 object-contain bg-gray-50" style="height:120px;" />
+                                    <img id="img_ekycBackImg" src="" class="w-full rounded border border-gray-200 object-contain bg-gray-50" style="height:120px;" />
                                 </div>
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Họ tên</label>
-                                <input type="text" id="ekycName" class="w-full rounded-lg border-gray-300 px-3 py-2 border outline-none" />
+                                <input type="text" id="input_ekycName" class="w-full rounded-lg border-gray-300 px-3 py-2 border outline-none" />
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Số CCCD</label>
-                                <input type="text" id="ekycId" class="w-full rounded-lg border-gray-300 px-3 py-2 border outline-none" />
+                                <input type="text" id="input_ekycId" class="w-full rounded-lg border-gray-300 px-3 py-2 border outline-none" />
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Ngày sinh</label>
-                                <input type="date" id="ekycDob" class="w-full rounded-lg border-gray-300 px-3 py-2 border outline-none" />
+                                <input type="date" id="input_ekycDob" class="w-full rounded-lg border-gray-300 px-3 py-2 border outline-none" />
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Giới tính</label>
-                                <input type="text" id="ekycGender" class="w-full rounded-lg border-gray-300 px-3 py-2 border outline-none" />
+                                <input type="text" id="input_ekycGender" class="w-full rounded-lg border-gray-300 px-3 py-2 border outline-none" />
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nơi cư trú (Nơi ĐKTT)</label>
-                                <input type="text" id="ekycAddress" class="w-full rounded-lg border-gray-300 px-3 py-2 border outline-none" />
+                                <input type="text" id="input_ekycAddress" class="w-full rounded-lg border-gray-300 px-3 py-2 border outline-none" />
                             </div>
-                            <input type="hidden" id="ekycFrontId" />
-                            <input type="hidden" id="ekycBackId" />
-                            <input type="hidden" id="ekycTargetIndex" />
+                            <input type="hidden" id="input_ekycFrontId" />
+                            <input type="hidden" id="input_ekycBackId" />
+                            <input type="hidden" id="input_ekycTargetIndex" />
                         </div>
                     </div>
                     <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 align-items-center">
-                        <button type="button" onclick="fillEkycData()" class="inline-flex w-full justify-center rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-white shadow-sm sm:ml-3 sm:w-auto">Điền thông tin</button>
-                        <button type="button" onclick="closeEkycModal()" class="mt-3 inline-flex w-full justify-center rounded-lg bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 sm:mt-0 sm:w-auto">Đóng</button>
+                        <button id="btn_fillEkycData" type="button" onclick="fillEkycData()" class="inline-flex w-full justify-center rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-white shadow-sm sm:ml-3 sm:w-auto">Điền thông tin</button>
+                        <button id="btn_closeEkycModal" type="button" onclick="closeEkycModal()" class="mt-3 inline-flex w-full justify-center rounded-lg bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 sm:mt-0 sm:w-auto">Đóng</button>
                     </div>
                 </div>
             </div>
@@ -893,7 +893,7 @@
             const file = e.dataTransfer.files[0];
             if (!file || !file.type.startsWith('image/')) return;
             // Assign to the real hidden input so processEkyc can read it
-            const inputId = (side === 'front' ? 'frontFile_' : 'backFile_') + idx;
+            const inputId = (side === 'front' ? 'input_frontFile_' : 'input_backFile_') + idx;
             const dt = new DataTransfer();
             dt.items.add(file);
             document.getElementById(inputId).files = dt.files;
@@ -904,27 +904,27 @@
             const suffix = side === 'front' ? 'Front' : 'Back';
             const reader = new FileReader();
             reader.onload = function(e) {
-                document.getElementById('dzImg' + suffix + '_' + idx).src = e.target.result;
-                document.getElementById('dzEmpty'   + suffix + '_' + idx).style.display = 'none';
-                document.getElementById('dzPreview' + suffix + '_' + idx).style.display = 'block';
+                document.getElementById('img_dzImg' + suffix + '_' + idx).src = e.target.result;
+                document.getElementById('div_dzEmpty'   + suffix + '_' + idx).style.display = 'none';
+                document.getElementById('div_dzPreview' + suffix + '_' + idx).style.display = 'block';
             };
             reader.readAsDataURL(file);
         }
 
         function dzClear(side, idx) {
             const suffix = side === 'front' ? 'Front' : 'Back';
-            const inputId = (side === 'front' ? 'frontFile_' : 'backFile_') + idx;
+            const inputId = (side === 'front' ? 'input_frontFile_' : 'input_backFile_') + idx;
             document.getElementById(inputId).value = '';
-            document.getElementById('dzImg'     + suffix + '_' + idx).src = '';
-            document.getElementById('dzEmpty'   + suffix + '_' + idx).style.display = '';
-            document.getElementById('dzPreview' + suffix + '_' + idx).style.display = 'none';
+            document.getElementById('img_dzImg'     + suffix + '_' + idx).src = '';
+            document.getElementById('div_dzEmpty'   + suffix + '_' + idx).style.display = '';
+            document.getElementById('div_dzPreview' + suffix + '_' + idx).style.display = 'none';
         }
 
         /* ──────────────────────────────────────
            OCCUPANT ADD / REMOVE
         ────────────────────────────────────── */
         function addOccupant() {
-            const container = document.getElementById('occupantsContainer');
+            const container = document.getElementById('div_occupantsContainer');
             const index = container.querySelectorAll('.occupant-item').length;
             const max = @Model.MaxOccupants;
             if (max > 0 && index >= max) {
@@ -940,22 +940,22 @@
                         <div><div class="occupant-label">Người ${index + 1}</div></div>
                     </div>
                     <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                        <label class="primary-radio-label">
-                            <input type="radio" name="PrimaryIndex" value="${index}" />
+                        <label id="lbl_primaryIndex_${index}" class="primary-radio-label">
+                            <input id="radio_primaryIndex_${index}" type="radio" name="PrimaryIndex" value="${index}" />
                             Tenant chính
                         </label>
-                        <button type="button" class="btn-remove" onclick="removeOccupant(this)">
+                        <button id="btn_removeOccupant_${index}" type="button" class="btn-remove" onclick="removeOccupant(this)">
                             <span class="material-symbols-outlined" style="font-size:1rem;">delete</span> Xóa
                         </button>
                     </div>
                 </div>
                 <div class="fields-grid">
-                    <div class="field-group"><label>Họ tên</label><input type="text" name="Occupants[${index}].FullName" placeholder="Nhập họ và tên" /></div>
-                    <div class="field-group"><label>SĐT</label><input type="tel" name="Occupants[${index}].Phone" placeholder="Nhập số điện thoại" /></div>
-                    <div class="field-group"><label>Email</label><input type="email" name="Occupants[${index}].Email" placeholder="Nhập email" /></div>
-                    <div class="field-group"><label>CMND / CCCD</label><input type="text" name="Occupants[${index}].IdentityNo" placeholder="Nhập số CMND/CCCD" /></div>
-                    <div class="field-group"><label>Ngày sinh</label><input type="date" name="Occupants[${index}].DateOfBirth" /></div>
-                    <div class="field-group"><label>Nơi ĐKTT</label><input type="text" id="Address_${index}" name="Occupants[${index}].PermanentAddress" placeholder="Địa chỉ thường trú" /></div>
+                    <div class="field-group"><label id="lbl_fullName_${index}">Họ tên</label><input id="input_fullName_${index}" type="text" name="Occupants[${index}].FullName" placeholder="Nhập họ và tên" /></div>
+                    <div class="field-group"><label id="lbl_phone_${index}">SĐT</label><input id="input_phone_${index}" type="tel" name="Occupants[${index}].Phone" placeholder="Nhập số điện thoại" /></div>
+                    <div class="field-group"><label id="lbl_email_${index}">Email</label><input id="input_email_${index}" type="email" name="Occupants[${index}].Email" placeholder="Nhập email" /></div>
+                    <div class="field-group"><label id="lbl_identityNo_${index}">CMND / CCCD</label><input id="input_identityNo_${index}" type="text" name="Occupants[${index}].IdentityNo" placeholder="Nhập số CMND/CCCD" /></div>
+                    <div class="field-group"><label id="lbl_dateOfBirth_${index}">Ngày sinh</label><input id="input_dateOfBirth_${index}" type="date" name="Occupants[${index}].DateOfBirth" /></div>
+                    <div class="field-group"><label id="lbl_permanentAddress_${index}">Nơi ĐKTT</label><input type="text" id="input_permanentAddress_${index}" name="Occupants[${index}].PermanentAddress" placeholder="Địa chỉ thường trú" /></div>
                 </div>
 
                 <div class="cccd-section">
@@ -963,66 +963,66 @@
                         <span class="material-symbols-outlined">badge</span>
                         Tải lên CCCD để tự động điền thông tin
                     </div>
-                    <input type="hidden" name="Occupants[${index}].CccdFrontImageId" id="frontId_${index}" />
-                    <input type="hidden" name="Occupants[${index}].CccdBackImageId"  id="backId_${index}" />
+                    <input type="hidden" name="Occupants[${index}].CccdFrontImageId" id="input_frontId_${index}" />
+                    <input type="hidden" name="Occupants[${index}].CccdBackImageId"  id="input_backId_${index}" />
 
                     <div class="cccd-drop-row">
                         <div>
                             <div class="cccd-drop-side-label">Mặt trước</div>
-                            <div class="drop-zone" id="dropFront_${index}"
+                            <div class="drop-zone" id="div_dropFront_${index}"
                                  ondragover="dzDragOver(event)" ondragleave="dzDragLeave(event)"
                                  ondrop="dzDrop(event,'front',${index})">
-                                <div class="drop-zone-empty" id="dzEmptyFront_${index}">
+                                <div class="drop-zone-empty" id="div_dzEmptyFront_${index}">
                                     <div class="drop-zone-icon"><span class="material-symbols-outlined">id_card</span></div>
                                     <span class="dz-title">Kéo và thả ảnh của bạn</span>
                                     <span class="dz-or">hoặc</span>
                                     <div class="dz-btn-row">
-                                        <button type="button" class="dz-btn" onclick="dzTrigger('frontFile_${index}')">Tải ảnh lên</button>
-                                        <button type="button" class="dz-btn" onclick="dzTrigger('frontFile_${index}')">Chụp ảnh</button>
+                                        <button id="btn_uploadFrontFile_${index}" type="button" class="dz-btn" onclick="dzTrigger('input_frontFile_${index}')">Tải ảnh lên</button>
+                                        <button id="btn_captureFrontFile_${index}" type="button" class="dz-btn" onclick="dzTrigger('input_frontFile_${index}')">Chụp ảnh</button>
                                     </div>
                                 </div>
-                                <div class="drop-zone-preview" id="dzPreviewFront_${index}">
-                                    <img id="dzImgFront_${index}" src="" alt="Mặt trước CCCD" />
-                                    <button type="button" class="dz-clear" onclick="dzClear('front',${index})">
+                                <div class="drop-zone-preview" id="div_dzPreviewFront_${index}">
+                                    <img id="img_dzImgFront_${index}" src="" alt="Mặt trước CCCD" />
+                                    <button id="btn_clearFrontFile_${index}" type="button" class="dz-clear" onclick="dzClear('front',${index})">
                                         <span class="material-symbols-outlined">close</span>
                                     </button>
                                 </div>
-                                <input type="file" class="dz-file-input" id="frontFile_${index}" accept="image/*" capture="environment"
+                                <input type="file" class="dz-file-input" id="input_frontFile_${index}" accept="image/*" capture="environment"
                                        onchange="dzFileChosen(this,'front',${index})" />
                             </div>
                         </div>
                         <div>
                             <div class="cccd-drop-side-label">Mặt sau</div>
-                            <div class="drop-zone" id="dropBack_${index}"
+                            <div class="drop-zone" id="div_dropBack_${index}"
                                  ondragover="dzDragOver(event)" ondragleave="dzDragLeave(event)"
                                  ondrop="dzDrop(event,'back',${index})">
-                                <div class="drop-zone-empty" id="dzEmptyBack_${index}">
+                                <div class="drop-zone-empty" id="div_dzEmptyBack_${index}">
                                     <div class="drop-zone-icon"><span class="material-symbols-outlined">id_card</span></div>
                                     <span class="dz-title">Kéo và thả ảnh của bạn</span>
                                     <span class="dz-or">hoặc</span>
                                     <div class="dz-btn-row">
-                                        <button type="button" class="dz-btn" onclick="dzTrigger('backFile_${index}')">Tải ảnh lên</button>
-                                        <button type="button" class="dz-btn" onclick="dzTrigger('backFile_${index}')">Chụp ảnh</button>
+                                        <button id="btn_uploadBackFile_${index}" type="button" class="dz-btn" onclick="dzTrigger('input_backFile_${index}')">Tải ảnh lên</button>
+                                        <button id="btn_captureBackFile_${index}" type="button" class="dz-btn" onclick="dzTrigger('input_backFile_${index}')">Chụp ảnh</button>
                                     </div>
                                 </div>
-                                <div class="drop-zone-preview" id="dzPreviewBack_${index}">
-                                    <img id="dzImgBack_${index}" src="" alt="Mặt sau CCCD" />
-                                    <button type="button" class="dz-clear" onclick="dzClear('back',${index})">
+                                <div class="drop-zone-preview" id="div_dzPreviewBack_${index}">
+                                    <img id="img_dzImgBack_${index}" src="" alt="Mặt sau CCCD" />
+                                    <button id="btn_clearBackFile_${index}" type="button" class="dz-clear" onclick="dzClear('back',${index})">
                                         <span class="material-symbols-outlined">close</span>
                                     </button>
                                 </div>
-                                <input type="file" class="dz-file-input" id="backFile_${index}" accept="image/*" capture="environment"
+                                <input type="file" class="dz-file-input" id="input_backFile_${index}" accept="image/*" capture="environment"
                                        onchange="dzFileChosen(this,'back',${index})" />
                             </div>
                         </div>
                     </div>
 
                     <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-                        <button type="button" class="btn-scan" onclick="processEkyc(${index})" id="btnScan_${index}">
+                        <button id="btn_scanCccd_${index}" type="button" class="btn-scan" onclick="processEkyc(${index})">
                             <span class="material-symbols-outlined">document_scanner</span>
                             Tải lên & Quét
                         </button>
-                        <div class="scan-msg" id="scanMsg_${index}"></div>
+                        <div class="scan-msg" id="div_scanMsg_${index}"></div>
                     </div>
                 </div>
             </div>`;
@@ -1042,15 +1042,15 @@
            EKYC (unchanged logic)
         ────────────────────────────────────── */
         function showScanMsg(idx, text, type) {
-            const el = document.getElementById('scanMsg_' + idx);
+            const el = document.getElementById('div_scanMsg_' + idx);
             el.textContent = text;
             el.className = 'scan-msg ' + type;
             el.style.display = 'block';
         }
 
         async function processEkyc(index) {
-            const frontFile = document.getElementById('frontFile_' + index).files[0];
-            const backFile  = document.getElementById('backFile_'  + index).files[0];
+            const frontFile = document.getElementById('input_frontFile_' + index).files[0];
+            const backFile  = document.getElementById('input_backFile_'  + index).files[0];
 
             if (!frontFile || !backFile) {
                 showScanMsg(index, 'Vui lòng chọn cả ảnh mặt trước và mặt sau CCCD.', 'err');
@@ -1059,14 +1059,14 @@
 
             // populate modal preview immediately
             const rFront = new FileReader();
-            rFront.onload = e => { document.getElementById('ekycFrontImg').src = e.target.result; };
+            rFront.onload = e => { document.getElementById('img_ekycFrontImg').src = e.target.result; };
             rFront.readAsDataURL(frontFile);
             const rBack = new FileReader();
-            rBack.onload  = e => { document.getElementById('ekycBackImg').src  = e.target.result; };
+            rBack.onload  = e => { document.getElementById('img_ekycBackImg').src  = e.target.result; };
             rBack.readAsDataURL(backFile);
 
             showScanMsg(index, 'Đang tải lên và nhận dạng...', 'loading');
-            const btn = document.getElementById('btnScan_' + index);
+            const btn = document.getElementById('btn_scanCccd_' + index);
             btn.disabled = true;
 
             const formData = new FormData();
@@ -1079,24 +1079,24 @@
                 btn.disabled = false;
 
                 if (result.success) {
-                    document.getElementById('scanMsg_' + index).style.display = 'none';
-                    document.getElementById('ekycTargetIndex').value = index;
-                    document.getElementById('ekycFrontId').value     = result.frontId;
-                    document.getElementById('ekycBackId').value      = result.backId;
+                    document.getElementById('div_scanMsg_' + index).style.display = 'none';
+                    document.getElementById('input_ekycTargetIndex').value = index;
+                    document.getElementById('input_ekycFrontId').value     = result.frontId;
+                    document.getElementById('input_ekycBackId').value      = result.backId;
 
                     if (result.data) {
-                        document.getElementById('ekycName').value    = result.data.name    || '';
-                        document.getElementById('ekycId').value      = result.data.id      || '';
-                        document.getElementById('ekycAddress').value = result.data.address || '';
-                        document.getElementById('ekycGender').value  = result.data.gender  || '';
+                        document.getElementById('input_ekycName').value    = result.data.name    || '';
+                        document.getElementById('input_ekycId').value      = result.data.id      || '';
+                        document.getElementById('input_ekycAddress').value = result.data.address || '';
+                        document.getElementById('input_ekycGender').value  = result.data.gender  || '';
                         let dobVal = '';
                         if (result.data.birthday) {
                             const p = result.data.birthday.split('/');
                             if (p.length === 3) dobVal = `${p[2]}-${p[1]}-${p[0]}`;
                         }
-                        document.getElementById('ekycDob').value = dobVal;
+                        document.getElementById('input_ekycDob').value = dobVal;
                     }
-                    document.getElementById('ekycModal').classList.remove('hidden');
+                    document.getElementById('div_ekycModal').classList.remove('hidden');
                 } else {
                     showScanMsg(index, result.message || 'Lỗi nhận dạng', 'err');
                 }
@@ -1107,19 +1107,19 @@
         }
 
         function closeEkycModal() {
-            document.getElementById('ekycModal').classList.add('hidden');
+            document.getElementById('div_ekycModal').classList.add('hidden');
         }
 
         function fillEkycData() {
-            const index = document.getElementById('ekycTargetIndex').value;
-            document.getElementById('frontId_' + index).value = document.getElementById('ekycFrontId').value;
-            document.getElementById('backId_'  + index).value = document.getElementById('ekycBackId').value;
+            const index = document.getElementById('input_ekycTargetIndex').value;
+            document.getElementById('input_frontId_' + index).value = document.getElementById('input_ekycFrontId').value;
+            document.getElementById('input_backId_'  + index).value = document.getElementById('input_ekycBackId').value;
 
             const q = s => document.querySelector(`input[name="Occupants[${index}].${s}"]`);
-            if (q('FullName'))        q('FullName').value        = document.getElementById('ekycName').value;
-            if (q('IdentityNo'))      q('IdentityNo').value      = document.getElementById('ekycId').value;
-            if (q('DateOfBirth'))     q('DateOfBirth').value     = document.getElementById('ekycDob').value;
-            if (q('PermanentAddress')) q('PermanentAddress').value = document.getElementById('ekycAddress').value;
+            if (q('FullName'))        q('FullName').value        = document.getElementById('input_ekycName').value;
+            if (q('IdentityNo'))      q('IdentityNo').value      = document.getElementById('input_ekycId').value;
+            if (q('DateOfBirth'))     q('DateOfBirth').value     = document.getElementById('input_ekycDob').value;
+            if (q('PermanentAddress')) q('PermanentAddress').value = document.getElementById('input_ekycAddress').value;
 
             closeEkycModal();
             showScanMsg(index, 'Đã điền thông tin thành công!', 'ok');

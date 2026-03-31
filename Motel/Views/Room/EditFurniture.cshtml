@@ -1,21 +1,20 @@
-﻿@model Motel.ViewModels.Room.UpdateFurnitureViewModel
+@model Motel.ViewModels.Room.UpdateFurnitureViewModel
 
 @{
 ViewData["Title"] = "Edit Furniture";
 }
 
-<form asp-action="EditFurniture" method="post" enctype="multipart/form-data" id="furnitureForm">
+<form asp-action="EditFurniture" method="post" enctype="multipart/form-data" id="form_editFurniture">
 
-```
 @Html.AntiForgeryToken()
 
-<input type="hidden" asp-for="FurnitureId" />
-<input type="hidden" asp-for="RoomId" />
+<input id="input_furnitureId" type="hidden" asp-for="FurnitureId" />
+<input id="input_roomId" type="hidden" asp-for="RoomId" />
 
 <div class="mb-3">
-    <label class="form-label">Tên nội thất</label>
+    <label id="lbl_furnitureCatalogId" class="form-label">Tên nội thất</label>
 
-    <select asp-for="FurnitureCatalogId" class="form-select" required>
+    <select id="select_furnitureCatalogId" asp-for="FurnitureCatalogId" class="form-select" required>
 
         <option value="">-- Chọn nội thất --</option>
 
@@ -30,9 +29,9 @@ ViewData["Title"] = "Edit Furniture";
 </div>
 
 <div class="mb-3">
-    <label class="form-label">Số lượng</label>
+    <label id="lbl_quantity" class="form-label">Số lượng</label>
 
-    <input asp-for="Quantity"
+    <input id="input_quantity" asp-for="Quantity"
            type="number"
            min="1"
            class="form-control"
@@ -40,9 +39,9 @@ ViewData["Title"] = "Edit Furniture";
 </div>
 
 <div class="mb-3">
-    <label class="form-label">Trạng thái</label>
+    <label id="lbl_furnitureStatusId" class="form-label">Trạng thái</label>
 
-    <select asp-for="FurnitureStatusId"
+    <select id="select_furnitureStatusId" asp-for="FurnitureStatusId"
             class="form-select"
             required>
 
@@ -59,9 +58,9 @@ ViewData["Title"] = "Edit Furniture";
 </div>
 
 <div class="mb-3">
-    <label class="form-label">Mô tả</label>
+    <label id="lbl_description" class="form-label">Mô tả</label>
 
-    <textarea asp-for="Description"
+    <textarea id="textarea_description" asp-for="Description"
               class="form-control">
     </textarea>
 </div>
@@ -79,9 +78,10 @@ ViewData["Title"] = "Edit Furniture";
 
         <br />
 
-        <label>
+        <label id="lbl_deleteImage_@img.StoredFileId">
 
-            <input type="checkbox"
+            <input id="cb_deleteImage_@img.StoredFileId"
+                   type="checkbox"
                    name="DeleteImageIds"
                    value="@img.StoredFileId"
                    class="delete-image-checkbox" />
@@ -98,22 +98,21 @@ ViewData["Title"] = "Edit Furniture";
 
 <div class="mb-3 mt-4">
 
-    <label class="form-label">Thêm ảnh mới</label>
+    <label id="lbl_newImages" class="form-label">Thêm ảnh mới</label>
 
-    <input asp-for="Images"
+    <input id="input_newImages" asp-for="Images"
            type="file"
            multiple
-           class="form-control"
-           id="imageInput"/>
+           class="form-control" />
 
 </div>
 
 
-<div id="preview" class="d-flex flex-wrap gap-2"></div>
+<div id="div_imagePreview" class="d-flex flex-wrap gap-2"></div>
 
 
 <button class="btn btn-primary mt-3"
-        id="btnSave"
+        id="btn_saveFurniture"
         type="submit">
 
     Lưu
@@ -125,10 +124,10 @@ ViewData["Title"] = "Edit Furniture";
 
 <script>
 
-const form = document.getElementById("furnitureForm");
-const btn = document.getElementById("btnSave");
-const preview = document.getElementById("preview");
-const imageInput = document.getElementById("imageInput");
+const form = document.getElementById("form_editFurniture");
+const btn = document.getElementById("btn_saveFurniture");
+const preview = document.getElementById("div_imagePreview");
+const imageInput = document.getElementById("input_newImages");
 
 
 form.addEventListener("input", function () {
