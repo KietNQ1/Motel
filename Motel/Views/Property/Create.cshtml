@@ -15,13 +15,13 @@
         </ol>
     </nav>
 
-    <a asp-action="Index" class="back-link">
+    <a id="lnk_backToProperties" asp-action="Index" class="back-link">
         <i class="bi bi-arrow-left"></i> Quay lại
     </a>
 
     <h1 class="settings-title">Tạo nhà trọ mới</h1>
 
-    <form asp-action="Create" method="post" id="createForm">
+    <form id="form_createProperty" asp-action="Create" method="post">
         <div asp-validation-summary="ModelOnly" class="alert-toast error" style="display:@(ViewData.ModelState.IsValid ? "none" : "flex")"></div>
 
         <!-- Card: Thông tin cơ bản -->
@@ -32,20 +32,20 @@
 
             <div class="row-fields">
                 <div class="field-group">
-                    <label asp-for="Name">Tên nhà trọ <span class="required">*</span></label>
-                    <input asp-for="Name" type="text" placeholder="Ví dụ: Nhà trọ Bình Minh" />
+                    <label id="lbl_propertyName" asp-for="Name">Tên nhà trọ <span class="required">*</span></label>
+                    <input id="input_propertyName" asp-for="Name" type="text" placeholder="Ví dụ: Nhà trọ Bình Minh" />
                     <span asp-validation-for="Name" class="field-error"></span>
                 </div>
                 <div class="field-group">
-                    <label asp-for="Address">Địa chỉ <span class="required">*</span></label>
-                    <input asp-for="Address" type="text" placeholder="123 Đường ABC, Phường 4, Quận 5, TP.HCM" />
+                    <label id="lbl_propertyAddress" asp-for="Address">Địa chỉ <span class="required">*</span></label>
+                    <input id="input_propertyAddress" asp-for="Address" type="text" placeholder="123 Đường ABC, Phường 4, Quận 5, TP.HCM" />
                     <span asp-validation-for="Address" class="field-error"></span>
                 </div>
             </div>
 
             <div class="field-group mt-3">
-                <label asp-for="Description">Mô tả thêm</label>
-                <textarea asp-for="Description" rows="3" placeholder="Thông tin giới thiệu về nhà trọ..."></textarea>
+                <label id="lbl_propertyDescription" asp-for="Description">Mô tả thêm</label>
+                <textarea id="textarea_propertyDescription" asp-for="Description" rows="3" placeholder="Thông tin giới thiệu về nhà trọ..."></textarea>
             </div>
         </div>
 
@@ -58,20 +58,20 @@
                     </div>
                     <p class="fee-subtitle">Điện và nước được cài sẵn. Bạn có thể thêm các loại phí khác (vệ sinh, internet...) sau khi tạo xong.</p>
                 </div>
-                <button type="button" class="btn-orange-outline" id="addFeeBtn">
+                <button type="button" class="btn-orange-outline" id="btn_addFee">
                     <i class="bi bi-plus-circle"></i> Thêm phí khác
                 </button>
             </div>
 
-            <div id="feeSettingsContainer">
+            <div id="div_feeSettingsContainer">
                 @for (int i = 0; i < Model.FeeSettings.Count; i++)
                 {
                     var fee = Model.FeeSettings[i];
                     bool isMeter = fee.CalculationMethod == "meter";
-                    <div class="fee-row" data-index="@i">
-                        <input type="hidden" name="FeeSettings[@i].FeeTypeId" value="@fee.FeeTypeId" />
-                        <input type="hidden" name="FeeSettings[@i].FeeTypeName" value="@fee.FeeTypeName" />
-                        <input type="hidden" name="FeeSettings[@i].IsSelected" value="true" />
+                    <div id="div_feeRow_@i" class="fee-row" data-index="@i">
+                        <input id="input_feeTypeId_@i" type="hidden" name="FeeSettings[@i].FeeTypeId" value="@fee.FeeTypeId" />
+                        <input id="input_feeTypeNameHidden_@i" type="hidden" name="FeeSettings[@i].FeeTypeName" value="@fee.FeeTypeName" />
+                        <input id="input_feeIsSelected_@i" type="hidden" name="FeeSettings[@i].IsSelected" value="true" />
 
                         <div class="fee-row-name">
                             <i class="bi bi-lightning-charge-fill" style="color:#f59e0b;"></i>
@@ -81,7 +81,7 @@
                         <div class="fee-row-inputs">
                             <div class="field-group">
                                 <label>Cách tính</label>
-                                <select name="FeeSettings[@i].CalculationMethod" class="form-select calc-method-select">
+                                <select id="select_calcMethod_@i" name="FeeSettings[@i].CalculationMethod" class="form-select calc-method-select">
                                     <option value="meter" selected="@(fee.CalculationMethod == "meter")">Theo chỉ số đồng hồ</option>
                                     <option value="per_person" selected="@(fee.CalculationMethod == "per_person")">Theo đầu người</option>
                                     <option value="per_room" selected="@(fee.CalculationMethod == "per_room")">Theo phòng</option>
@@ -89,11 +89,11 @@
                             </div>
                             <div class="field-group unit-price-container" style="@(isMeter ? "" : "display:none;")">
                                 <label>Đơn giá (VNĐ / đơn vị)</label>
-                                <input name="FeeSettings[@i].UnitPrice" type="number" step="100" value="@fee.UnitPrice" class="form-control" />
+                                <input id="input_unitPrice_@i" name="FeeSettings[@i].UnitPrice" type="number" step="100" value="@fee.UnitPrice" class="form-control" />
                             </div>
                             <div class="field-group base-amount-container" style="@(isMeter ? "display:none;" : "")">
                                 <label>Mức phí (VNĐ)</label>
-                                <input name="FeeSettings[@i].BaseAmount" type="number" step="1000" value="@fee.BaseAmount" class="form-control" />
+                                <input id="input_baseAmount_@i" name="FeeSettings[@i].BaseAmount" type="number" step="1000" value="@fee.BaseAmount" class="form-control" />
                             </div>
                         </div>
                     </div>
@@ -101,14 +101,14 @@
             </div>
 
             <!-- Custom fee rows added dynamically -->
-            <div id="customFeeContainer"></div>
+            <div id="div_customFeeContainer"></div>
         </div>
 
         <div class="form-action-right mt-4" style="gap:12px;">
-            <a asp-action="Index" class="btn-cancel">
+            <a id="lnk_cancelCreate" asp-action="Index" class="btn-cancel">
                 <i class="bi bi-x-circle"></i> Hủy
             </a>
-            <button type="submit" class="btn-orange">
+            <button id="btn_submitCreateProperty" type="submit" class="btn-orange">
                 <i class="bi bi-building-add"></i> Tạo nhà trọ
             </button>
         </div>
@@ -376,38 +376,38 @@
             document.querySelectorAll('.fee-row').forEach(row => toggleFeeInputs(row));
 
             // On calc method change
-            document.getElementById('feeSettingsContainer').addEventListener('change', function (e) {
+            document.getElementById('div_feeSettingsContainer').addEventListener('change', function (e) {
                 if (e.target.classList.contains('calc-method-select')) {
                     toggleFeeInputs(e.target.closest('.fee-row'));
                 }
             });
-            document.getElementById('customFeeContainer').addEventListener('change', function (e) {
+            document.getElementById('div_customFeeContainer').addEventListener('change', function (e) {
                 if (e.target.classList.contains('calc-method-select')) {
                     toggleFeeInputs(e.target.closest('.fee-row'));
                 }
             });
 
             // Add custom fee
-            document.getElementById('addFeeBtn').addEventListener('click', function () {
+            document.getElementById('btn_addFee').addEventListener('click', function () {
                 const idx = customFeeIndex++;
                 const html = `
-                    <div class="fee-row custom-fee" data-index="${idx}">
-                        <input type="hidden" name="FeeSettings[${idx}].FeeTypeId" value="0" />
-                        <input type="hidden" name="FeeSettings[${idx}].IsSelected" value="true" />
+                    <div id="div_customFeeRow_${idx}" class="fee-row custom-fee" data-index="${idx}">
+                        <input id="input_customFeeTypeId_${idx}" type="hidden" name="FeeSettings[${idx}].FeeTypeId" value="0" />
+                        <input id="input_customFeeIsSelected_${idx}" type="hidden" name="FeeSettings[${idx}].IsSelected" value="true" />
                         <div class="fee-row-name">
                             <i class="bi bi-tag-fill" style="color:#3b82f6;"></i>
-                            <input class="custom-fee-name-input" type="text"
+                            <input id="input_customFeeTypeName_${idx}" class="custom-fee-name-input" type="text"
                                    name="FeeSettings[${idx}].FeeTypeName"
                                    placeholder="Tên phí (VD: Phí gửi xe, Phí vệ sinh...)" required />
                             <span class="fee-badge custom">Tùy chỉnh</span>
-                            <button type="button" class="fee-row-remove ms-auto" onclick="this.closest('.fee-row').remove()">
+                            <button id="btn_removeCustomFee_${idx}" type="button" class="fee-row-remove ms-auto" onclick="this.closest('.fee-row').remove()">
                                 <i class="bi bi-trash"></i>
                             </button>
                         </div>
                         <div class="fee-row-inputs">
                             <div class="field-group">
                                 <label>Cách tính</label>
-                                <select name="FeeSettings[${idx}].CalculationMethod" class="form-select calc-method-select">
+                                <select id="select_customCalcMethod_${idx}" name="FeeSettings[${idx}].CalculationMethod" class="form-select calc-method-select">
                                     <option value="per_room" selected>Theo phòng</option>
                                     <option value="per_person">Theo đầu người</option>
                                     <option value="meter">Theo chỉ số đồng hồ</option>
@@ -415,15 +415,15 @@
                             </div>
                             <div class="field-group unit-price-container" style="display:none;">
                                 <label>Đơn giá (VNĐ / đơn vị)</label>
-                                <input name="FeeSettings[${idx}].UnitPrice" type="number" step="100" value="0" class="form-control" />
+                                <input id="input_customUnitPrice_${idx}" name="FeeSettings[${idx}].UnitPrice" type="number" step="100" value="0" class="form-control" />
                             </div>
                             <div class="field-group base-amount-container">
                                 <label>Mức phí (VNĐ)</label>
-                                <input name="FeeSettings[${idx}].BaseAmount" type="number" step="1000" value="0" class="form-control" />
+                                <input id="input_customBaseAmount_${idx}" name="FeeSettings[${idx}].BaseAmount" type="number" step="1000" value="0" class="form-control" />
                             </div>
                         </div>
                     </div>`;
-                document.getElementById('customFeeContainer').insertAdjacentHTML('beforeend', html);
+                document.getElementById('div_customFeeContainer').insertAdjacentHTML('beforeend', html);
             });
         });
     </script>

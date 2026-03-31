@@ -1,4 +1,4 @@
-﻿@model Motel.ViewModels.User.UserListViewModel
+@model Motel.ViewModels.User.UserListViewModel
 
 @{
     ViewData["Title"] = "User Management";
@@ -6,25 +6,26 @@
 
 <h2 class="page-title">User Management</h2>
 
-<form method="get" class="search-form">
-    <input type="text"
+<form id="form_searchUser" method="get" class="search-form">
+    <input id="input_searchUser"
+           type="text"
            name="search"
            value="@Model.Search"
            placeholder="Search by name, email, phone..."
            class="search-input" />
-    <button type="submit" class="btn btn-primary">Search</button>
+    <button id="btn_submit_searchUser" type="submit" class="btn btn-primary">Search</button>
 </form>
 
-<div class="table-wrapper">
-    <table class="user-table">
+<div id="div_userTableWrapper" class="table-wrapper">
+    <table id="tbl_users" class="user-table">
         <thead>
             <tr>
-                <th>Name</th>
-                <th>Phone</th>
-                <th>Email</th>
-                <th>Created Date</th>
-                <th>Status</th>
-                <th class="text-center">Action</th>
+                <th id="th_fullName">Name</th>
+                <th id="th_phoneNumber">Phone</th>
+                <th id="th_email">Email</th>
+                <th id="th_createdAt">Created Date</th>
+                <th id="th_status">Status</th>
+                <th id="th_action" class="text-center">Action</th>
             </tr>
         </thead>
         <tbody>
@@ -32,18 +33,19 @@
             {
                 var isLocked = u.LockoutEnd.HasValue && u.LockoutEnd > DateTimeOffset.Now;
 
-                <tr>
-                    <td>@u.FullName</td>
-                    <td>@u.PhoneNumber</td>
-                    <td>@u.Email</td>
-                    <td>@u.CreatedAt.ToString("dd/MM/yyyy")</td>
-                    <td>
-                        <span class="status @(isLocked ? "locked" : "active")">
+                <tr id="tr_user_@u.Id">
+                    <td id="td_fullName_@u.Id">@u.FullName</td>
+                    <td id="td_phoneNumber_@u.Id">@u.PhoneNumber</td>
+                    <td id="td_email_@u.Id">@u.Email</td>
+                    <td id="td_createdAt_@u.Id">@u.CreatedAt.ToString("dd/MM/yyyy")</td>
+                    <td id="td_status_@u.Id">
+                        <span id="txt_status_@u.Id" class="status @(isLocked ? "locked" : "active")">
                             @(isLocked ? "Locked" : "Active")
                         </span>
                     </td>
-                    <td class="text-center">
-                        <a asp-action="Edit"
+                    <td id="td_action_@u.Id" class="text-center">
+                        <a id="lnk_editUser_@u.Id"
+                           asp-action="Edit"
                            asp-route-id="@u.Id"
                            class="btn btn-sm btn-secondary">
                             Edit
@@ -55,16 +57,17 @@
     </table>
 </div>
 
-<div class="pagination">
+<div id="div_pagination" class="pagination">
     @for (int i = 1; i <= Model.TotalPages; i++)
     {
         if (i == Model.CurrentPage)
         {
-            <span class="page-item active">@i</span>
+            <span id="txt_page_@i" class="page-item active">@i</span>
         }
         else
         {
-            <a asp-action="Index"
+            <a id="lnk_page_@i"
+               asp-action="Index"
                asp-route-page="@i"
                asp-route-search="@Model.Search"
                class="page-item">@i</a>

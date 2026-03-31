@@ -9,17 +9,17 @@
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Doanh thu chi tiết 12 tháng</h1>
         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Doanh thu đã thu theo từng tháng</p>
     </div>
-    <a asp-controller="Dashboard" asp-action="Index" class="inline-flex items-center gap-2 rounded-xl border border-[#e7d9cf] dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+    <a id="lnk_backToDashboard" asp-controller="Dashboard" asp-action="Index" class="inline-flex items-center gap-2 rounded-xl border border-[#e7d9cf] dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-sm font-medium text-text-main dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
         <span class="material-symbols-outlined text-lg">arrow_back</span>
         Về Dashboard
     </a>
 </div>
 
 <div class="mb-6 rounded-2xl border border-[#e7d9cf] dark:border-gray-700 bg-white dark:bg-gray-800/50 p-4">
-    <form method="get" asp-action="Revenue" class="flex flex-wrap items-end gap-3">
+    <form id="form_filterRevenue" method="get" asp-action="Revenue" class="flex flex-wrap items-end gap-3">
         <div>
-            <label class="mb-1 block text-xs font-medium text-gray-500">Năm</label>
-            <select name="year" class="rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm">
+            <label id="lbl_filterYear" class="mb-1 block text-xs font-medium text-gray-500">Năm</label>
+            <select id="select_filterYear" name="year" class="rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm">
                 @for (var y = DateTime.Now.Year; y >= DateTime.Now.Year - 5; y--)
                 {
                     <option value="@y" selected="@(Model.Year == y)">@y</option>
@@ -27,8 +27,8 @@
             </select>
         </div>
         <div>
-            <label class="mb-1 block text-xs font-medium text-gray-500">Tòa nhà</label>
-            <select name="propertyId" class="rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm min-w-[200px]">
+            <label id="lbl_filterProperty" class="mb-1 block text-xs font-medium text-gray-500">Tòa nhà</label>
+            <select id="select_filterProperty" name="propertyId" class="rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm min-w-[200px]">
                 <option value="">Tất cả</option>
                 @foreach (var p in Model.Properties)
                 {
@@ -36,7 +36,7 @@
                 }
             </select>
         </div>
-        <button type="submit" class="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-dark">Xem</button>
+        <button id="btn_submitFilter" type="submit" class="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-dark">Xem</button>
     </form>
 </div>
 
@@ -47,13 +47,13 @@
             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Doanh thu từ hóa đơn đã thanh toán</p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
-            <button type="button"
+            <button id="btn_exportPdf" type="button"
                     class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-primary hover:bg-primary/5 hover:text-primary dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:border-primary dark:hover:bg-primary/10"
                     title="Xuất PDF (đang phát triển)">
                 <span class="material-symbols-outlined text-base">picture_as_pdf</span>
                 Xuất PDF
             </button>
-            <button type="button"
+            <button id="btn_exportExcel" type="button"
                     class="inline-flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200 dark:hover:bg-emerald-900/50"
                     title="Xuất Excel (đang phát triển)">
                 <span class="material-symbols-outlined text-base">grid_on</span>
@@ -62,20 +62,22 @@
         </div>
     </div>
     <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+        <table id="tbl_revenue" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead class="bg-gray-50 dark:bg-gray-900/50">
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-600 dark:text-gray-400">Tháng</th>
-                    <th class="px-6 py-3 text-right text-xs font-semibold uppercase text-gray-600 dark:text-gray-400">Doanh thu</th>
+                    <th id="th_revenueMonth" class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-600 dark:text-gray-400">Tháng</th>
+                    <th id="th_revenueAmount" class="px-6 py-3 text-right text-xs font-semibold uppercase text-gray-600 dark:text-gray-400">Doanh thu</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                @{ int rowIndex = 1; }
                 @foreach (var row in Model.Months)
                 {
-                    <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-700/30">
-                        <td class="px-6 py-3 font-medium text-gray-900 dark:text-white">@row.MonthLabel</td>
-                        <td class="px-6 py-3 text-right font-semibold text-gray-900 dark:text-white">@row.RevenueFormatted</td>
+                    <tr id="tr_revenueMonth_@rowIndex" class="hover:bg-gray-50/50 dark:hover:bg-gray-700/30">
+                        <td id="td_revenueMonthLabel_@rowIndex" class="px-6 py-3 font-medium text-gray-900 dark:text-white">@row.MonthLabel</td>
+                        <td id="td_revenueAmountVal_@rowIndex" class="px-6 py-3 text-right font-semibold text-gray-900 dark:text-white">@row.RevenueFormatted</td>
                     </tr>
+                    rowIndex++;
                 }
             </tbody>
             <tfoot class="bg-gray-50 dark:bg-gray-900/50">

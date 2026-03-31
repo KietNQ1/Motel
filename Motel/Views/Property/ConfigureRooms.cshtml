@@ -474,7 +474,7 @@
 
         @* Breadcrumb *@
         <nav class="rc-breadcrumb" aria-label="Breadcrumb">
-            <a asp-action="Index">Nhà trọ của tôi</a>
+            <a id="lnk_backToProperties" asp-action="Index">Nhà trọ của tôi</a>
             <span class="msym">chevron_right</span>
             <a href="#">@Model.PropertyName</a>
             <span class="msym">chevron_right</span>
@@ -492,9 +492,9 @@
 
             @* ── Main column ── *@
             <div class="rc-main-col">
-                <form asp-action="ConfigureRooms" method="post" id="roomConfigForm">
-                    <input type="hidden" asp-for="PropertyId" />
-                    <input type="hidden" asp-for="PropertyName" />
+                <form id="form_roomConfig" asp-action="ConfigureRooms" method="post">
+                    <input id="input_propertyId" type="hidden" asp-for="PropertyId" />
+                    <input id="input_propertyName" type="hidden" asp-for="PropertyName" />
 
                     <div asp-validation-summary="ModelOnly" class="rc-validation-summary"></div>
 
@@ -506,19 +506,19 @@
                         </h3>
                         <div class="rc-two-col">
                             <div class="rc-field">
-                                <label asp-for="NumberOfFloors"></label>
+                                <label id="lbl_numberOfFloors" asp-for="NumberOfFloors"></label>
                                 <input asp-for="NumberOfFloors"
                                        class="rc-input"
                                        type="number" min="1" max="50"
-                                       id="numberOfFloors"
+                                       id="input_numberOfFloors"
                                        placeholder="Ví dụ: 5" />
                                 <span asp-validation-for="NumberOfFloors" class="rc-field-error"></span>
                             </div>
                             <div class="rc-field">
-                                <label>Số phòng mặc định mỗi tầng</label>
+                                <label id="lbl_defaultRoomsPerFloor">Số phòng mặc định mỗi tầng</label>
                                 <input type="number"
                                        class="rc-input"
-                                       id="defaultRoomsPerFloor"
+                                       id="input_defaultRoomsPerFloor"
                                        min="1" max="50"
                                        value="5"
                                        placeholder="Ví dụ: 10" />
@@ -532,15 +532,15 @@
                             <span class="msym">rule</span>
                             Cấu hình chi tiết từng tầng
                         </h3>
-                        <div id="floorsContainer"></div>
+                        <div id="div_floorsContainer"></div>
                     </div>
 
                     @* Card 3: Pricing *@
                     <div class="rc-card">
                         <div class="rc-field">
-                            <label asp-for="DefaultRentPrice"></label>
+                            <label id="lbl_defaultRentPrice" asp-for="DefaultRentPrice"></label>
                             <div class="rc-price-wrap">
-                                <input asp-for="DefaultRentPrice"
+                                <input id="input_defaultRentPrice" asp-for="DefaultRentPrice"
                                        class="rc-input"
                                        type="number" step="100000"
                                        placeholder="0" />
@@ -580,12 +580,12 @@
                 </div>
 
                 @* Action buttons *@
-                <button type="submit" form="roomConfigForm" class="rc-btn-primary">
+                <button id="btn_submitRoomConfig" type="submit" form="form_roomConfig" class="rc-btn-primary">
                     <span class="msym">add_business</span>
                     Tạo phòng
                 </button>
 
-                <a asp-action="Index" class="rc-btn-secondary">Hủy</a>
+                <a id="lnk_cancelRoomConfig" asp-action="Index" class="rc-btn-secondary">Hủy</a>
 
                 @* Support card *@
                 <div class="rc-support-card">
@@ -607,9 +607,9 @@
     <partial name="_ValidationScriptsPartial" />
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const floorsInput  = document.getElementById('numberOfFloors');
-            const defaultRooms = document.getElementById('defaultRoomsPerFloor');
-            const container    = document.getElementById('floorsContainer');
+            const floorsInput  = document.getElementById('input_numberOfFloors');
+            const defaultRooms = document.getElementById('input_defaultRoomsPerFloor');
+            const container    = document.getElementById('div_floorsContainer');
 
             function generateFloorInputs() {
                 const floors = parseInt(floorsInput.value) || 1;
@@ -625,8 +625,8 @@
                             <span class="rc-floor-label">Tầng ${i + 1}</span>
                         </div>
                         <div class="rc-floor-rooms-wrap">
-                            <span>Số phòng:</span>
-                            <input type="number"
+                            <span id="lbl_roomsPerFloor_${i}">Số phòng:</span>
+                            <input id="input_roomsPerFloor_${i}" type="number"
                                    name="RoomsPerFloor[${i}]"
                                    class="rc-floor-input"
                                    min="1" max="50"
