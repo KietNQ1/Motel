@@ -66,7 +66,7 @@ namespace Motel.Controllers
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                 return Redirect(returnUrl);
 
-            return RedirectToAction("Index", "Dashboard");
+            return RedirectToAction("Index", "Home");
         }
 
         // ================= PROFILE =================
@@ -100,7 +100,7 @@ namespace Motel.Controllers
         public async Task<IActionResult> Logout()
         {
             await _signInManager.SignOutAsync();
-            return RedirectToAction("Login");
+            return RedirectToAction("Index", "Home");
         }
 
         // ================= REGISTER =================
@@ -156,7 +156,7 @@ namespace Motel.Controllers
 
             await _signInManager.SignInAsync(user, false);
 
-            return RedirectToAction("Index", "Dashboard");
+            return RedirectToAction("Index", "Home");
         }
 
         // ================= FORGOT PASSWORD =================
