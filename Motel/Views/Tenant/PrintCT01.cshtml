@@ -55,13 +55,13 @@
         
         <!-- Nút điều hướng -->
         <div class="no-print flex flex-wrap items-center justify-between gap-2 mb-4">
-            <a asp-action="Details" asp-route-id="@Model.TenantId" asp-route-occupancyId="@Context.Request.Query["occupancyId"]"
+            <a id="lnk_back_tenantDetails" asp-action="Details" asp-route-id="@Model.TenantId" asp-route-occupancyId="@Context.Request.Query["occupancyId"]"
                class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:border-primary">
                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
                 Quay lại chi tiết
             </a>
             
-            <button onclick="window.print()" class="rounded-xl bg-slate-900 text-white px-4 py-2 font-medium hover:bg-slate-700 transition">
+            <button id="btn_print_ct01_@Model.TenantId" onclick="window.print()" class="rounded-xl bg-slate-900 text-white px-4 py-2 font-medium hover:bg-slate-700 transition">
                 🖨️ In Mẫu CT01
             </button>
         </div>
@@ -152,21 +152,21 @@
                     11. Những thành viên trong hộ gia đình cùng thay đổi:
                 </div>
 
-                <table class="ct01-table text-[12pt]">
+                <table id="tbl_ct01Members" class="ct01-table text-[12pt]">
                     <thead>
                         <tr>
-                            <th style="width: 5%;">TT</th>
-                            <th style="width: 30%;">Họ, chữ đệm<br/>và tên</th>
-                            <th style="width: 15%;">Ngày, tháng,<br/>năm sinh</th>
-                            <th style="width: 10%;">Giới<br/>tính</th>
-                            <th style="width: 20%;">Số định danh<br/>cá nhân</th>
-                            <th style="width: 20%;">Mối quan hệ<br/>với chủ hộ</th>
+                            <th id="th_memberOrder" style="width: 5%;">TT</th>
+                            <th id="th_memberName" style="width: 30%;">Họ, chữ đệm<br/>và tên</th>
+                            <th id="th_memberDob" style="width: 15%;">Ngày, tháng,<br/>năm sinh</th>
+                            <th id="th_memberGender" style="width: 10%;">Giới<br/>tính</th>
+                            <th id="th_memberId" style="width: 20%;">Số định danh<br/>cá nhân</th>
+                            <th id="th_memberRelation" style="width: 20%;">Mối quan hệ<br/>với chủ hộ</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-                        <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-                        <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                        <tr id="tr_memberBlank_1"><td id="td_memberOrder_1"></td><td id="td_memberName_1"></td><td id="td_memberDob_1"></td><td id="td_memberGender_1"></td><td id="td_memberId_1"></td><td id="td_memberRelation_1"></td></tr>
+                        <tr id="tr_memberBlank_2"><td id="td_memberOrder_2"></td><td id="td_memberName_2"></td><td id="td_memberDob_2"></td><td id="td_memberGender_2"></td><td id="td_memberId_2"></td><td id="td_memberRelation_2"></td></tr>
+                        <tr id="tr_memberBlank_3"><td id="td_memberOrder_3"></td><td id="td_memberName_3"></td><td id="td_memberDob_3"></td><td id="td_memberGender_3"></td><td id="td_memberId_3"></td><td id="td_memberRelation_3"></td></tr>
                     </tbody>
                 </table>
 

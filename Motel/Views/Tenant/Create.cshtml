@@ -6,26 +6,26 @@
 <div class="container py-4">
     <h3 class="mb-3">Tạo người thuê</h3>
 
-    <form asp-action="Create" method="post">
+    <form id="form_createTenant" asp-action="Create" method="post">
         @Html.AntiForgeryToken()
 
-        <input type="hidden" asp-for="ReturnRoomId" />
-        <input type="hidden" asp-for="CccdImageId" id="CccdImageId" />
+        <input id="input_returnRoomId" type="hidden" asp-for="ReturnRoomId" />
+        <input id="input_cccdImageId" type="hidden" asp-for="CccdImageId" />
 
         <div class="mb-3">
-            <label class="form-label fw-bold"><i class="bi bi-camera me-1"></i> Tải lên CCCD (Mặt trước) để nhận thông tin tự động</label>
-            <input type="file" id="CccdFile" class="form-control" accept="image/*" />
+            <label id="lbl_cccdFile" class="form-label fw-bold"><i class="bi bi-camera me-1"></i> Tải lên CCCD (Mặt trước) để nhận thông tin tự động</label>
+            <input type="file" id="input_cccdFile" class="form-control" accept="image/*" />
             
-            <div id="CccdPreviewContainer" class="mt-2 shadow-sm rounded p-2" style="display: none; background-color: #f8f9fa;">
-                <img id="CccdPreview" src="#" alt="CCCD Preview" class="img-fluid rounded" style="max-height: 200px; display: block; margin: 0 auto;" />
+            <div id="div_cccdPreviewContainer" class="mt-2 shadow-sm rounded p-2" style="display: none; background-color: #f8f9fa;">
+                <img id="img_cccdPreview" src="#" alt="CCCD Preview" class="img-fluid rounded" style="max-height: 200px; display: block; margin: 0 auto;" />
             </div>
             
-            <div id="ocrLoading" class="mt-2 text-primary" style="display: none;">
+            <div id="div_ocrLoading" class="mt-2 text-primary" style="display: none;">
                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                 <strong>Đang xử lý nhận dạng CCCD...</strong>
             </div>
-            <div id="ocrError" class="mt-2 text-danger fw-bold" style="display: none;"></div>
-            <div id="ocrSuccess" class="mt-2 text-success fw-bold" style="display: none;">
+            <div id="div_ocrError" class="mt-2 text-danger fw-bold" style="display: none;"></div>
+            <div id="div_ocrSuccess" class="mt-2 text-success fw-bold" style="display: none;">
                 <i class="bi bi-check-circle-fill me-1"></i> Nhận dạng thành công! Đã tự động điền form.
             </div>
         </div>
@@ -33,45 +33,45 @@
         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
         <div class="mb-3">
-            <label asp-for="FullName" class="form-label"></label>
-            <input asp-for="FullName" class="form-control" />
+            <label id="lbl_fullName" asp-for="FullName" class="form-label"></label>
+            <input id="input_fullName" asp-for="FullName" class="form-control" />
             <span asp-validation-for="FullName" class="text-danger"></span>
         </div>
 
         <div class="mb-3">
-            <label asp-for="Phone" class="form-label"></label>
-            <input asp-for="Phone" class="form-control" />
+            <label id="lbl_phone" asp-for="Phone" class="form-label"></label>
+            <input id="input_phone" asp-for="Phone" class="form-control" />
             <span asp-validation-for="Phone" class="text-danger"></span>
         </div>
 
         <div class="mb-3">
-            <label asp-for="Email" class="form-label"></label>
-            <input asp-for="Email" class="form-control" />
+            <label id="lbl_email" asp-for="Email" class="form-label"></label>
+            <input id="input_email" asp-for="Email" class="form-control" />
             <span asp-validation-for="Email" class="text-danger"></span>
         </div>
 
         <div class="mb-3">
-            <label asp-for="IdentityNo" class="form-label"></label>
-            <input asp-for="IdentityNo" class="form-control" />
+            <label id="lbl_identityNo" asp-for="IdentityNo" class="form-label"></label>
+            <input id="input_identityNo" asp-for="IdentityNo" class="form-control" />
             <span asp-validation-for="IdentityNo" class="text-danger"></span>
         </div>
 
         <div class="row">
             <div class="col-md-6 mb-3">
-                <label asp-for="DateOfBirth" class="form-label"></label>
-                <input asp-for="DateOfBirth" class="form-control" type="date" />
+                <label id="lbl_dateOfBirth" asp-for="DateOfBirth" class="form-label"></label>
+                <input id="input_dateOfBirth" asp-for="DateOfBirth" class="form-control" type="date" />
                 <span asp-validation-for="DateOfBirth" class="text-danger"></span>
             </div>
             <div class="col-md-6 mb-3">
-                <label asp-for="PermanentAddress" class="form-label"></label>
-                <input asp-for="PermanentAddress" class="form-control" placeholder="Nơi đăng ký thường trú" />
+                <label id="lbl_permanentAddress" asp-for="PermanentAddress" class="form-label"></label>
+                <input id="input_permanentAddress" asp-for="PermanentAddress" class="form-control" placeholder="Nơi đăng ký thường trú" />
                 <span asp-validation-for="PermanentAddress" class="text-danger"></span>
             </div>
         </div>
 
         <div class="d-flex gap-2">
-            <a asp-controller="Property" asp-action="Index" class="btn btn-secondary">Hủy</a>
-            <button type="submit" class="btn btn-primary">Tạo</button>
+            <a id="lnk_cancel_createTenant" asp-controller="Property" asp-action="Index" class="btn btn-secondary">Hủy</a>
+            <button id="btn_submit_createTenant" type="submit" class="btn btn-primary">Tạo</button>
         </div>
     </form>
 </div>
@@ -79,25 +79,25 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-        document.getElementById('CccdFile').addEventListener('change', async function(e) {
+        document.getElementById('input_cccdFile').addEventListener('change', async function(e) {
             const file = e.target.files[0];
             if (!file) {
-                document.getElementById('CccdPreviewContainer').style.display = 'none';
+                document.getElementById('div_cccdPreviewContainer').style.display = 'none';
                 return;
             }
 
             // Show preview
             const reader = new FileReader();
             reader.onload = function(evt) {
-                document.getElementById('CccdPreview').src = evt.target.result;
-                document.getElementById('CccdPreviewContainer').style.display = 'block';
+                document.getElementById('img_cccdPreview').src = evt.target.result;
+                document.getElementById('div_cccdPreviewContainer').style.display = 'block';
             }
             reader.readAsDataURL(file);
 
             // Hide old status messages
-            document.getElementById('ocrLoading').style.display = 'block';
-            document.getElementById('ocrError').style.display = 'none';
-            document.getElementById('ocrSuccess').style.display = 'none';
+            document.getElementById('div_ocrLoading').style.display = 'block';
+            document.getElementById('div_ocrError').style.display = 'none';
+            document.getElementById('div_ocrSuccess').style.display = 'none';
 
             // Upload to API
             const formData = new FormData();
@@ -111,34 +111,34 @@
                 
                 const result = await response.json();
                 
-                document.getElementById('ocrLoading').style.display = 'none';
+                document.getElementById('div_ocrLoading').style.display = 'none';
 
                 if (result.success) {
-                    document.getElementById('ocrSuccess').style.display = 'block';
-                    document.getElementById('CccdImageId').value = result.storedFileId;
+                    document.getElementById('div_ocrSuccess').style.display = 'block';
+                    document.getElementById('input_cccdImageId').value = result.storedFileId;
                     
                     if (result.data) {
-                        if (result.data.name) document.getElementById('FullName').value = result.data.name;
-                        if (result.data.id) document.getElementById('IdentityNo').value = result.data.id;
-                        if (result.data.address) document.getElementById('PermanentAddress').value = result.data.address;
+                        if (result.data.name) document.getElementById('input_fullName').value = result.data.name;
+                        if (result.data.id) document.getElementById('input_identityNo').value = result.data.id;
+                        if (result.data.address) document.getElementById('input_permanentAddress').value = result.data.address;
                         
                         if (result.data.birthday) {
                             // Convert DD/MM/YYYY to YYYY-MM-DD for date input
                             const parts = result.data.birthday.split('/');
                             if (parts.length === 3) {
-                                document.getElementById('DateOfBirth').value = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                                document.getElementById('input_dateOfBirth').value = `${parts[2]}-${parts[1]}-${parts[0]}`;
                             }
                         }
                     }
                 } else {
-                    document.getElementById('ocrError').innerText = result.message || 'Lỗi nhận dạng';
-                    document.getElementById('ocrError').style.display = 'block';
+                    document.getElementById('div_ocrError').innerText = result.message || 'Lỗi nhận dạng';
+                    document.getElementById('div_ocrError').style.display = 'block';
                 }
             } catch (error) {
                 console.error('OCR Error:', error);
-                document.getElementById('ocrLoading').style.display = 'none';
-                document.getElementById('ocrError').innerText = 'Lỗi kết nối máy chủ. Vui lòng thử lại sau.';
-                document.getElementById('ocrError').style.display = 'block';
+                document.getElementById('div_ocrLoading').style.display = 'none';
+                document.getElementById('div_ocrError').innerText = 'Lỗi kết nối máy chủ. Vui lòng thử lại sau.';
+                document.getElementById('div_ocrError').style.display = 'block';
             }
         });
     </script>

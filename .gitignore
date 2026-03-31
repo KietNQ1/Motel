@@ -113,3 +113,8 @@ desktop.ini
 ################################
 Motel/wwwroot/uploads/cccd/*
 !Motel/wwwroot/uploads/cccd/.gitignore
+
+################################
+# Temp Build Artifacts
+################################
+Motel/build_verify

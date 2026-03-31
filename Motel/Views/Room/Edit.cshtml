@@ -45,27 +45,27 @@
             <i class="bi bi-info-circle-fill text-primary"></i> Thông tin cơ bản
         </div>
 
-        <form asp-action="Edit" method="post" class="basic-info-form" enctype="multipart/form-data">
-            <input type="hidden" asp-for="RoomId" />
-            <input type="hidden" asp-for="PropertyId" />
-            <input type="hidden" asp-for="PropertyName" />
+        <form id="form_editRoom" asp-action="Edit" method="post" class="basic-info-form" enctype="multipart/form-data">
+            <input id="input_roomId" type="hidden" asp-for="RoomId" />
+            <input id="input_propertyId" type="hidden" asp-for="PropertyId" />
+            <input id="input_propertyName" type="hidden" asp-for="PropertyName" />
 
             <div class="row-fields">
                 <div class="field-group">
-                    <label>Tên phòng <span class="required">*</span></label>
-                    <input asp-for="RoomName" type="text" placeholder="101" />
+                    <label id="lbl_roomName">Tên phòng <span class="required">*</span></label>
+                    <input id="input_roomName" asp-for="RoomName" type="text" placeholder="101" />
                     <span asp-validation-for="RoomName" class="field-error"></span>
                 </div>
                 <div class="field-group">
-                    <label>Giá thuê (VNĐ/tháng) <span class="required">*</span></label>
-                    <input asp-for="RentPrice" type="number" step="100000" />
+                    <label id="lbl_rentPrice">Giá thuê (VNĐ/tháng) <span class="required">*</span></label>
+                    <input id="input_rentPrice" asp-for="RentPrice" type="number" step="100000" />
                     <span asp-validation-for="RentPrice" class="field-error"></span>
                 </div>
             </div>
 
             <div class="field-group mt-3">
-                <label>Số người tối đa <span class="required">*</span></label>
-                <input asp-for="MaxOccupants" type="number" min="1" max="20" />
+                <label id="lbl_maxOccupants">Số người tối đa <span class="required">*</span></label>
+                <input id="input_maxOccupants" asp-for="MaxOccupants" type="number" min="1" max="20" />
                 <span asp-validation-for="MaxOccupants" class="field-error"></span>
             </div>
 
@@ -80,8 +80,8 @@
                             <div style="position: relative; width: 120px; height: 120px; border-radius: 8px; overflow: hidden; border: 1px solid #ddd; background: #fafafa;">
                                 <img src="@img.StoragePath" style="width: 100%; height: 100%; object-fit: cover;" alt="Room Image" />
                                 <div style="position: absolute; top: 0; right: 0; background: rgba(255, 255, 255, 0.9); padding: 4px; border-bottom-left-radius: 6px;">
-                                    <label style="font-size: 0.8rem; margin: 0; cursor: pointer;">
-                                        <input type="checkbox" name="DeleteImageIds" value="@img.StoredFileId" style="margin-right: 4px;" />Xóa
+                                    <label id="lbl_deleteImage_@img.StoredFileId" style="font-size: 0.8rem; margin: 0; cursor: pointer;">
+                                        <input id="cb_deleteImage_@img.StoredFileId" type="checkbox" name="DeleteImageIds" value="@img.StoredFileId" style="margin-right: 4px;" />Xóa
                                     </label>
                                 </div>
                             </div>
@@ -89,12 +89,12 @@
                     </div>
                 }
 
-                <label style="font-size: 0.85rem;">Tải thêm ảnh mới</label>
-                <input asp-for="NewImages" type="file" multiple accept="image/*" />
+                <label id="lbl_newImages" style="font-size: 0.85rem;">Tải thêm ảnh mới</label>
+                <input id="input_newImages" asp-for="NewImages" type="file" multiple accept="image/*" />
             </div>
 
             <div class="form-action-right">
-                <button type="submit" class="btn-orange">
+                <button id="btn_submitEditRoom" type="submit" class="btn-orange">
                     <i class="bi bi-save"></i> Lưu thông tin
                 </button>
             </div>
@@ -133,10 +133,10 @@
                 @if (currentStatus == "available")
                 {
                     <!-- available → có thể chuyển sang maintenance -->
-                    <form asp-action="SetMaintenance" asp-route-id="@Model.RoomId" method="post" class="d-inline-form"
+                    <form id="form_setMaintenance" asp-action="SetMaintenance" asp-route-id="@Model.RoomId" method="post" class="d-inline-form"
                           onsubmit="return confirm('Xác nhận chuyển phòng @Model.RoomName sang trạng thái đang sửa chữa? Phòng sẽ không thể cho thuê trong thời gian này.');">
                         @Html.AntiForgeryToken()
-                        <button type="submit" class="btn-maintenance">
+                        <button id="btn_setMaintenance" type="submit" class="btn-maintenance">
                             <i class="bi bi-tools"></i> Chuyển sang sửa chữa
                         </button>
                     </form>
@@ -144,10 +144,10 @@
                 else if (currentStatus == "maintenance")
                 {
                     <!-- maintenance → có thể kết thúc, trả về available -->
-                    <form asp-action="EndMaintenance" asp-route-id="@Model.RoomId" method="post" class="d-inline-form"
+                    <form id="form_endMaintenance" asp-action="EndMaintenance" asp-route-id="@Model.RoomId" method="post" class="d-inline-form"
                           onsubmit="return confirm('Xác nhận hoàn tất sửa chữa và mở lại phòng @Model.RoomName cho thuê?');">
                         @Html.AntiForgeryToken()
-                        <button type="submit" class="btn-end-maintenance">
+                        <button id="btn_endMaintenance" type="submit" class="btn-end-maintenance">
                             <i class="bi bi-check2-circle"></i> Hoàn tất sửa chữa
                         </button>
                     </form>
@@ -173,7 +173,7 @@
                 </div>
                 <p class="fee-subtitle">Cấu hình các loại phí áp dụng riêng cho phòng này. Sẽ ghi đè phụ phí mặc định của nhà trọ.</p>
             </div>
-            <button type="button" class="btn-orange-outline" data-bs-toggle="modal" data-bs-target="#addFeeModal">
+            <button id="btn_openAddFeeModal" type="button" class="btn-orange-outline" data-bs-toggle="modal" data-bs-target="#modal_addFee">
                 <i class="bi bi-plus-circle"></i> Thêm phụ phí phòng
             </button>
         </div>
@@ -215,9 +215,9 @@
                             <td class="fee-method">@methodLabel</td>
                             <td class="fee-price">@priceDisplay</td>
                             <td class="fee-actions">
-                                <button class="icon-btn edit"
+                                <button id="btn_openEditFeeModal_@fee.FeeSettingId" class="icon-btn edit"
                                         data-bs-toggle="modal"
-                                        data-bs-target="#editFeeModal"
+                                        data-bs-target="#modal_editFee"
                                         data-setting-id="@fee.FeeSettingId"
                                         data-type-id="@fee.FeeTypeId"
                                         data-method="@fee.CalculationMethod"
@@ -226,11 +226,11 @@
                                         title="Chỉnh sửa">
                                     <i class="bi bi-pencil"></i>
                                 </button>
-                                <form asp-action="DeleteFeeSetting" method="post" class="d-inline"
+                                <form id="form_deleteFeeSetting_@fee.FeeSettingId" asp-action="DeleteFeeSetting" method="post" class="d-inline"
                                       onsubmit="return confirm('Xóa phụ phí này khỏi phòng?');">
-                                    <input type="hidden" name="feeSettingId" value="@fee.FeeSettingId" />
-                                    <input type="hidden" name="roomId" value="@Model.RoomId" />
-                                    <button type="submit" class="icon-btn delete" title="Xóa">
+                                    <input id="input_deleteFeeSettingId_@fee.FeeSettingId" type="hidden" name="feeSettingId" value="@fee.FeeSettingId" />
+                                    <input id="input_deleteRoomId_@fee.FeeSettingId" type="hidden" name="roomId" value="@Model.RoomId" />
+                                    <button id="btn_deleteFeeSetting_@fee.FeeSettingId" type="submit" class="icon-btn delete" title="Xóa">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>
@@ -277,9 +277,9 @@
                             <td class="fee-price">@priceDisplay</td>
                             <td class="fee-actions">
                                 <!-- Case 1: no room override yet, settingId=0 creates new room-level fee -->
-                                <button class="icon-btn edit"
+                                <button id="btn_inheritFee_@fee.FeeTypeId" class="icon-btn edit"
                                         data-bs-toggle="modal"
-                                        data-bs-target="#editFeeModal"
+                                        data-bs-target="#modal_editFee"
                                         data-setting-id="0"
                                         data-type-id="@fee.FeeTypeId"
                                         data-method="@fee.CalculationMethod"
@@ -299,62 +299,62 @@
 </div>
 
 <!-- Add Fee Modal -->
-<div class="modal fade" id="addFeeModal" tabindex="-1">
+<div class="modal fade" id="modal_addFee" tabindex="-1">
     <div class="modal-dialog">
-        <form asp-action="AddFeeSetting" method="post" class="modal-content settings-modal">
-            <input type="hidden" name="roomId" value="@Model.RoomId" />
-            <input type="hidden" name="propertyId" value="@Model.PropertyId" />
-            <input type="hidden" name="feeTypeId" id="addFeeTypeId" value="0" />
+        <form id="form_addFee" asp-action="AddFeeSetting" method="post" class="modal-content settings-modal">
+            <input id="input_addRoomId" type="hidden" name="roomId" value="@Model.RoomId" />
+            <input id="input_addPropertyId" type="hidden" name="propertyId" value="@Model.PropertyId" />
+            <input type="hidden" name="feeTypeId" id="input_addFeeTypeId" value="0" />
 
             <div class="modal-header">
                 <h5 class="modal-title"><i class="bi bi-plus-circle text-warning"></i> Thêm phụ phí phòng</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i></button>
+                <button id="btn_closeAddFeeModalIcon" type="button" class="btn-close" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i></button>
             </div>
             <div class="modal-body">
-                <div class="field-group mb-3" id="addCustomFeeNameDiv">
-                    <label>Tên phí mới <span class="required">*</span></label>
-                    <input type="text" name="newFeeTypeName" id="addCustomFeeInput" class="form-control" placeholder="VD: Phí gửi xe, Phí vệ sinh..." required />
+                <div class="field-group mb-3" id="div_addCustomFeeName">
+                    <label id="lbl_newFeeTypeName">Tên phí mới <span class="required">*</span></label>
+                    <input type="text" name="newFeeTypeName" id="input_addCustomFeeName" class="form-control" placeholder="VD: Phí gửi xe, Phí vệ sinh..." required />
                 </div>
 
                 <div class="field-group mb-3">
-                    <label>Cách tính</label>
-                    <select name="calculationMethod" id="addCalcMethodSelect" class="form-select" required>
+                    <label id="lbl_addCalcMethod">Cách tính</label>
+                    <select name="calculationMethod" id="select_addCalcMethod" class="form-select" required>
                         <option value="per_room">Theo phòng (cố định mỗi phòng)</option>
                         <option value="per_person">Theo đầu người</option>
                         <option value="meter">Theo chỉ số đồng hồ (điện, nước...)</option>
                     </select>
                 </div>
 
-                <div class="field-group mb-3 d-none" id="addUnitPriceDiv">
-                    <label>Đơn giá (VNĐ / đơn vị)</label>
-                    <input type="number" name="unitPrice" id="addUnitPriceInput" class="form-control" value="0" min="0" step="100" />
+                <div class="field-group mb-3 d-none" id="div_addUnitPrice">
+                    <label id="lbl_addUnitPrice">Đơn giá (VNĐ / đơn vị)</label>
+                    <input type="number" name="unitPrice" id="input_addUnitPrice" class="form-control" value="0" min="0" step="100" />
                 </div>
 
-                <div class="field-group mb-3" id="addBaseAmountDiv">
-                    <label>Mức phí (VNĐ)</label>
-                    <input type="number" name="baseAmount" id="addBaseAmountInput" class="form-control" value="0" min="0" step="1000" />
+                <div class="field-group mb-3" id="div_addBaseAmount">
+                    <label id="lbl_addBaseAmount">Mức phí (VNĐ)</label>
+                    <input type="number" name="baseAmount" id="input_addBaseAmount" class="form-control" value="0" min="0" step="1000" />
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
-                <button type="submit" class="btn-orange">Thêm mới</button>
+                <button id="btn_cancelAddFeeModal" type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
+                <button id="btn_submitAddFee" type="submit" class="btn-orange">Thêm mới</button>
             </div>
         </form>
     </div>
 </div>
 
 <!-- Edit Fee Modal -->
-<div class="modal fade" id="editFeeModal" tabindex="-1">
+<div class="modal fade" id="modal_editFee" tabindex="-1">
     <div class="modal-dialog">
-        <form asp-action="EditFeeSetting" method="post" class="modal-content settings-modal">
-            <input type="hidden" name="roomId" value="@Model.RoomId" />
-            <input type="hidden" name="propertyId" value="@Model.PropertyId" />
-            <input type="hidden" name="feeSettingId" id="editFeeSettingId" />
-            <input type="hidden" name="feeTypeId" id="editFeeTypeId" />
+        <form id="form_editFee" asp-action="EditFeeSetting" method="post" class="modal-content settings-modal">
+            <input id="input_editRoomId" type="hidden" name="roomId" value="@Model.RoomId" />
+            <input id="input_editPropertyId" type="hidden" name="propertyId" value="@Model.PropertyId" />
+            <input type="hidden" name="feeSettingId" id="input_editFeeSettingId" />
+            <input type="hidden" name="feeTypeId" id="input_editFeeTypeId" />
 
             <div class="modal-header">
                 <h5 class="modal-title"><i class="bi bi-pencil-square text-primary"></i> Cập nhật mức phí</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i></button>
+                <button id="btn_closeEditFeeModalIcon" type="button" class="btn-close" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i></button>
             </div>
             <div class="modal-body">
                 <div class="alert alert-light border small py-2 mb-3">
@@ -363,27 +363,27 @@
                 </div>
 
                 <div class="field-group mb-3">
-                    <label>Cách tính</label>
-                    <select name="calculationMethod" id="editCalcMethodSelect" class="form-select" required>
+                    <label id="lbl_editCalcMethod">Cách tính</label>
+                    <select name="calculationMethod" id="select_editCalcMethod" class="form-select" required>
                         <option value="per_room">Theo phòng</option>
                         <option value="per_person">Theo đầu người</option>
                         <option value="meter">Theo chỉ số đồng hồ</option>
                     </select>
                 </div>
 
-                <div class="field-group mb-3 d-none" id="editUnitPriceDiv">
-                    <label>Đơn giá (VNĐ / đơn vị)</label>
-                    <input type="number" name="unitPrice" id="editUnitPriceInput" class="form-control" min="0" step="100" />
+                <div class="field-group mb-3 d-none" id="div_editUnitPrice">
+                    <label id="lbl_editUnitPrice">Đơn giá (VNĐ / đơn vị)</label>
+                    <input type="number" name="unitPrice" id="input_editUnitPrice" class="form-control" min="0" step="100" />
                 </div>
 
-                <div class="mb-3 field-group" id="editBaseAmountDiv">
-                    <label>Mức phí (VNĐ)</label>
-                    <input type="number" name="baseAmount" id="editBaseAmountInput" class="form-control" min="0" step="1000" />
+                <div class="mb-3 field-group" id="div_editBaseAmount">
+                    <label id="lbl_editBaseAmount">Mức phí (VNĐ)</label>
+                    <input type="number" name="baseAmount" id="input_editBaseAmount" class="form-control" min="0" step="1000" />
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
-                <button type="submit" class="btn-orange">Lưu thay đổi</button>
+                <button id="btn_cancelEditFeeModal" type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
+                <button id="btn_submitEditFee" type="submit" class="btn-orange">Lưu thay đổi</button>
             </div>
         </form>
     </div>
@@ -708,18 +708,18 @@
     <script>
         function toggleMethodInputs(method, prefix) {
             if (method === 'meter') {
-                $('#' + prefix + 'UnitPriceDiv').removeClass('d-none');
-                $('#' + prefix + 'BaseAmountDiv').addClass('d-none');
+                $('#div_' + prefix + 'UnitPrice').removeClass('d-none');
+                $('#div_' + prefix + 'BaseAmount').addClass('d-none');
             } else {
-                $('#' + prefix + 'UnitPriceDiv').addClass('d-none');
-                $('#' + prefix + 'BaseAmountDiv').removeClass('d-none');
+                $('#div_' + prefix + 'UnitPrice').addClass('d-none');
+                $('#div_' + prefix + 'BaseAmount').removeClass('d-none');
             }
         }
 
         $(document).ready(function () {
             // Initialize add method selects
-            $('#addCalcMethodSelect').on('change', function () { toggleMethodInputs($(this).val(), 'add'); });
-            toggleMethodInputs($('#addCalcMethodSelect').val(), 'add');
+            $('#select_addCalcMethod').on('change', function () { toggleMethodInputs($(this).val(), 'add'); });
+            toggleMethodInputs($('#select_addCalcMethod').val(), 'add');
 
             // Custom modal toggle logic (replaces Bootstrap JS)
             $('[data-bs-toggle="modal"]').click(function(e) {
@@ -740,14 +740,14 @@
             // Edit fee validation and population
             $('.icon-btn.edit').click(function () {
                 var btn = this;
-                $('#editFeeSettingId').val(btn.dataset.settingId);
-                $('#editFeeTypeId').val(btn.dataset.typeId);
-                $('#editCalcMethodSelect').val(btn.dataset.method);
-                $('#editUnitPriceInput').val(parseFloat(btn.dataset.unitPrice) || 0);
-                $('#editBaseAmountInput').val(parseFloat(btn.dataset.baseAmount) || 0);
+                $('#input_editFeeSettingId').val(btn.dataset.settingId);
+                $('#input_editFeeTypeId').val(btn.dataset.typeId);
+                $('#select_editCalcMethod').val(btn.dataset.method);
+                $('#input_editUnitPrice').val(parseFloat(btn.dataset.unitPrice) || 0);
+                $('#input_editBaseAmount').val(parseFloat(btn.dataset.baseAmount) || 0);
                 toggleMethodInputs(btn.dataset.method, 'edit');
             });
-            $('#editCalcMethodSelect').on('change', function () { toggleMethodInputs($(this).val(), 'edit'); });
+            $('#select_editCalcMethod').on('change', function () { toggleMethodInputs($(this).val(), 'edit'); });
 
             // Auto-dismiss toast
             setTimeout(function() { var t = document.getElementById('toastMsg'); if(t) t.remove(); }, 4000);
