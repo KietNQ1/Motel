@@ -19,10 +19,10 @@
 
 <!-- Filters -->
 <div class="mb-6 rounded-2xl border border-[#e7d9cf] dark:border-gray-700 bg-white dark:bg-gray-800/50 p-4">
-    <form method="get" asp-action="Index" class="flex flex-wrap items-end gap-3">
+    <form id="form_filterInvoices" method="get" asp-action="Index" class="flex flex-wrap items-end gap-3">
         <div>
             <label class="mb-1 block text-xs font-medium text-gray-500">Tòa nhà</label>
-            <select name="propertyId" class="rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm">
+            <select id="select_property_invoiceIndex" name="propertyId" class="rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm">
                 <option value="">Tất cả</option>
                 @foreach (var p in properties)
                 {
@@ -32,7 +32,7 @@
         </div>
         <div>
             <label class="mb-1 block text-xs font-medium text-gray-500">Trạng thái</label>
-            <select name="status" class="rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm">
+            <select id="select_status_invoiceIndex" name="status" class="rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm">
                 <option value="" selected="@(selectedStatus == "")">Tất cả</option>
                 <option value="unpaid" selected="@(selectedStatus == "unpaid")">Chưa thanh toán</option>
                 <option value="paid" selected="@(selectedStatus == "paid")">Đã thanh toán</option>
@@ -41,7 +41,7 @@
         </div>
         <div>
             <label class="mb-1 block text-xs font-medium text-gray-500">Tháng</label>
-            <select name="month" class="rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm">
+            <select id="select_month_invoiceIndex" name="month" class="rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm">
                 <option value="">Tất cả</option>
                 @for (var m = 1; m <= 12; m++)
                 {
@@ -51,7 +51,7 @@
         </div>
         <div>
             <label class="mb-1 block text-xs font-medium text-gray-500">Năm</label>
-            <select name="year" class="rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm">
+            <select id="select_year_invoiceIndex" name="year" class="rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm">
                 <option value="">Tất cả</option>
                 @for (var y = DateTime.Now.Year; y >= DateTime.Now.Year - 5; y--)
                 {
@@ -66,7 +66,7 @@
 </div>
 
 <!-- Bulk reminder (UI only, backend phát triển sau) + Table -->
-<form method="post" asp-action="SendBulkReminder" id="frmBulkReminder">
+<form method="post" asp-action="SendBulkReminder" id="form_bulkReminder_invoiceIndex">
     @Html.AntiForgeryToken()
     @if (unpaidList.Any())
     {
@@ -83,13 +83,13 @@
 <!-- Table -->
 <div class="overflow-hidden rounded-2xl border border-[#e7d9cf] dark:border-gray-700 bg-white dark:bg-gray-800/50 shadow-sm">
     <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+        <table id="tbl_invoices" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead class="bg-gray-50 dark:bg-gray-900/50">
                 <tr>
                     @if (unpaidList.Any())
                     {
                         <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-600 dark:text-gray-400 w-10">
-                            <input type="checkbox" id="checkAllUnpaid" class="rounded border-gray-400" />
+                            <input type="checkbox" id="chk_checkAllUnpaid_invoiceIndex" class="rounded border-gray-400" />
                         </th>
                     }
                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-600 dark:text-gray-400">Phòng · Tòa nhà</th>
@@ -118,7 +118,7 @@
                                 <td class="px-4 py-3">
                                     @if (inv.Status == "unpaid")
                                     {
-                                        <input type="checkbox" name="invoiceIds" value="@inv.InvoiceId" class="cb-unpaid rounded border-gray-400" />
+                                        <input type="checkbox" name="invoiceIds" value="@inv.InvoiceId" class="cb-unpaid rounded border-gray-400" data-type="invoice" />
                                     }
                                 </td>
                             }
@@ -151,14 +151,14 @@
 @section Scripts {
 <script>
     (function() {
-        var checkAll = document.getElementById('checkAllUnpaid');
+        var checkAll = document.getElementById('chk_checkAllUnpaid_invoiceIndex');
         var cbs = document.querySelectorAll('.cb-unpaid');
         if (checkAll && cbs.length) {
             checkAll.addEventListener('change', function() {
                 cbs.forEach(function(cb) { cb.checked = checkAll.checked; });
             });
         }
-        var frm = document.getElementById('frmBulkReminder');
+        var frm = document.getElementById('form_bulkReminder_invoiceIndex');
         if (frm) {
             frm.addEventListener('submit', function(e) {
                 var checked = document.querySelectorAll('.cb-unpaid:checked');

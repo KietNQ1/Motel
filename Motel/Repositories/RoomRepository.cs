@@ -213,7 +213,7 @@ namespace Motel.Repositories
                 var tenantEntities = new List<Tenant>();
                 foreach (var o in occupants)
                 {
-                    Tenant t = null;
+                    Tenant? t = null;
                     if (!string.IsNullOrWhiteSpace(o.IdentityNo))
                     {
                         t = await _db.Tenants.FirstOrDefaultAsync(x => x.LandlordId == landlordId && x.IdentityNo == o.IdentityNo && !x.IsDeleted, ct);

@@ -564,7 +564,7 @@
             }
         </div>
 
-        <form asp-controller="Invoice" asp-action="Create" method="post" id="invoiceForm">
+        <form asp-controller="Invoice" asp-action="Create" method="post" id="form_invoiceCreate">
             @Html.AntiForgeryToken()
             <input type="hidden" asp-for="RoomId" />
             <input type="hidden" asp-for="ContractId" />
@@ -687,7 +687,7 @@
                                 <span class="msym">add_circle</span>
                                 Phí phát sinh
                             </h3>
-                            <button type="button" class="rc-add-btn" id="addExtraChargeBtn">
+                            <button type="button" class="rc-add-btn" id="btn_addExtraCharge_invoiceCreate">
                                 <span class="msym">add</span>
                                 Thêm phí
                             </button>
@@ -702,8 +702,8 @@
                                     <th style="width:8%"></th>
                                 </tr>
                             </thead>
-                            <tbody id="extraChargesBody">
-                                <tr class="rc-empty-row" id="emptyRow">
+                            <tbody id="tbody_extraCharges_invoiceCreate">
+                                <tr class="rc-empty-row" id="tr_empty_invoiceCreate">
                                     <td colspan="4">
                                         <span class="msym" style="font-size:28px;color:#dec0b2;display:block;margin-bottom:.4rem;">inbox</span>
                                         Chưa có phí phát sinh nào
@@ -724,24 +724,24 @@
                             <span class="msym">calculate</span>
                             Tổng kết
                         </h4>
-                        <div id="summaryRows">
+                        <div id="div_summaryRows_invoiceCreate">
                             <div class="rc-summary-row">
                                 <span class="label">Các khoản phí</span>
-                                <span class="value" id="summaryFeeCount">—</span>
+                                <span class="value" id="txt_summaryFeeCount_invoiceCreate">—</span>
                             </div>
                             <div class="rc-summary-row">
                                 <span class="label">Phí phát sinh</span>
-                                <span class="value" id="summaryExtraCount">0 khoản</span>
+                                <span class="value" id="txt_summaryExtraCount_invoiceCreate">0 khoản</span>
                             </div>
                         </div>
                         <div class="rc-summary-total">
                             <span class="label">Ước tính</span>
-                            <span class="value" id="summaryTotal">—</span>
+                            <span class="value" id="txt_summaryTotal_invoiceCreate">—</span>
                         </div>
                     </div>
 
                     @* Action buttons *@
-                    <button type="submit" form="invoiceForm" class="rc-btn-primary">
+                    <button type="submit" form="form_invoiceCreate" class="rc-btn-primary">
                         <span class="msym">check_circle</span>
                         Tạo hóa đơn
                     </button>

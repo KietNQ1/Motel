@@ -25,14 +25,14 @@
         </div>
     }
 
-    <form asp-action="Index" method="post" class="bg-white shadow-sm rounded-xl border border-gray-200 p-6 space-y-5">
+    <form id="form_bankConfig" asp-action="Index" method="post" class="bg-white shadow-sm rounded-xl border border-gray-200 p-6 space-y-5">
         @Html.AntiForgeryToken()
 
                 <div class="grid grid-cols-1 gap-4">
             <!-- Ngân hàng (chọn từ danh sách) -->
             <div>
                 <label class="block text-sm font-medium text-gray-700">Ngân hàng</label>
-                <select asp-for="BankCode"
+                <select id="select_bankCode" asp-for="BankCode"
                         asp-items="Model.BankOptions"
                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary">
                     <option value="">-- Chọn ngân hàng --</option>
@@ -50,23 +50,23 @@
 
             <!-- Số tài khoản -->
             <div>
-                <label asp-for="BankAccountNumber" class="block text-sm font-medium text-gray-700"></label>
-                <input asp-for="BankAccountNumber"
+                <label id="lbl_bankAccountNumber" asp-for="BankAccountNumber" class="block text-sm font-medium text-gray-700"></label>
+                <input id="input_bankAccountNumber" asp-for="BankAccountNumber"
                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary" />
                 <span asp-validation-for="BankAccountNumber" class="text-sm text-red-600"></span>
             </div>
 
             <!-- Tên chủ tài khoản -->
             <div>
-                <label asp-for="BankAccountName" class="block text-sm font-medium text-gray-700"></label>
-                <input asp-for="BankAccountName"
+                <label id="lbl_bankAccountName" asp-for="BankAccountName" class="block text-sm font-medium text-gray-700"></label>
+                <input id="input_bankAccountName" asp-for="BankAccountName"
                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary" />
                 <span asp-validation-for="BankAccountName" class="text-sm text-red-600"></span>
             </div>
         </div>
 
         <div class="pt-2 flex justify-end">
-            <button type="submit" class="inline-flex items-center px-4 py-2 rounded-md bg-primary text-white text-sm font-medium hover:bg-primary-dark">
+            <button id="btn_submitBankConfig" type="submit" class="inline-flex items-center px-4 py-2 rounded-md bg-primary text-white text-sm font-medium hover:bg-primary-dark">
                 Lưu cấu hình
             </button>
         </div>

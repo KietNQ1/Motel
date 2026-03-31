@@ -56,14 +56,14 @@
                 <!-- Form Card -->
                 <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
                     <div class="p-6 sm:p-10">
-                        <form class="space-y-6">
+                        <form id="form_sendNotification" class="space-y-6">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <!-- Target Selection -->
                                 <div class="space-y-2">
                                     <label class="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
                                         <span class="material-symbols-outlined text-sm text-primary">send</span> Gửi đến
                                     </label>
-                                    <select id="targetType" class="w-full rounded-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800 focus:border-primary focus:ring-primary transition-colors py-3">
+                                    <select id="select_targetType_notification" class="w-full rounded-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800 focus:border-primary focus:ring-primary transition-colors py-3">
                                         <option value="tenant">Khách thuê cụ thể</option>
                                         <option value="room">Tất cả khách trong phòng</option>
                                         <option value="property">Tất cả khách trong cơ sở</option>
@@ -74,7 +74,7 @@
                                     <label class="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
                                         <span class="material-symbols-outlined text-sm text-primary">corporate_fare</span> Cơ sở
                                     </label>
-                                    <select id="propertySelect" class="w-full rounded-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800 focus:border-primary focus:ring-primary transition-colors py-3">
+                                    <select id="select_property_notification" class="w-full rounded-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800 focus:border-primary focus:ring-primary transition-colors py-3">
                                         <option value="">Chọn cơ sở</option>
                                     </select>
                                 </div>
@@ -83,7 +83,7 @@
                                     <label class="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
                                         <span class="material-symbols-outlined text-sm text-primary">bed</span> Phòng
                                     </label>
-                                    <select id="roomSelect" class="w-full rounded-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800 focus:border-primary focus:ring-primary transition-colors py-3">
+                                    <select id="select_room_notification" class="w-full rounded-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800 focus:border-primary focus:ring-primary transition-colors py-3">
                                         <option value="">Chọn phòng</option>
                                     </select>
                                 </div>
@@ -92,7 +92,7 @@
                                     <label class="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
                                         <span class="material-symbols-outlined text-sm text-primary">person</span> Khách thuê
                                     </label>
-                                    <select id="tenantSelect" class="w-full rounded-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800 focus:border-primary focus:ring-primary transition-colors py-3">
+                                    <select id="select_tenant_notification" class="w-full rounded-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800 focus:border-primary focus:ring-primary transition-colors py-3">
                                         <option value="">Chọn khách thuê</option>
                                     </select>
                                 </div>
@@ -100,7 +100,7 @@
                             <!-- Subject -->
                             <div class="space-y-2">
                                 <label class="text-sm font-semibold text-slate-700 dark:text-slate-300">Tiêu đề</label>
-                                <input id="title" class="w-full rounded-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800 focus:border-primary focus:ring-primary transition-colors py-3" placeholder="Nhập tiêu đề email..." type="text" />
+                                <input id="input_title_notification" class="w-full rounded-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800 focus:border-primary focus:ring-primary transition-colors py-3" placeholder="Nhập tiêu đề email..." type="text" />
                             </div>
                             <!-- Content Area -->
                             <div class="space-y-2">
@@ -121,12 +121,12 @@
                                             <span class="material-symbols-outlined text-sm">attach_file</span>
                                         </button>
                                     </div>
-                                    <textarea id="content" class="w-full border-none focus:ring-0 dark:bg-slate-800 p-4 resize-none" placeholder="Viết nội dung thông báo tại đây..." rows="8"></textarea>
+                                    <textarea id="input_content_notification" class="w-full border-none focus:ring-0 dark:bg-slate-800 p-4 resize-none" placeholder="Viết nội dung thông báo tại đây..." rows="8"></textarea>
                                 </div>
                             </div>
                             <!-- Action Buttons -->
                             <div class="flex flex-col sm:flex-row items-center gap-4 pt-4">
-                                <button type="button" onclick="sendNotification()" class="w-full sm:w-auto px-8 py-3 bg-brand-brown hover:bg-brand-brown/90 text-white font-bold rounded-lg transition-all shadow-md flex items-center justify-center gap-2">
+                                <button id="btn_submit_sendNotification" type="button" onclick="sendNotification()" class="w-full sm:w-auto px-8 py-3 bg-brand-brown hover:bg-brand-brown/90 text-white font-bold rounded-lg transition-all shadow-md flex items-center justify-center gap-2">
                                     <span class="material-symbols-outlined">send</span>
                                     Gửi thông báo
                                 </button>
@@ -184,21 +184,21 @@
         $(document).ready(function () {
             loadProperties();
 
-            $("#propertySelect").change(function () {
+            $("#select_property_notification").change(function () {
                 let propertyId = $(this).val();
 
-                $("#roomSelect").html('<option value="">Chọn phòng</option>');
-                $("#tenantSelect").html('<option value="">Chọn khách thuê</option>');
+                $("#select_room_notification").html('<option value="">Chọn phòng</option>');
+                $("#select_tenant_notification").html('<option value="">Chọn khách thuê</option>');
 
                 if (propertyId) {
                     loadRooms(propertyId);
                 }
             });
 
-            $("#roomSelect").change(function () {
+            $("#select_room_notification").change(function () {
                 let roomId = $(this).val();
 
-                $("#tenantSelect").html('<option value="">Chọn khách thuê</option>');
+                $("#select_tenant_notification").html('<option value="">Chọn khách thuê</option>');
 
                 if (roomId) {
                     loadTenants(roomId);
@@ -210,7 +210,7 @@
             $.get("/api/property")
                 .done(function (data) {
                     console.log("Property data:", data);
-                    $("#propertySelect").html('<option value="">Chọn cơ sở</option>');
+                    $("#select_property_notification").html('<option value="">Chọn cơ sở</option>');
                     data.forEach(p => {
                         $("#propertySelect").append(
                             `<option value="${p.propertyId}">${p.name}</option>`
@@ -226,9 +226,9 @@
             $.get("/api/room/byProperty/" + propertyId)
                 .done(function (data) {
                     console.log("Room data:", data);
-                    $("#roomSelect").html('<option value="">Chọn phòng</option>');
+                    $("#select_room_notification").html('<option value="">Chọn phòng</option>');
                     data.forEach(r => {
-                        $("#roomSelect").append(
+                        $("#select_room_notification").append(
                             `<option value="${r.roomId}">${r.roomName}</option>`
                         );
                     });
@@ -242,9 +242,9 @@
             $.get("/api/tenant/byRoom/" + roomId)
                 .done(function (data) {
                     console.log("Tenant data:", data);
-                    $("#tenantSelect").html('<option value="">Chọn khách thuê</option>');
+                    $("#select_tenant_notification").html('<option value="">Chọn khách thuê</option>');
                     data.forEach(t => {
-                        $("#tenantSelect").append(
+                        $("#select_tenant_notification").append(
                             `<option value="${t.tenantId}">${t.fullName}</option>`
                         );
                     });
@@ -255,12 +255,12 @@
         }
 
         function sendNotification() {
-            let type = $("#targetType").val();
-            let propertyId = $("#propertySelect").val();
-            let roomId = $("#roomSelect").val();
-            let tenantId = $("#tenantSelect").val();
-            let title = $("#title").val();
-            let content = $("#content").val();
+            let type = $("#select_targetType_notification").val();
+            let propertyId = $("#select_property_notification").val();
+            let roomId = $("#select_room_notification").val();
+            let tenantId = $("#select_tenant_notification").val();
+            let title = $("#input_title_notification").val();
+            let content = $("#input_content_notification").val();
 
             let url = "";
 
@@ -287,8 +287,8 @@
             $.post(url, data)
                 .done(function () {
                     alert("Gửi thông báo thành công");
-                    $("#title").val("");
-                    $("#content").val("");
+                    $("#input_title_notification").val("");
+                    $("#input_content_notification").val("");
                 })
                 .fail(function (err) {
                     console.error(err);
