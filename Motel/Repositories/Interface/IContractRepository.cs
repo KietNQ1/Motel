@@ -19,6 +19,9 @@ public interface IContractRepository
     // list tenants của landlord (để build dropdown/checkbox)
     Task<List<Tenant>> GetTenantsByLandlordAsync(int landlordId, CancellationToken ct = default);
 
+    // list contracts của landlord (include Room + Tenant)
+    Task<List<Contract>> GetContractsByLandlordAsync(int landlordId, CancellationToken ct = default);
+
     // tạo contract + occupancies + update room status (transaction)
     Task<int> CreateContractWithOccupanciesAsync(
         Contract contract,

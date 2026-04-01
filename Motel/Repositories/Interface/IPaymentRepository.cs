@@ -1,4 +1,5 @@
 using Motel.Models;
+using Motel.ViewModels.Chat;
 
 namespace Motel.Repositories.Interface;
 
@@ -26,4 +27,12 @@ public interface IPaymentRepository
     Task SaveChangesAsync();
     Task<Payment?> GetPaymentForReceiptAsync(int paymentId);
     Task<bool> HasPendingIntentAsync(int invoiceId);
+
+    Task<int> GetPaymentCountByLandlordAsync(int landlordId);
+
+    Task<(int VietQrPendingCount, int CashPendingCount)> GetPendingIntentCountsByLandlordAsync(int landlordId);
+
+    Task<PaymentInsightDto> GetPaymentInsightByLandlordAsync(int landlordId);
+
+    Task<PaymentIntentInsightDto> GetPaymentIntentInsightByLandlordAsync(int landlordId);
 }

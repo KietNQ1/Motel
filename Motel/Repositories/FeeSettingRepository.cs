@@ -75,4 +75,26 @@ public sealed class FeeSettingRepository : IFeeSettingRepository
         await _db.SaveChangesAsync(ct);
         return true;
     }
+
+    public Task<int> GetFeeSettingCountByLandlordAsync(int landlordId, CancellationToken ct = default)
+    {
+        return _db.FeeSettings
+            .AsNoTracking()
+            .CountAsync(fs =>
+                (fs.PropertyId.HasValue && fs.Property.LandlordId == landlordId) ||
+                (fs.RoomId.HasValue && fs.Room.Property.LandlordId == landlordId),
+                ct);
+    }
+
+    public Task<List<FeeSetting>> GetFeeSettingsByLandlordAsync(int landlordId, CancellationToken ct = default)
+    {
+        return _db.FeeSettings
+            .AsNoTracking()
+            .Include(fs => fs.FeeType)
+            .Where(fs =>
+                (fs.PropertyId.HasValue && fs.Property.LandlordId == landlordId) ||
+                (fs.RoomId.HasValue && fs.Room.Property.LandlordId == landlordId))
+            .OrderByDescending(fs => fs.EffectiveFrom)
+            .ToListAsync(ct);
+    }
 }

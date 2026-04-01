@@ -29,4 +29,14 @@ public interface IFeeSettingRepository
     /// Ends a fee setting by setting its EffectiveTo date.
     /// </summary>
     Task<bool> InvalidateFeeSettingAsync(int feeSettingId, DateOnly endDate, CancellationToken ct = default);
+
+    /// <summary>
+    /// Counts fee settings owned by a landlord (both property-level and room-level).
+    /// </summary>
+    Task<int> GetFeeSettingCountByLandlordAsync(int landlordId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Gets fee settings owned by a landlord (property-level and room-level) with FeeType.
+    /// </summary>
+    Task<List<FeeSetting>> GetFeeSettingsByLandlordAsync(int landlordId, CancellationToken ct = default);
 }

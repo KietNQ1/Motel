@@ -49,6 +49,15 @@ public sealed class ContractRepository : IContractRepository
             .OrderBy(t => t.FullName)
             .ToListAsync(ct);
 
+    public Task<List<Contract>> GetContractsByLandlordAsync(int landlordId, CancellationToken ct = default)
+        => _db.Contracts
+            .AsNoTracking()
+            .Include(c => c.Room)
+            .Include(c => c.Tenant)
+            .Where(c => c.Room.Property.LandlordId == landlordId && !c.IsDeleted)
+            .OrderByDescending(c => c.CreatedAt)
+            .ToListAsync(ct);
+
     public async Task<int> CreateContractWithOccupanciesAsync(
         Contract contract,
         List<RoomOccupancy> occupancies,

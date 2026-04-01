@@ -70,6 +70,17 @@ public class RoomFurnitureRepository : IRoomFurnitureRepository
                 f.FurnitureCatalogId == catalogId &&
                 !f.IsDeleted);
     }
+
+    public Task<List<RoomFurniture>> GetRoomFurnituresByLandlordAsync(int landlordId)
+    {
+        return _db.RoomFurnitures
+            .AsNoTracking()
+            .Include(f => f.FurnitureCatalog)
+            .Include(f => f.FurnitureStatus)
+            .Where(f => !f.IsDeleted && f.Room.Property.LandlordId == landlordId)
+            .OrderByDescending(f => f.CreatedAt)
+            .ToListAsync();
+    }
     public async Task DeleteImagesAsync(List<int> imageIds)
     {
         var images = await _db.StoredFileReferences
@@ -88,6 +99,75 @@ public class RoomFurnitureRepository : IRoomFurnitureRepository
     {
         _db.StoredFileReferences.Add(reference);
         return Task.CompletedTask;
+    }
+
+    public Task<int> GetRoomFurnitureCountByLandlordAsync(int landlordId)
+    {
+        return _db.RoomFurnitures
+            .AsNoTracking()
+            .CountAsync(rf => !rf.IsDeleted && rf.Room.Property.LandlordId == landlordId);
+    }
+
+    public Task<int> GetStoredFileCountByLandlordAsync(int landlordId)
+    {
+        return _db.StoredFiles
+            .AsNoTracking()
+            .CountAsync(sf => sf.LandlordId == landlordId);
+    }
+
+    public Task<List<StoredFile>> GetStoredFilesByLandlordAsync(int landlordId)
+    {
+        return _db.StoredFiles
+            .AsNoTracking()
+            .Where(sf => sf.LandlordId == landlordId)
+            .OrderByDescending(sf => sf.UploadedAt)
+            .ToListAsync();
+    }
+
+    public Task<int> GetStoredFileReferenceCountByLandlordAsync(int landlordId)
+    {
+        return _db.StoredFileReferences
+            .AsNoTracking()
+            .CountAsync(sfr => sfr.StoredFile.LandlordId == landlordId);
+    }
+
+    public Task<List<StoredFileReference>> GetStoredFileReferencesByLandlordAsync(int landlordId)
+    {
+        return _db.StoredFileReferences
+            .AsNoTracking()
+            .Where(sfr => sfr.StoredFile.LandlordId == landlordId)
+            .OrderByDescending(sfr => sfr.CreatedAt)
+            .ToListAsync();
+    }
+
+    public Task<int> GetFurnitureCatalogCountAsync()
+    {
+        return _db.FurnitureCatalogs
+            .AsNoTracking()
+            .CountAsync();
+    }
+
+    public Task<List<FurnitureCatalog>> GetFurnitureCatalogsAsync()
+    {
+        return _db.FurnitureCatalogs
+            .AsNoTracking()
+            .OrderBy(fc => fc.Name)
+            .ToListAsync();
+    }
+
+    public Task<int> GetFurnitureStatusCountAsync()
+    {
+        return _db.FurnitureStatuses
+            .AsNoTracking()
+            .CountAsync();
+    }
+
+    public Task<List<FurnitureStatus>> GetFurnitureStatusesAsync()
+    {
+        return _db.FurnitureStatuses
+            .AsNoTracking()
+            .OrderBy(fs => fs.Name)
+            .ToListAsync();
     }
 
     public async Task SaveChangesAsync()

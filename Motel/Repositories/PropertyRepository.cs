@@ -164,6 +164,77 @@ namespace Motel.Repositories
                 .AnyAsync(p => p.PropertyId == propertyId && p.LandlordId == landlordId && !p.IsDeleted);
         }
 
+        public Task<int> GetRoomOccupancyCountByLandlordAsync(int landlordId)
+        {
+            return _context.RoomOccupancies
+                .AsNoTracking()
+                .CountAsync(ro => ro.Room.Property.LandlordId == landlordId);
+        }
+
+        public Task<List<RoomOccupancy>> GetRoomOccupanciesByLandlordAsync(int landlordId)
+        {
+            return _context.RoomOccupancies
+                .AsNoTracking()
+                .Include(ro => ro.Room)
+                .Include(ro => ro.Tenant)
+                .Where(ro => ro.Room.Property.LandlordId == landlordId)
+                .OrderByDescending(ro => ro.CreatedAt)
+                .ToListAsync();
+        }
+
+        public Task<int> GetSubscriptionCountByLandlordAsync(int landlordId)
+        {
+            return _context.Subscriptions
+                .AsNoTracking()
+                .CountAsync(s => s.LandlordId == landlordId);
+        }
+
+        public Task<int> GetActiveSubscriptionCountByLandlordAsync(int landlordId)
+        {
+            return _context.Subscriptions
+                .AsNoTracking()
+                .CountAsync(s => s.LandlordId == landlordId && s.Status == "active");
+        }
+
+        public Task<List<Subscription>> GetSubscriptionsByLandlordAsync(int landlordId)
+        {
+            return _context.Subscriptions
+                .AsNoTracking()
+                .Where(s => s.LandlordId == landlordId)
+                .OrderByDescending(s => s.EndDate)
+                .ToListAsync();
+        }
+
+        public async Task<(int TotalAccounts, int PrimaryAccounts)> GetBankAccountSummaryByLandlordAsync(int landlordId)
+        {
+            var total = await _context.LandlordBankAccounts
+                .AsNoTracking()
+                .CountAsync(a => a.LandlordId == landlordId && !a.IsDeleted);
+
+            var primary = await _context.LandlordBankAccounts
+                .AsNoTracking()
+                .CountAsync(a => a.LandlordId == landlordId && !a.IsDeleted && a.IsPrimary);
+
+            return (total, primary);
+        }
+
+        public Task<List<LandlordBankAccount>> GetBankAccountsByLandlordAsync(int landlordId)
+        {
+            return _context.LandlordBankAccounts
+                .AsNoTracking()
+                .Where(a => a.LandlordId == landlordId && !a.IsDeleted)
+                .OrderByDescending(a => a.IsPrimary)
+                .ThenBy(a => a.BankName)
+                .ToListAsync();
+        }
+
+        public Task<Landlord?> GetLandlordProfileAsync(int landlordId)
+        {
+            return _context.Landlords
+                .AsNoTracking()
+                .FirstOrDefaultAsync(l => l.LandlordId == landlordId);
+        }
+
         private int ExtractFloorNumber(string roomName)
         {
             // Extract floor number from room name (e.g., "301" -> 3, "A201" -> 2)

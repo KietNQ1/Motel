@@ -3,6 +3,7 @@ using Motel.Data;
 using Motel.Models;
 using Motel.Repositories.Interface;
 using Motel.Services;
+using Motel.ViewModels.Chat;
 
 namespace Motel.Repositories;
 
@@ -146,5 +147,65 @@ public class PaymentRepository : IPaymentRepository
             .ThenInclude(i => i.Room)
                 .ThenInclude(r => r.Property)
         .FirstOrDefaultAsync(p => p.PaymentId == paymentId);
+
+    public Task<int> GetPaymentCountByLandlordAsync(int landlordId)
+        => _db.Payments
+            .AsNoTracking()
+            .CountAsync(p => p.Invoice.Room.Property.LandlordId == landlordId);
+
+    public async Task<(int VietQrPendingCount, int CashPendingCount)> GetPendingIntentCountsByLandlordAsync(int landlordId)
+    {
+        var pendingVietQr = await GetVietQrRequestsForLandlordAsync(landlordId);
+        var pendingCash = await GetPendingCashIntentsForLandlordAsync(landlordId);
+        return (pendingVietQr.Count, pendingCash.Count);
+    }
+
+    public async Task<PaymentInsightDto> GetPaymentInsightByLandlordAsync(int landlordId)
+    {
+        var payments = await _db.Payments
+            .AsNoTracking()
+            .Where(p => p.Invoice.Room.Property.LandlordId == landlordId)
+            .OrderByDescending(p => p.PaidAt)
+            .ToListAsync();
+
+        var dto = new PaymentInsightDto
+        {
+            TotalPayments = payments.Count,
+            TotalAmount = payments.Sum(p => p.Amount),
+            SucceededCount = payments.Count(p => p.Status == PaymentStatus.Succeeded),
+            PendingCount = payments.Count(p => p.Status == "pending"),
+            FailedCount = payments.Count(p => p.Status == PaymentStatus.Failed || p.Status == PaymentStatus.Rejected),
+            RecentPaymentSamples = payments
+                .Take(3)
+                .Select(p => $"{p.Provider.ToUpperInvariant()} | {p.Amount:N0} VND | {p.Status} | {p.PaidAt:dd/MM/yyyy HH:mm}")
+                .ToList()
+        };
+
+        return dto;
+    }
+
+    public async Task<PaymentIntentInsightDto> GetPaymentIntentInsightByLandlordAsync(int landlordId)
+    {
+        var now = DateTime.UtcNow;
+        var intents = await _db.PaymentIntents
+            .AsNoTracking()
+            .Where(i => i.Invoice.Room.Property.LandlordId == landlordId)
+            .OrderByDescending(i => i.CreatedAt)
+            .ToListAsync();
+
+        var dto = new PaymentIntentInsightDto
+        {
+            TotalIntents = intents.Count,
+            PendingIntents = intents.Count(i => i.Status == PaymentIntentStatus.Pending),
+            AwaitingLandlordIntents = intents.Count(i => i.Status == PaymentIntentStatus.AwaitingLandlord),
+            ExpiredIntents = intents.Count(i => i.ExpiredAt.HasValue && i.ExpiredAt.Value <= now),
+            RecentIntentSamples = intents
+                .Take(3)
+                .Select(i => $"{i.Provider.ToUpperInvariant()} | {i.Amount:N0} VND | {i.Status} | {i.CreatedAt:dd/MM/yyyy HH:mm}")
+                .ToList()
+        };
+
+        return dto;
+    }
 }
 
