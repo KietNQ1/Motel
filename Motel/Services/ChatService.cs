@@ -177,10 +177,10 @@ public class ChatService : IChatService {
                 Console.WriteLine($"[ChatService] HandleLandlord truyền vào landlordId: {landlordId}");
                 reply = await HandleLandlord(landlordId, message);
                 break;
-            case "guide":
-                Console.WriteLine($"[ChatService] HandleGuide truyền vào landlordId: {landlordId}");
-                reply = await HandleGuide(landlordId, message);
-                break;
+            // case "guide":
+            //     Console.WriteLine($"[ChatService] HandleGuide truyền vào landlordId: {landlordId}");
+            //     reply = await HandleGuide(landlordId, message);
+            //     break;
             default:
                 var history = await _repo.GetRecentMessagesAsync(userId);
                 reply = await _gemini.GenerateReplyAsync(history, message);
@@ -228,7 +228,7 @@ public class ChatService : IChatService {
             { "furniture-status", new[] { "trạng thái nội thất", "furniture status", "tình trạng nội thất" } },
             { "furniture-catalog", new[] { "danh mục nội thất", "furniture catalog", "trạng thái nội thất" } },
             { "landlord", new[] { "chủ trọ", "landlord", "thông tin chủ" } },
-            { "guide", new[] { "hướng dẫn", "guide", "cách sử dụng", "làm sao", "thao tác", "help" } },
+            // { "guide", new[] { "hướng dẫn", "guide", "cách sử dụng", "làm sao", "thao tác", "help" } },
         };
 
         foreach (var kv in map)
