@@ -1,0 +1,87 @@
+@model Motel.ViewModels.Payment.PaymentSettingsViewModel
+@{
+    ViewData["Title"] = "Cài đặt thanh toán";
+}
+
+<div class="max-w-5xl mx-auto space-y-10">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Cài đặt thanh toán</h1>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            Cấu hình ngân hàng VietQR, duyệt yêu cầu VietQR và xác nhận tiền mặt — tất cả tại một trang.
+        </p>
+    </div>
+
+    <div id="bank-config" class="scroll-mt-24">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-1">Cấu hình tài khoản ngân hàng</h2>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+            Dùng để tạo mã VietQR. Người thuê chuyển khoản trực tiếp vào tài khoản này.
+        </p>
+    </div>
+
+    @if (TempData["Success"] is string successMsg)
+    {
+        <div class="rounded-md bg-green-50 p-3 text-sm text-green-700 border border-green-200">
+            @successMsg
+        </div>
+    }
+
+    <form id="form_bankConfig" asp-action="Index" method="post" class="bg-white shadow-sm rounded-xl border border-gray-200 p-6 space-y-5">
+        @Html.AntiForgeryToken()
+
+                <div class="grid grid-cols-1 gap-4">
+            <!-- Ngân hàng (chọn từ danh sách) -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Ngân hàng</label>
+                <select id="select_bankCode" asp-for="BankCode"
+                        asp-items="Model.BankOptions"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary">
+                    <option value="">-- Chọn ngân hàng --</option>
+                </select>
+                <span asp-validation-for="BankCode" class="text-sm text-red-600"></span>
+
+                @* Hiển thị mã ngân hàng hiện tại (nếu đã lưu) *@
+                @if (!string.IsNullOrEmpty(Model.BankCode))
+                {
+                    <p class="mt-1 text-xs text-gray-500">
+                        Mã ngân hàng: <span class="font-semibold">@Model.BankCode</span>
+                    </p>
+                }
+            </div>
+
+            <!-- Số tài khoản -->
+            <div>
+                <label id="lbl_bankAccountNumber" asp-for="BankAccountNumber" class="block text-sm font-medium text-gray-700"></label>
+                <input id="input_bankAccountNumber" asp-for="BankAccountNumber"
+                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary" />
+                <span asp-validation-for="BankAccountNumber" class="text-sm text-red-600"></span>
+            </div>
+
+            <!-- Tên chủ tài khoản -->
+            <div>
+                <label id="lbl_bankAccountName" asp-for="BankAccountName" class="block text-sm font-medium text-gray-700"></label>
+                <input id="input_bankAccountName" asp-for="BankAccountName"
+                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary" />
+                <span asp-validation-for="BankAccountName" class="text-sm text-red-600"></span>
+            </div>
+        </div>
+
+        <div class="pt-2 flex justify-end">
+            <button id="btn_submitBankConfig" type="submit" class="inline-flex items-center px-4 py-2 rounded-md bg-primary text-white text-sm font-medium hover:bg-primary-dark">
+                Lưu cấu hình
+            </button>
+        </div>
+    </form>
+
+    <hr class="border-gray-200 dark:border-gray-700" />
+
+    @await Html.PartialAsync("_VietQrRequestsSection", Model.VietQrRequests)
+
+    <hr class="border-gray-200 dark:border-gray-700" />
+
+    @await Html.PartialAsync("_CashPendingSection", Model.PendingCashConfirms)
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+

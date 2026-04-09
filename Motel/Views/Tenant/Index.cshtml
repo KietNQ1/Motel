@@ -1,0 +1,426 @@
+@model Motel.ViewModels.Tenant.PropertyTenantsViewModel
+
+@{
+    ViewData["Title"] = "Người thuê - " + Model.PropertyName;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <style>
+        .rc-page {
+            font-family: 'Manrope', sans-serif;
+            --rc-primary:          #994200;
+            --rc-primary-dark:     #c05500;
+            --rc-primary-fixed:    #ffdbca;
+            --rc-on-primary-fixed: #331100;
+            --rc-outline-var:      #dec0b2;
+            --rc-surface-low:      #f3f3f3;
+            --rc-surface-lowest:   #ffffff;
+            --rc-on-surface:       #1a1c1c;
+            --rc-on-surface-var:   #574238;
+            --rc-tertiary-fixed:   #d1e4ff;
+            --rc-tertiary:         #005fa0;
+        }
+
+        .rc-page .msym {
+            font-family: 'Material Symbols Outlined';
+            font-size: 20px;
+            line-height: 1;
+            user-select: none;
+            vertical-align: middle;
+        }
+
+        /* Breadcrumb */
+        .rc-breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+            font-size: .82rem;
+            color: var(--rc-on-surface-var);
+            margin-bottom: 1.5rem;
+        }
+        .rc-breadcrumb a { color: inherit; text-decoration: none; }
+        .rc-breadcrumb a:hover { color: var(--rc-primary); }
+        .rc-breadcrumb strong { color: var(--rc-on-surface); }
+
+        /* Page heading */
+        .rc-page-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+        .rc-page-header h1 {
+            font-size: clamp(1.8rem, 4vw, 2.6rem);
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: var(--rc-on-surface);
+            line-height: 1.1;
+            margin: 0 0 .35rem;
+        }
+        .rc-page-header p {
+            color: var(--rc-on-surface-var);
+            font-size: .88rem;
+            margin: 0;
+        }
+
+        /* Back button */
+        .rc-btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .6rem 1.1rem;
+            background: transparent;
+            color: var(--rc-on-surface);
+            border: 2px solid var(--rc-outline-var);
+            border-radius: .75rem;
+            font-weight: 700;
+            font-size: .85rem;
+            font-family: 'Manrope', sans-serif;
+            cursor: pointer;
+            transition: background .15s;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .rc-btn-secondary:hover { background: var(--rc-surface-low); color: var(--rc-on-surface); }
+
+        /* Stats row */
+        .rc-stats {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+        .rc-stat-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            background: var(--rc-surface-lowest);
+            border: 1px solid rgba(222,192,178,.4);
+            border-radius: 2rem;
+            padding: .35rem .9rem;
+            font-size: .78rem;
+            font-weight: 700;
+            color: var(--rc-on-surface-var);
+            box-shadow: 0 1px 3px rgba(0,0,0,.04);
+        }
+        .rc-stat-pill .count {
+            font-size: 1rem;
+            font-weight: 800;
+            color: var(--rc-primary);
+        }
+        .rc-stat-pill .msym { font-size: 16px; color: var(--rc-primary); }
+
+        /* Card */
+        .rc-card {
+            background: var(--rc-surface-lowest);
+            border-radius: 1rem;
+            box-shadow: 0 1px 6px rgba(0,0,0,.06);
+            overflow: hidden;
+        }
+
+        /* Table */
+        .rc-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .rc-table thead th {
+            font-size: .67rem;
+            font-weight: 700;
+            letter-spacing: .09em;
+            text-transform: uppercase;
+            color: var(--rc-on-surface-var);
+            padding: .85rem 1rem;
+            border-bottom: 2px solid var(--rc-outline-var);
+            background: var(--rc-surface-low);
+            white-space: nowrap;
+        }
+        .rc-table thead th.text-end { text-align: right; }
+        .rc-table tbody tr {
+            border-bottom: 1px solid rgba(222,192,178,.18);
+            transition: background .15s, transform .1s;
+        }
+        .rc-table tbody tr:last-child { border-bottom: none; }
+        .rc-table tbody tr:hover { background: rgba(255,219,202,.13); }
+        .rc-table td {
+            padding: .9rem 1rem;
+            font-size: .88rem;
+            color: var(--rc-on-surface);
+            vertical-align: middle;
+        }
+        .rc-table td.text-end { text-align: right; }
+
+        /* Avatar */
+        .rc-avatar {
+            width: 2.4rem; height: 2.4rem;
+            border-radius: 50%;
+            background: var(--rc-primary-fixed);
+            color: var(--rc-on-primary-fixed);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800;
+            font-size: .88rem;
+            flex-shrink: 0;
+        }
+        .rc-name-cell {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+        }
+        .rc-name-cell .name {
+            font-weight: 700;
+            font-size: .92rem;
+            color: var(--rc-on-surface);
+        }
+
+        /* Chips */
+        .rc-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: .3rem;
+            padding: .22rem .7rem;
+            border-radius: 2rem;
+            font-size: .72rem;
+            font-weight: 700;
+            white-space: nowrap;
+            text-decoration: none;
+            transition: opacity .15s;
+        }
+        .rc-chip:hover { opacity: .82; }
+        .rc-chip .msym { font-size: 14px; }
+
+        .rc-chip-room {
+            background: var(--rc-tertiary-fixed);
+            color: var(--rc-tertiary);
+        }
+        .rc-chip-contract {
+            background: var(--rc-primary-fixed);
+            color: var(--rc-on-primary-fixed);
+        }
+        .rc-chip-active {
+            background: #d4f5e2;
+            color: #1a7a4a;
+        }
+        .rc-chip-inactive {
+            background: var(--rc-surface-low);
+            color: var(--rc-on-surface-var);
+        }
+        .rc-chip-none {
+            color: var(--rc-on-surface-var);
+            font-style: italic;
+            font-size: .78rem;
+            font-weight: 500;
+        }
+
+        /* Detail button */
+        .rc-btn-detail {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            padding: .38rem .85rem;
+            background: transparent;
+            color: var(--rc-primary);
+            border: 1.5px solid var(--rc-outline-var);
+            border-radius: .5rem;
+            font-size: .78rem;
+            font-weight: 700;
+            font-family: 'Manrope', sans-serif;
+            text-decoration: none;
+            transition: background .15s, border-color .15s;
+            white-space: nowrap;
+        }
+        .rc-btn-detail:hover {
+            background: var(--rc-primary-fixed);
+            border-color: var(--rc-primary);
+            color: var(--rc-primary);
+        }
+        .rc-btn-detail .msym { font-size: 16px; }
+
+        /* Empty state */
+        .rc-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem 2rem;
+            text-align: center;
+            gap: .75rem;
+        }
+        .rc-empty .msym {
+            font-size: 48px;
+            color: var(--rc-outline-var);
+        }
+        .rc-empty p {
+            font-size: .9rem;
+            color: var(--rc-on-surface-var);
+            margin: 0;
+        }
+    </style>
+}
+
+<div class="rc-page py-4 py-lg-5">
+    <div class="container-lg">
+
+        @* Breadcrumb *@
+        <nav class="rc-breadcrumb" aria-label="Breadcrumb">
+            <a id="lnk_breadcrumb_propertyIndex" asp-controller="Property" asp-action="Index">Nhà trọ của tôi</a>
+            <span class="msym">chevron_right</span>
+            <a id="lnk_breadcrumb_propertyDetails" asp-controller="Property" asp-action="Details" asp-route-id="@Model.PropertyId">@Model.PropertyName</a>
+            <span class="msym">chevron_right</span>
+            <strong>Người thuê</strong>
+        </nav>
+
+        @* Page heading *@
+        <div class="rc-page-header">
+            <div>
+                <h1>Người thuê</h1>
+                <p>@Model.PropertyName</p>
+            </div>
+            <a id="lnk_back_propertyDetails" asp-controller="Property" asp-action="Details" asp-route-id="@Model.PropertyId"
+               class="rc-btn-secondary">
+                <span class="msym">arrow_back</span>
+                Quay lại
+            </a>
+        </div>
+
+        @* Stats row *@
+        @{
+            var totalCount  = Model.Tenants.Count();
+            var activeCount = Model.Tenants.Count(t => t.OccupancyStatus == "active");
+            var leftCount   = totalCount - activeCount;
+        }
+        <div class="rc-stats">
+            <div class="rc-stat-pill">
+                <span class="msym">group</span>
+                Tổng cộng <span class="count">@totalCount</span> người
+            </div>
+            <div class="rc-stat-pill">
+                <span class="msym">check_circle</span>
+                Đang thuê <span class="count" style="color:#1a7a4a">@activeCount</span>
+            </div>
+            @if (leftCount > 0)
+            {
+                <div class="rc-stat-pill">
+                    <span class="msym" style="color:var(--rc-on-surface-var)">logout</span>
+                    Đã rời <span class="count" style="color:var(--rc-on-surface-var)">@leftCount</span>
+                </div>
+            }
+        </div>
+
+        @* Content *@
+        <div class="rc-card">
+            @if (!Model.Tenants.Any())
+            {
+                <div class="rc-empty">
+                    <span class="msym">people_outline</span>
+                    <p>Nhà trọ chưa có người thuê nào.</p>
+                </div>
+            }
+            else
+            {
+                <div id="div_tenantsTableWrapper" style="overflow-x:auto;">
+                    <table id="tbl_tenants" class="rc-table">
+                        <thead>
+                            <tr>
+                                <th id="th_fullName">Họ tên</th>
+                                <th id="th_phone">Số điện thoại</th>
+                                <th id="th_identityNo">CCCD / CMND</th>
+                                <th id="th_room">Phòng</th>
+                                <th id="th_contract">Hợp đồng</th>
+                                <th id="th_temporaryResidence">Tạm trú</th>
+                                <th id="th_status">Trạng thái</th>
+                                <th id="th_action" class="text-end">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var tenant in Model.Tenants)
+                            {
+                                @* Lấy chữ cái đầu tên cho avatar *@
+                                var initials = string.IsNullOrEmpty(tenant.FullName)
+                                    ? "?"
+                                    : tenant.FullName.Split(' ').Last().Substring(0, 1).ToUpper();
+
+                                <tr id="tr_tenant_@tenant.TenantId">
+                                    <td id="td_fullName_@tenant.TenantId">
+                                        <div class="rc-name-cell">
+                                            <div class="rc-avatar">@initials</div>
+                                            <span class="name">@tenant.FullName</span>
+                                        </div>
+                                    </td>
+                                    <td id="td_phone_@tenant.TenantId" style="color:var(--rc-on-surface-var)">
+                                        @(string.IsNullOrEmpty(tenant.Phone) ? "—" : tenant.Phone)
+                                    </td>
+                                    <td id="td_identityNo_@tenant.TenantId" style="color:var(--rc-on-surface-var); font-variant-numeric:tabular-nums;">
+                                        @(string.IsNullOrEmpty(tenant.IdentityNo) ? "—" : tenant.IdentityNo)
+                                    </td>
+                                    <td id="td_room_@tenant.TenantId">
+                                        <a id="lnk_roomDetails_@tenant.TenantId" asp-controller="Room" asp-action="Details" asp-route-id="@tenant.RoomId"
+                                           class="rc-chip rc-chip-room">
+                                            <span class="msym">meeting_room</span>
+                                            @tenant.RoomName
+                                        </a>
+                                    </td>
+                                    <td id="td_contract_@tenant.TenantId">
+                                        @if (tenant.ContractId.HasValue)
+                                        {
+                                            <a id="lnk_contractDetails_@tenant.TenantId" asp-controller="Contract" asp-action="Details" asp-route-id="@tenant.ContractId"
+                                               class="rc-chip rc-chip-contract">
+                                                <span class="msym">description</span>
+                                                @(tenant.StartDate?.ToString("dd/MM/yy") ?? "...") – @(tenant.EndDate?.ToString("dd/MM/yy") ?? "...")
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span id="txt_noContract_@tenant.TenantId" class="rc-chip-none">Không có HĐ</span>
+                                        }
+                                    </td>
+                                    <td id="td_temporaryResidence_@tenant.TenantId">
+                                        @if (tenant.IsTemporaryResidenceRegistered)
+                                        {
+                                            <span id="badge_registered_@tenant.TenantId" class="badge bg-success bg-opacity-10 text-success border border-success">
+                                                <i class="bi bi-check-circle"></i> Đã đăng ký
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span id="badge_unregistered_@tenant.TenantId" class="badge bg-warning bg-opacity-10 text-warning border border-warning">
+                                                <i class="bi bi-exclamation-triangle"></i> Chưa đăng ký
+                                            </span>
+                                        }
+                                    </td>
+                                    <td id="td_status_@tenant.TenantId">
+                                        @if (tenant.OccupancyStatus == "active")
+                                        {
+                                            <span id="txt_statusActive_@tenant.TenantId" class="rc-chip rc-chip-active">
+                                                <span class="msym">check_circle</span>
+                                                Đang thuê
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span id="txt_statusInactive_@tenant.TenantId" class="rc-chip rc-chip-inactive">
+                                                <span class="msym">logout</span>
+                                                Đã rời đi
+                                            </span>
+                                        }
+                                    </td>
+                                    <td id="td_action_@tenant.TenantId" class="text-end">
+                                        <a id="lnk_tenantDetails_@tenant.TenantId" asp-controller="Tenant" asp-action="Details" asp-route-id="@tenant.TenantId" asp-route-occupancyId="@tenant.OccupancyId"
+                                           class="rc-btn-detail">
+                                            <span class="msym">open_in_new</span>
+                                            Chi tiết
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+
+    </div>
+</div>

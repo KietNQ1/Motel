@@ -23,5 +23,5 @@ public partial class StoredFile
 
     public virtual ICollection<StoredFileReference> StoredFileReferences { get; set; } = new List<StoredFileReference>();
 
-    public virtual AspNetUser UploadedByUser { get; set; } = null!;
+    public virtual ApplicationUser UploadedByUser { get; set; } = null!;
 }

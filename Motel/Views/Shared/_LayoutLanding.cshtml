@@ -1,0 +1,178 @@
+@inject Microsoft.AspNetCore.Identity.UserManager<Motel.Models.ApplicationUser> UserManager
+
+@{
+    var currentUser = await UserManager.GetUserAsync(User);
+    var fullName = currentUser?.FullName ?? "Guest";
+    var nameParts = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+    var initials = nameParts.Length == 1
+        ? (nameParts[0].Length >= 2 ? nameParts[0].Substring(0, 2) : nameParts[0]).ToUpper()
+        : (nameParts[0][0].ToString() + nameParts[nameParts.Length - 1][0].ToString()).ToUpper();
+}
+
+<!DOCTYPE html>
+<html class="light" lang="vi">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>@ViewData["Title"] - Rentify</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.0/dist/cdn.min.js"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#d46211",
+                        "primary-dark": "#b04f0b",
+                        "secondary": "#efe7dd",
+                        "background-light": "#fcfaf8",
+                        "background-dark": "#221810",
+                        "text-main": "#1b130d",
+                        "text-sub": "#6b594e",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"],
+                        "body": ["Manrope", "sans-serif"],
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "2xl": "2rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+    <style>
+        body { font-family: 'Manrope', sans-serif; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-text-main font-display overflow-x-hidden">
+    <header class="sticky top-0 z-50 w-full border-b border-[#f3ece7] bg-white/90 backdrop-blur-md px-4 py-3 md:px-10">
+        <div class="mx-auto flex max-w-7xl items-center justify-between">
+            <a asp-controller="Home" asp-action="Index" class="flex items-center gap-3">
+                <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-white">
+                    <span class="material-symbols-outlined">apartment</span>
+                </div>
+                <h2 class="text-xl font-bold tracking-tight text-text-main">Rentify</h2>
+            </a>
+            <nav class="hidden items-center gap-8 md:flex">
+                <a class="text-sm font-medium text-text-main transition hover:text-primary" href="#features">Tính năng</a>
+                <a class="text-sm font-medium text-text-main transition hover:text-primary" href="#pricing">Bảng giá</a>
+                <a class="text-sm font-medium text-text-main transition hover:text-primary" href="#stats">Thống kê</a>
+                <a class="text-sm font-medium text-text-main transition hover:text-primary" href="#admin">Admin</a>
+                <a class="text-sm font-medium text-text-main transition hover:text-primary" href="#contact">Liên hệ</a>
+            </nav>
+            <div class="flex items-center gap-3">
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <div x-data="{ userMenuOpen: false }" class="relative">
+                        <button @@click="userMenuOpen = !userMenuOpen"
+                                class="flex items-center gap-2 rounded-xl border border-[#e7d9cf] bg-white px-3 py-2 hover:bg-gray-50 transition">
+                            <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-semibold text-white">
+                                @initials
+                            </div>
+                            <span class="hidden text-sm font-medium text-text-main sm:block max-w-[120px] truncate">@fullName</span>
+                            <span class="material-symbols-outlined text-lg text-text-sub">expand_more</span>
+                        </button>
+                        <div x-show="userMenuOpen"
+                             @@click.away="userMenuOpen = false"
+                             x-transition
+                             class="absolute right-0 mt-2 w-52 rounded-xl border border-gray-200 bg-white py-1 shadow-xl">
+                            <a asp-controller="Dashboard" asp-action="Index" class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100">
+                                <span class="material-symbols-outlined text-lg">dashboard</span>
+                                Dashboard
+                            </a>
+                            <a asp-controller="Account" asp-action="Profile" class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100">
+                                <span class="material-symbols-outlined text-lg">person</span>
+                                Hồ sơ cá nhân
+                            </a>
+                            <hr class="my-1 border-gray-200" />
+                            <form asp-controller="Account" asp-action="Logout" method="post">
+                                <button type="submit" class="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50">
+                                    <span class="material-symbols-outlined text-lg">logout</span>
+                                    Đăng xuất
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <a asp-controller="Account" asp-action="Login" class="hidden rounded-xl border border-[#e7d9cf] px-4 py-2 text-sm font-bold text-text-main transition hover:bg-gray-50 md:block">
+                        Đăng nhập
+                    </a>
+                    <button class="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white transition hover:bg-primary-dark shadow-lg shadow-primary/20">
+                        Dùng thử miễn phí
+                    </button>
+                }
+                <button class="md:hidden p-2 text-text-main">
+                    <span class="material-symbols-outlined">menu</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    @RenderBody()
+
+    <footer class="bg-background-light pt-16 pb-8 border-t border-[#e7d9cf]">
+        <div class="mx-auto max-w-7xl px-4 md:px-10">
+            <div class="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
+                <div>
+                    <a asp-controller="Home" asp-action="Index" class="mb-4 flex items-center gap-2">
+                        <div class="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-white">
+                            <span class="material-symbols-outlined text-lg">apartment</span>
+                        </div>
+                        <h2 class="text-lg font-bold text-text-main">Rentify</h2>
+                    </a>
+                    <p class="text-sm text-text-sub">
+                        Giải pháp quản lý nhà trọ, phòng trọ, căn hộ dịch vụ hàng đầu tại Việt Nam.
+                    </p>
+                </div>
+                <div>
+                    <h3 class="mb-4 font-bold text-text-main">Sản phẩm</h3>
+                    <ul class="space-y-2 text-sm text-text-sub">
+                        <li><a class="hover:text-primary" href="#">Tính năng</a></li>
+                        <li><a class="hover:text-primary" href="#">Bảng giá</a></li>
+                        <li><a class="hover:text-primary" href="#">Ứng dụng di động</a></li>
+                        <li><a class="hover:text-primary" href="#">Phần cứng IoT</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="mb-4 font-bold text-text-main">Hỗ trợ</h3>
+                    <ul class="space-y-2 text-sm text-text-sub">
+                        <li><a class="hover:text-primary" href="#">Trung tâm trợ giúp</a></li>
+                        <li><a class="hover:text-primary" href="#">Hướng dẫn sử dụng</a></li>
+                        <li><a class="hover:text-primary" href="#">Cộng đồng</a></li>
+                        <li><a class="hover:text-primary" href="#">Liên hệ</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="mb-4 font-bold text-text-main">Liên hệ</h3>
+                    <ul class="space-y-2 text-sm text-text-sub">
+                        <li class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-base">call</span>
+                            <span>0909 123 456</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-base">mail</span>
+                            <span>hotro@rentify.vn</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-base">location_on</span>
+                            <span>TP. Hồ Chí Minh, Việt Nam</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-16 border-t border-[#e7d9cf] pt-8 text-center text-sm text-text-sub">
+                <p>© 2024 Rentify. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,55 @@
+@model List<Motel.ViewModels.Payment.PendingCashConfirmItemViewModel>
+
+<div id="cash-confirm" class="scroll-mt-24">
+    <h2 class="text-xl font-bold text-gray-900 dark:text-white">Xác nhận thanh toán tiền mặt</h2>
+    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+        Các yêu cầu tiền mặt đang chờ bạn xác nhận. Nhấn &quot;Mở xác nhận&quot; để vào trang chi tiết giống trước đây.
+    </p>
+
+    <div class="mt-4 bg-white dark:bg-gray-800 shadow-sm rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <table id="tbl_pendingCash" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-900/50">
+                <tr>
+                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Hóa đơn</th>
+                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Phòng</th>
+                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Người thuê</th>
+                    <th class="px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase">Số tiền</th>
+                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Thời gian</th>
+                    <th class="px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase"></th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+            @if (!Model.Any())
+            {
+                <tr>
+                    <td colspan="6" class="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
+                        Không có yêu cầu tiền mặt nào đang chờ xác nhận.
+                    </td>
+                </tr>
+            }
+            else
+            {
+                foreach (var item in Model)
+                {
+                    <tr id="tr_cashConfirm_@item.InvoiceId" class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                        <td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">#@item.InvoiceId</td>
+                        <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+                            <div class="font-medium">@item.RoomName</div>
+                            <div class="text-xs text-gray-400">@item.PropertyName</div>
+                        </td>
+                        <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">@item.TenantName</td>
+                        <td class="px-4 py-3 text-sm text-right font-semibold text-gray-900 dark:text-white">@item.Amount.ToString("N0") đ</td>
+                        <td class="px-4 py-3 text-sm text-gray-500">@item.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                        <td class="px-4 py-3 text-sm text-right">
+                            <a id="lnk_cashConfirm_@item.PaymentIntentId" asp-controller="Payment" asp-action="CashConfirm" asp-route-paymentIntentId="@item.PaymentIntentId"
+                               class="inline-flex items-center px-3 py-1.5 rounded-md bg-primary text-white text-xs font-medium hover:bg-primary-dark">
+                                Mở xác nhận
+                            </a>
+                        </td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,56 +1,73 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Motel.Models;
 
 namespace Motel.Data;
 
-public partial class MotelDbContext : DbContext
+public partial class MotelDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>, int>
 {
     public MotelDbContext(DbContextOptions<MotelDbContext> options)
         : base(options)
     {
     }
 
-    public virtual DbSet<AspNetUser> AspNetUsers { get; set; }
+    public virtual DbSet<ApplicationUser> AspNetUsers { get; set; } = null!;
 
-    public virtual DbSet<Contract> Contracts { get; set; }
+    public virtual DbSet<Contract> Contracts { get; set; } = null!;
 
-    public virtual DbSet<Invoice> Invoices { get; set; }
+    public virtual DbSet<Invoice> Invoices { get; set; } = null!;
 
-    public virtual DbSet<InvoiceLine> InvoiceLines { get; set; }
+    public virtual DbSet<InvoiceLine> InvoiceLines { get; set; } = null!;
 
-    public virtual DbSet<Landlord> Landlords { get; set; }
+    public virtual DbSet<Landlord> Landlords { get; set; } = null!;
 
-    public virtual DbSet<MeterReading> MeterReadings { get; set; }
+    public virtual DbSet<MeterReading> MeterReadings { get; set; } = null!;
 
-    public virtual DbSet<Notification> Notifications { get; set; }
+    public virtual DbSet<Notification> Notifications { get; set; } = null!;
 
-    public virtual DbSet<Payment> Payments { get; set; }
+    public virtual DbSet<Payment> Payments { get; set; } = null!;
 
-    public virtual DbSet<PaymentIntent> PaymentIntents { get; set; }
+    public virtual DbSet<PaymentIntent> PaymentIntents { get; set; } = null!;
 
-    public virtual DbSet<Property> Properties { get; set; }
+    public virtual DbSet<Property> Properties { get; set; } = null!;
 
-    public virtual DbSet<Room> Rooms { get; set; }
+    public virtual DbSet<Room> Rooms { get; set; } = null!;
 
-    public virtual DbSet<RoomOccupancy> RoomOccupancies { get; set; }
+    public virtual DbSet<RoomFurniture> RoomFurnitures { get; set; } = null!;
 
-    public virtual DbSet<RoomUtilitySetting> RoomUtilitySettings { get; set; }
+    public virtual DbSet<RoomOccupancy> RoomOccupancies { get; set; } = null!;
 
-    public virtual DbSet<StoredFile> StoredFiles { get; set; }
+    public virtual DbSet<FeeType> FeeTypes { get; set; } = null!;
 
-    public virtual DbSet<StoredFileReference> StoredFileReferences { get; set; }
+    public virtual DbSet<FeeSetting> FeeSettings { get; set; } = null!;
 
-    public virtual DbSet<Subscription> Subscriptions { get; set; }
+    public virtual DbSet<StoredFile> StoredFiles { get; set; } = null!;
 
-    public virtual DbSet<Tenant> Tenants { get; set; }
+    public virtual DbSet<StoredFileReference> StoredFileReferences { get; set; } = null!;
 
-    public virtual DbSet<Transaction> Transactions { get; set; }
+    public virtual DbSet<Subscription> Subscriptions { get; set; } = null!;
+
+    public virtual DbSet<TaxEstimation> TaxEstimations { get; set; } = null!;
+
+    public virtual DbSet<TaxRule> TaxRules { get; set; } = null!;
+
+    public virtual DbSet<Tenant> Tenants { get; set; } = null!;
+
+    public virtual DbSet<Transaction> Transactions { get; set; } = null!;
+
+    public virtual DbSet<FurnitureCatalog> FurnitureCatalogs { get; set; } = null!;
+
+    public DbSet<FurnitureStatus> FurnitureStatuses { get; set; } = null!;
+
+    public virtual DbSet<LandlordBankAccount> LandlordBankAccounts { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<AspNetUser>(entity =>
+        base.OnModelCreating(modelBuilder);
+        modelBuilder.Entity<ApplicationUser>(entity =>
         {
             entity.HasIndex(e => e.Email, "UX_AspNetUsers_Email").IsUnique();
 
@@ -58,16 +75,25 @@ public partial class MotelDbContext : DbContext
             entity.Property(e => e.Email).HasMaxLength(256);
             entity.Property(e => e.FullName).HasMaxLength(150);
             entity.Property(e => e.PasswordHash).HasMaxLength(500);
-            entity.Property(e => e.Phone).HasMaxLength(30);
+            entity.Property(e => e.PhoneNumber).HasMaxLength(30);
+
+            // Indexes from SQLAspCore
+            entity.HasIndex(e => e.NormalizedUserName, "UX_AspNetUsers_NormalizedUserName").IsUnique().HasFilter("[NormalizedUserName] IS NOT NULL");
+            entity.HasIndex(e => e.NormalizedEmail, "IX_AspNetUsers_NormalizedEmail");
+        });
+
+        modelBuilder.Entity<IdentityRole<int>>(entity =>
+        {
+            entity.HasIndex(e => e.NormalizedName, "UX_AspNetRoles_NormalizedName").IsUnique().HasFilter("[NormalizedName] IS NOT NULL");
         });
 
         modelBuilder.Entity<Contract>(entity =>
         {
             entity.HasIndex(e => e.RoomId, "IX_Contracts_RoomId").HasFilter("([IsDeleted]=(0))");
 
-            entity.HasIndex(e => e.RoomId, "UX_Contracts_RoomId_ActiveOnly")
-                .IsUnique()
-                .HasFilter("([IsDeleted]=(0) AND [Status]='active')");
+            entity.HasIndex(e => new { e.RoomId, e.TenantId }, "UX_Contracts_Room_Tenant_Active")
+    .IsUnique()
+    .HasFilter("([IsDeleted]=(0) AND [Status]='active')");
 
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysdatetime())");
             entity.Property(e => e.DepositAmount).HasColumnType("decimal(18, 2)");
@@ -75,10 +101,11 @@ public partial class MotelDbContext : DbContext
                 .HasMaxLength(20)
                 .IsUnicode(false);
 
-            entity.HasOne(d => d.Room).WithOne(p => p.Contract)
-                .HasForeignKey<Contract>(d => d.RoomId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Contracts_Rooms");
+            entity.HasOne(d => d.Room)
+              .WithMany(p => p.Contracts)
+              .HasForeignKey(d => d.RoomId)
+              .OnDelete(DeleteBehavior.ClientSetNull)
+              .HasConstraintName("FK_Contracts_Rooms");
 
             entity.HasOne(d => d.Tenant).WithMany(p => p.Contracts)
                 .HasForeignKey(d => d.TenantId)
@@ -112,9 +139,6 @@ public partial class MotelDbContext : DbContext
         modelBuilder.Entity<InvoiceLine>(entity =>
         {
             entity.Property(e => e.Description).HasMaxLength(255);
-            entity.Property(e => e.ItemType)
-                .HasMaxLength(20)
-                .IsUnicode(false);
             entity.Property(e => e.LineTotal)
                 .HasComputedColumnSql("(round([Quantity]*[UnitPrice],(2)))", true)
                 .HasColumnType("decimal(37, 4)");
@@ -125,6 +149,11 @@ public partial class MotelDbContext : DbContext
                 .HasForeignKey(d => d.InvoiceId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_InvoiceLines_Invoices");
+
+            entity.HasOne(d => d.FeeType).WithMany(p => p.InvoiceLines)
+                .HasForeignKey(d => d.FeeTypeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_InvoiceLines_FeeTypes");
         });
 
         modelBuilder.Entity<Landlord>(entity =>
@@ -141,6 +170,21 @@ public partial class MotelDbContext : DbContext
                 .HasForeignKey<Landlord>(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Landlords_AspNetUsers");
+        });
+
+        modelBuilder.Entity<LandlordBankAccount>(entity =>
+        {
+            entity.Property(e => e.BankName).HasMaxLength(150);
+            entity.Property(e => e.BankAccountNumber).HasMaxLength(50);
+            entity.Property(e => e.BankAccountName).HasMaxLength(150);
+            entity.Property(e => e.BankCode).HasMaxLength(20);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysdatetime())");
+
+            entity.HasOne(e => e.Landlord)
+                .WithMany(l => l.LandlordBankAccounts)
+                .HasForeignKey(e => e.LandlordId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_LandlordBankAccounts_Landlords");
         });
 
         modelBuilder.Entity<MeterReading>(entity =>
@@ -223,6 +267,9 @@ public partial class MotelDbContext : DbContext
                 .HasMaxLength(20)
                 .IsUnicode(false);
 
+            entity.HasCheckConstraint("CK_PaymentIntents_Provider", "Provider IN ('cash', 'payos', 'vietqr')");
+
+
             entity.HasOne(d => d.Invoice).WithMany(p => p.PaymentIntents)
                 .HasForeignKey(d => d.InvoiceId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -281,10 +328,11 @@ public partial class MotelDbContext : DbContext
                 .HasMaxLength(20)
                 .IsUnicode(false);
 
-            entity.HasOne(d => d.Room).WithOne(p => p.RoomOccupancy)
-                .HasForeignKey<RoomOccupancy>(d => d.RoomId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_RoomOccupancies_Rooms");
+            entity.HasOne(d => d.Room)
+              .WithMany(p => p.RoomOccupancies)
+              .HasForeignKey(d => d.RoomId)
+              .OnDelete(DeleteBehavior.ClientSetNull)
+              .HasConstraintName("FK_RoomOccupancies_Rooms");
 
             entity.HasOne(d => d.Tenant).WithMany(p => p.RoomOccupancies)
                 .HasForeignKey(d => d.TenantId)
@@ -292,22 +340,43 @@ public partial class MotelDbContext : DbContext
                 .HasConstraintName("FK_RoomOccupancies_Tenants");
         });
 
-        modelBuilder.Entity<RoomUtilitySetting>(entity =>
+        modelBuilder.Entity<FeeType>(entity =>
         {
-            entity.HasKey(e => e.UtilitySettingId);
+            entity.HasKey(e => e.FeeTypeId);
+            entity.Property(e => e.Name).HasMaxLength(100);
+            entity.Property(e => e.Unit).HasMaxLength(50);
+            entity.Property(e => e.Description).HasMaxLength(255);
+            entity.Property(e => e.IsSystem).HasDefaultValue(false);
+        });
 
-            entity.HasIndex(e => new { e.RoomId, e.EffectiveFrom }, "UX_RoomUtilitySettings_RoomId_EffectiveFrom").IsUnique();
+        modelBuilder.Entity<FeeSetting>(entity =>
+        {
+            entity.HasKey(e => e.FeeSettingId);
 
+            entity.Property(e => e.CalculationMethod)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            
+            entity.HasCheckConstraint("CK_FeeSettings_CalculationMethod", "[CalculationMethod] IN ('meter', 'per_person', 'per_room', 'fixed')");
+
+            entity.Property(e => e.UnitPrice).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.BaseAmount).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysdatetime())");
-            entity.Property(e => e.ElectricUnitPrice).HasColumnType("decimal(18, 2)");
-            entity.Property(e => e.InternetFee).HasColumnType("decimal(18, 2)");
-            entity.Property(e => e.TrashFee).HasColumnType("decimal(18, 2)");
-            entity.Property(e => e.WaterUnitPrice).HasColumnType("decimal(18, 2)");
 
-            entity.HasOne(d => d.Room).WithMany(p => p.RoomUtilitySettings)
-                .HasForeignKey(d => d.RoomId)
+            entity.HasOne(d => d.FeeType).WithMany(p => p.FeeSettings)
+                .HasForeignKey(d => d.FeeTypeId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_RoomUtilitySettings_Rooms");
+                .HasConstraintName("FK_FeeSettings_FeeTypes");
+
+            entity.HasOne(d => d.Property).WithMany(p => p.FeeSettings)
+                .HasForeignKey(d => d.PropertyId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_FeeSettings_Properties");
+
+            entity.HasOne(d => d.Room).WithMany(p => p.FeeSettings)
+                .HasForeignKey(d => d.RoomId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_FeeSettings_Rooms");
         });
 
         modelBuilder.Entity<StoredFile>(entity =>
@@ -337,6 +406,8 @@ public partial class MotelDbContext : DbContext
             entity.HasKey(e => e.StoredFileRefId);
 
             entity.ToTable("StoredFileReference");
+            
+            entity.HasCheckConstraint("CK_StoredFileReference_RefType", "[RefType] IN ('tenant', 'room', 'property', 'ticket', 'meter', 'invoice', 'contract', 'roomfurniture')");
 
             entity.HasIndex(e => new { e.StoredFileId, e.RefType, e.RefId }, "UX_StoredFileReference_Dedupe").IsUnique();
 
@@ -363,6 +434,41 @@ public partial class MotelDbContext : DbContext
                 .HasForeignKey(d => d.LandlordId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Subscriptions_Landlords");
+        });
+
+        modelBuilder.Entity<TaxEstimation>(entity =>
+        {
+            entity.HasIndex(e => new { e.LandlordId, e.Year }, "IX_TaxEstimations_Landlord").IsDescending(false, true);
+
+            entity.HasIndex(e => new { e.LandlordId, e.Year }, "UK_TaxEstimations_LandlordYear").IsUnique();
+
+            entity.Property(e => e.CalculatedAt).HasDefaultValueSql("(sysdatetime())");
+            entity.Property(e => e.PitAmount).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TaxableRevenue).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TotalRevenue).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TotalTaxAmount).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.VatAmount).HasColumnType("decimal(18, 2)");
+
+            entity.HasOne(d => d.Landlord).WithMany(p => p.TaxEstimations)
+                .HasForeignKey(d => d.LandlordId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_TaxEstimations_Landlords");
+
+            entity.HasOne(d => d.TaxRule).WithMany(p => p.TaxEstimations)
+                .HasForeignKey(d => d.TaxRuleId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_TaxEstimations_TaxRules");
+        });
+
+        modelBuilder.Entity<TaxRule>(entity =>
+        {
+            entity.HasIndex(e => new { e.EffectiveDate, e.IsActive }, "IX_TaxRules_EffectiveDate").IsDescending(true, false);
+
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysdatetime())");
+            entity.Property(e => e.PitRate).HasColumnType("decimal(5, 4)");
+            entity.Property(e => e.RevenueThreshold).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.RuleName).HasMaxLength(200);
+            entity.Property(e => e.VatRate).HasColumnType("decimal(5, 4)");
         });
 
         modelBuilder.Entity<Tenant>(entity =>
@@ -422,6 +528,34 @@ public partial class MotelDbContext : DbContext
             entity.HasOne(d => d.Tenant).WithMany(p => p.Transactions)
                 .HasForeignKey(d => d.TenantId)
                 .HasConstraintName("FK_Transactions_Tenants");
+        });
+
+        modelBuilder.Entity<RoomFurniture>(entity =>
+        {
+            entity.HasKey(e => e.FurnitureId);
+
+            entity.HasOne(e => e.FurnitureStatus)
+              .WithMany()
+              .HasForeignKey(e => e.FurnitureStatusId);
+
+            entity.Property(e => e.Description)
+                .HasMaxLength(500);
+
+            entity.Property(e => e.IsDeleted)
+                .HasDefaultValue(false);
+
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())");
+
+            entity.HasOne(e => e.Room)
+                .WithMany(r => r.RoomFurnitures)
+                .HasForeignKey(e => e.RoomId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.FurnitureCatalog)
+                .WithMany(c => c.RoomFurnitures)
+                .HasForeignKey(e => e.FurnitureCatalogId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         OnModelCreatingPartial(modelBuilder);

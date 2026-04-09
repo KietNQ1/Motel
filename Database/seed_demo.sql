@@ -169,7 +169,7 @@ END
 ------------------------------------------------------------
 DECLARE @OccId INT =
 (
-    SELECT TOP (1) RoomOccupancyId
+    SELECT TOP (1) OccupancyId
     FROM dbo.RoomOccupancies
     WHERE RoomId = @RoomA101Id
       AND IsPrimary = 1

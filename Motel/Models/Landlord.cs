@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace Motel.Models;
@@ -13,6 +13,10 @@ public partial class Landlord
 
     public string? Address { get; set; }
 
+    public string? IdentityNo { get; set; }
+
+    public string? PermanentAddress { get; set; }
+
     public bool IsDeleted { get; set; }
 
     public DateTime CreatedAt { get; set; }
@@ -25,9 +29,13 @@ public partial class Landlord
 
     public virtual ICollection<Subscription> Subscriptions { get; set; } = new List<Subscription>();
 
+    public virtual ICollection<TaxEstimation> TaxEstimations { get; set; } = new List<TaxEstimation>();
+
     public virtual ICollection<Tenant> Tenants { get; set; } = new List<Tenant>();
 
     public virtual ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
 
-    public virtual AspNetUser User { get; set; } = null!;
+    public virtual ApplicationUser User { get; set; } = null!;
+
+    public virtual ICollection<LandlordBankAccount> LandlordBankAccounts { get; set; } = new List<LandlordBankAccount>();
 }

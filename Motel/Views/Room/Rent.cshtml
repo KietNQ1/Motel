@@ -1,0 +1,1128 @@
+@model Motel.ViewModels.Room.RentRoomViewModel
+
+@{
+    ViewData["Title"] = $"Cho thuê phòng {Model.RoomName}";
+}
+
+@section Styles {
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<style>
+    :root {
+        --primary: #ec5b13;
+        --primary-light: rgba(236,91,19,0.10);
+        --primary-glow: rgba(236,91,19,0.25);
+        --bg: #f7f5f3;
+        --surface: #ffffff;
+        --border: #e8e3df;
+        --text: #1a1410;
+        --text-muted: #7a6f68;
+        --radius: 14px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+        font-family: 'Be Vietnam Pro', sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+    }
+
+    .rent-header {
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        padding: 14px 0;
+    }
+
+    .rent-header .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--primary);
+        font-weight: 800;
+        font-size: 1.1rem;
+        text-decoration: none;
+    }
+
+    .brand-icon {
+        width: 36px; height: 36px;
+        background: var(--primary-light);
+        border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+    }
+
+    .page-wrapper {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 36px 20px 80px;
+    }
+
+    /* Breadcrumb */
+    .breadcrumb-nav {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 28px;
+        font-size: 0.82rem;
+    }
+    .breadcrumb-nav a { color: var(--primary); text-decoration: none; font-weight: 600; }
+    .breadcrumb-nav a:hover { text-decoration: underline; }
+    .breadcrumb-sep { color: #bbb; }
+    .breadcrumb-nav span.current { color: var(--text-muted); font-weight: 500; }
+
+    /* Page title */
+    .page-title h1 {
+        font-size: clamp(1.8rem, 4vw, 2.4rem);
+        font-weight: 900;
+        letter-spacing: -0.03em;
+        margin: 0 0 6px;
+    }
+    .page-title .subtitle {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+    .price-badge {
+        background: var(--primary);
+        color: #fff;
+        font-weight: 700;
+        font-size: 0.82rem;
+        padding: 3px 10px;
+        border-radius: 99px;
+        margin-left: 4px;
+    }
+
+    /* Section */
+    .form-section { margin-top: 36px; }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+    }
+
+    .section-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 1rem;
+        font-weight: 800;
+        color: var(--text);
+    }
+
+    .section-num {
+        width: 28px; height: 28px;
+        background: var(--primary);
+        color: #fff;
+        border-radius: 8px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.82rem;
+        font-weight: 800;
+        flex-shrink: 0;
+    }
+
+    .max-badge {
+        background: #f0ece8;
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 99px;
+    }
+
+    /* Card */
+    .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 24px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+
+    /* Occupant card */
+    .occupant-card {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .occupant-card::before {
+        content: '';
+        position: absolute;
+        left: 0; top: 0; bottom: 0;
+        width: 4px;
+        background: var(--primary);
+        border-radius: 4px 0 0 4px;
+    }
+
+    .occupant-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .occupant-identity {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .occupant-num {
+        width: 38px; height: 38px;
+        background: var(--primary-light);
+        color: var(--primary);
+        font-weight: 800;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1rem;
+    }
+
+    .occupant-label { font-weight: 700; font-size: 1rem; }
+
+    .primary-radio-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #fff4ee;
+        border: 1px solid rgba(236,91,19,0.3);
+        color: var(--primary);
+        font-size: 0.78rem;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 99px;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+    .primary-radio-label:hover { background: #ffe8d8; }
+    .primary-radio-label input[type="radio"] { accent-color: var(--primary); }
+
+    .btn-remove {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border: none;
+        background: transparent;
+        color: #e04040;
+        font-size: 0.82rem;
+        font-weight: 700;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background 0.15s;
+        font-family: inherit;
+    }
+    .btn-remove:hover { background: #fff0f0; }
+
+    /* Form fields */
+    .fields-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 16px;
+    }
+
+    .field-group label {
+        display: block;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 6px;
+    }
+
+    .field-group input,
+    .field-group select {
+        width: 100%;
+        padding: 9px 12px;
+        border: 1.5px solid var(--border);
+        border-radius: 9px;
+        font-size: 0.88rem;
+        font-family: inherit;
+        color: var(--text);
+        background: #fafaf9;
+        transition: border-color 0.15s, box-shadow 0.15s;
+        outline: none;
+    }
+
+    .field-group input:focus,
+    .field-group select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px var(--primary-glow);
+        background: #fff;
+    }
+
+    .field-group .input-suffix { position: relative; }
+    .field-group .input-suffix input { padding-right: 36px; }
+    .field-group .input-suffix .suffix {
+        position: absolute;
+        right: 12px; top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        font-weight: 600;
+        pointer-events: none;
+    }
+
+    /* Add person button */
+    .btn-add-person {
+        margin-top: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        padding: 13px;
+        border: 2px dashed #d4cdc8;
+        background: transparent;
+        border-radius: var(--radius);
+        font-family: inherit;
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: border-color 0.2s, color 0.2s, background 0.2s;
+    }
+    .btn-add-person:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+        background: var(--primary-light);
+    }
+
+    /* Meter row with icon */
+    .meter-icon {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .meter-icon .material-symbols-outlined {
+        font-size: 1rem;
+        vertical-align: middle;
+    }
+
+    /* Divider */
+    .section-divider {
+        border: none;
+        border-top: 1px solid var(--border);
+        margin: 36px 0 0;
+    }
+
+    /* Footer actions */
+    .footer-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 12px;
+        padding-top: 28px;
+        flex-wrap: wrap;
+    }
+
+    .btn-cancel {
+        padding: 11px 24px;
+        border: 1.5px solid var(--border);
+        background: transparent;
+        border-radius: 10px;
+        font-family: inherit;
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        cursor: pointer;
+        text-decoration: none;
+        transition: background 0.15s, color 0.15s;
+        display: inline-flex;
+        align-items: center;
+    }
+    .btn-cancel:hover { background: #f0ece8; color: var(--text); }
+
+    .btn-submit {
+        padding: 11px 28px;
+        background: var(--primary);
+        border: none;
+        border-radius: 10px;
+        font-family: inherit;
+        font-size: 0.9rem;
+        font-weight: 800;
+        color: #fff;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 16px var(--primary-glow);
+        transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+    }
+    .btn-submit:hover {
+        background: #d44e0e;
+        box-shadow: 0 6px 20px var(--primary-glow);
+        transform: translateY(-1px);
+    }
+    .btn-submit:active { transform: translateY(0); }
+
+    /* Validation */
+    .text-danger { color: #d63031; font-size: 0.78rem; font-weight: 600; margin-top: 4px; display: block; }
+
+    /* Spacing for multiple occupant cards */
+    .occupant-item + .occupant-item { margin-top: 14px; }
+
+    /* ──────────────────────────────────────
+       CCCD UPLOAD ZONE  (new)
+    ────────────────────────────────────── */
+    .cccd-section {
+        margin-top: 20px;
+        padding-top: 18px;
+        border-top: 1px dashed #d4cdc8;
+    }
+
+    .cccd-section-label {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .cccd-section-label .material-symbols-outlined { font-size: 1rem; }
+
+    .cccd-drop-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+        margin-bottom: 14px;
+    }
+    @@media (max-width: 520px) {
+        .cccd-drop-row { grid-template-columns: 1fr; }
+    }
+
+    .cccd-drop-side-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 6px;
+    }
+
+    /* The drop zone itself */
+    .drop-zone {
+        border: 2px dashed #d4cdc8;
+        border-radius: 12px;
+        background: #fafaf9;
+        cursor: pointer;
+        transition: border-color 0.2s, background 0.2s;
+        overflow: hidden;
+        position: relative;
+    }
+    .drop-zone:hover,
+    .drop-zone.drag-over {
+        border-color: var(--primary);
+        background: var(--primary-light);
+    }
+
+    /* Empty state (no image chosen) */
+    .drop-zone-empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 22px 14px;
+        text-align: center;
+    }
+    .drop-zone-icon {
+        width: 44px; height: 44px;
+        background: #f0ece8;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        margin-bottom: 2px;
+    }
+    .drop-zone-icon .material-symbols-outlined {
+        font-size: 1.4rem;
+        color: var(--text-muted);
+    }
+    .drop-zone-empty .dz-title {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--text);
+    }
+    .drop-zone-empty .dz-or {
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        margin: 1px 0;
+    }
+    .drop-zone-empty .dz-btn-row {
+        display: flex;
+        gap: 8px;
+        margin-top: 6px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    .dz-btn {
+        padding: 6px 16px;
+        border-radius: 99px;
+        font-family: inherit;
+        font-size: 0.75rem;
+        font-weight: 700;
+        border: none;
+        cursor: pointer;
+        transition: opacity 0.15s, transform 0.1s;
+        background: #f5c842;
+        color: #1a1410;
+    }
+    .dz-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+    .dz-btn:active { transform: translateY(0); }
+
+    /* Preview state (image chosen) */
+    .drop-zone-preview {
+        display: none;
+        position: relative;
+    }
+    .drop-zone-preview img {
+        width: 100%;
+        height: auto;
+        object-fit: contain;
+        display: block;
+        border-radius: 10px;
+    }
+    .drop-zone-preview .dz-clear {
+        position: absolute;
+        top: 6px; right: 6px;
+        width: 26px; height: 26px;
+        background: rgba(0,0,0,0.55);
+        border: none;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer;
+        color: #fff;
+        transition: background 0.15s;
+    }
+    .drop-zone-preview .dz-clear:hover { background: rgba(200,30,30,0.8); }
+    .drop-zone-preview .dz-clear .material-symbols-outlined { font-size: 0.9rem; }
+
+    /* Hidden real file input */
+    .dz-file-input {
+        display: none;
+    }
+
+    /* Scan button */
+    .btn-scan {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 9px 20px;
+        background: var(--primary);
+        border: none;
+        border-radius: 10px;
+        font-family: inherit;
+        font-size: 0.82rem;
+        font-weight: 800;
+        color: #fff;
+        cursor: pointer;
+        box-shadow: 0 3px 12px var(--primary-glow);
+        transition: background 0.15s, transform 0.1s;
+    }
+    .btn-scan:hover { background: #d44e0e; transform: translateY(-1px); }
+    .btn-scan:active { transform: translateY(0); }
+    .btn-scan:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .btn-scan .material-symbols-outlined { font-size: 1.05rem; }
+
+    .scan-msg {
+        margin-top: 8px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        display: none;
+    }
+    .scan-msg.ok  { color: #1a7a4a; }
+    .scan-msg.err { color: #d63031; }
+    .scan-msg.loading { color: var(--primary); }
+
+    @@media (max-width: 600px) {
+        .fields-grid { grid-template-columns: 1fr; }
+        .footer-actions { flex-direction: column-reverse; align-items: stretch; }
+        .btn-cancel, .btn-submit { justify-content: center; }
+    }
+</style>
+}
+
+<div class="page-wrapper">
+
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb-nav">
+        <a href="#">Nhà trọ của tôi</a>
+        <span class="breadcrumb-sep">/</span>
+        <a href="#">@Model.PropertyName</a>
+        <span class="breadcrumb-sep">/</span>
+        <span class="current">Cho thuê phòng @Model.RoomName</span>
+    </nav>
+
+    <!-- Page title -->
+    <div class="page-title">
+        <h1>Cho thuê phòng @Model.RoomName</h1>
+        <div class="subtitle">
+            <span class="material-symbols-outlined" style="font-size:1rem;">location_on</span>
+            @Model.PropertyName
+            <span class="price-badge">@Model.RentPrice.ToString("N0") VNĐ/tháng</span>
+        </div>
+    </div>
+
+    <form id="form_rentRoom" asp-action="Rent" method="post">
+        @Html.AntiForgeryToken()
+
+        <input id="input_roomId" type="hidden" asp-for="RoomId" />
+        <input id="input_roomName" type="hidden" asp-for="RoomName" />
+        <input id="input_rentPrice" type="hidden" asp-for="RentPrice" />
+        <input id="input_propertyName" type="hidden" asp-for="PropertyName" />
+        <input id="input_maxOccupants" type="hidden" asp-for="MaxOccupants" />
+
+        <div asp-validation-summary="All" class="text-danger" style="margin-top:16px;"></div>
+
+        <!-- Section 1: Occupants -->
+        <section class="form-section">
+            <div class="section-header">
+                <div class="section-title">
+                    <span class="section-num">1</span>
+                    Thông tin người ở <span style="font-weight:400; color:var(--text-muted);">(có thể ở ghép)</span>
+                </div>
+                <span class="max-badge">Tối đa: @Model.MaxOccupants người</span>
+            </div>
+
+            <div id="div_occupantsContainer">
+                @for (int i = 0; i < Model.Occupants.Count; i++)
+                {
+                    <div class="card occupant-card occupant-item">
+                        <div class="occupant-top">
+                            <div class="occupant-identity">
+                                <div class="occupant-num">@(i + 1)</div>
+                                <div>
+                                    <div class="occupant-label">Người @(i + 1)</div>
+                                </div>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                                <label id="lbl_primaryIndex_@i" class="primary-radio-label">
+                                    <input id="radio_primaryIndex_@i" type="radio" name="PrimaryIndex" value="@i" @(Model.PrimaryIndex == i ? "checked" : "") />
+                                    Tenant chính
+                                </label>
+                                <button id="btn_removeOccupant_@i" type="button" class="btn-remove" onclick="removeOccupant(this)">
+                                    <span class="material-symbols-outlined" style="font-size:1rem;">delete</span> Xóa
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="fields-grid">
+                            <div class="field-group">
+                                <label id="lbl_fullName_@i">Họ tên</label>
+                                <input id="input_fullName_@i" type="text" name="Occupants[@i].FullName" value="@Model.Occupants[i].FullName" placeholder="Nhập họ và tên" />
+                            </div>
+                            <div class="field-group">
+                                <label id="lbl_phone_@i">SĐT</label>
+                                <input id="input_phone_@i" type="tel" name="Occupants[@i].Phone" value="@Model.Occupants[i].Phone" placeholder="Nhập số điện thoại" />
+                            </div>
+                            <div class="field-group">
+                                <label id="lbl_email_@i">Email</label>
+                                <input id="input_email_@i" type="email" name="Occupants[@i].Email" value="@Model.Occupants[i].Email" placeholder="Nhập email" />
+                            </div>
+                            <div class="field-group">
+                                <label id="lbl_identityNo_@i">CMND / CCCD</label>
+                                <input id="input_identityNo_@i" type="text" name="Occupants[@i].IdentityNo" value="@Model.Occupants[i].IdentityNo" placeholder="Nhập số CMND/CCCD" />
+                            </div>
+                            <div class="field-group">
+                                <label id="lbl_dateOfBirth_@i">Ngày sinh</label>
+                                <input id="input_dateOfBirth_@i" type="date" name="Occupants[@i].DateOfBirth"
+                                       value="@(Model.Occupants[i].DateOfBirth.HasValue ? Model.Occupants[i].DateOfBirth.Value.ToString("yyyy-MM-dd") : "")" />
+                            </div>
+                            <div class="field-group">
+                                <label id="lbl_permanentAddress_@i">Nơi ĐKTT</label>
+                                <input id="input_permanentAddress_@i" type="text" name="Occupants[@i].PermanentAddress" value="@Model.Occupants[i].PermanentAddress" placeholder="Địa chỉ thường trú" />
+                            </div>
+                        </div>
+
+                        <!-- CCCD Upload Section -->
+                        <div class="cccd-section">
+                            <div class="cccd-section-label">
+                                <span class="material-symbols-outlined">badge</span>
+                                Tải lên CCCD để tự động điền thông tin
+                            </div>
+
+                            <input type="hidden" name="Occupants[@i].CccdFrontImageId" id="input_frontId_@i" value="@Model.Occupants[i].CccdFrontImageId" />
+                            <input type="hidden" name="Occupants[@i].CccdBackImageId"  id="input_backId_@i"  value="@Model.Occupants[i].CccdBackImageId" />
+
+                            <div class="cccd-drop-row">
+                                <!-- Mặt trước -->
+                                <div>
+                                    <div class="cccd-drop-side-label">Mặt trước</div>
+                                    <div class="drop-zone" id="div_dropFront_@i"
+                                         ondragover="dzDragOver(event)" ondragleave="dzDragLeave(event)"
+                                         ondrop="dzDrop(event,'front',@i)">
+                                        <div class="drop-zone-empty" id="div_dzEmptyFront_@i">
+                                            <div class="drop-zone-icon">
+                                                <span class="material-symbols-outlined">id_card</span>
+                                            </div>
+                                            <span class="dz-title">Kéo và thả ảnh của bạn</span>
+                                            <span class="dz-or">hoặc</span>
+                                            <div class="dz-btn-row">
+                                                <button id="btn_uploadFrontFile_@i" type="button" class="dz-btn" onclick="dzTrigger('input_frontFile_@i')">Tải ảnh lên</button>
+                                                <button id="btn_captureFrontFile_@i" type="button" class="dz-btn" onclick="dzTrigger('input_frontFile_@i')">Chụp ảnh</button>
+                                            </div>
+                                        </div>
+                                        <div class="drop-zone-preview" id="div_dzPreviewFront_@i">
+                                            <img id="img_dzImgFront_@i" src="" alt="Mặt trước CCCD" />
+                                            <button id="btn_clearFrontFile_@i" type="button" class="dz-clear" onclick="dzClear('front',@i)" title="Xóa ảnh">
+                                                <span class="material-symbols-outlined">close</span>
+                                            </button>
+                                        </div>
+                                        <input type="file" class="dz-file-input" id="input_frontFile_@i" accept="image/*" capture="environment"
+                                               onchange="dzFileChosen(this,'front',@i)" />
+                                    </div>
+                                </div>
+
+                                <!-- Mặt sau -->
+                                <div>
+                                    <div class="cccd-drop-side-label">Mặt sau</div>
+                                    <div class="drop-zone" id="div_dropBack_@i"
+                                         ondragover="dzDragOver(event)" ondragleave="dzDragLeave(event)"
+                                         ondrop="dzDrop(event,'back',@i)">
+                                        <div class="drop-zone-empty" id="div_dzEmptyBack_@i">
+                                            <div class="drop-zone-icon">
+                                                <span class="material-symbols-outlined">id_card</span>
+                                            </div>
+                                            <span class="dz-title">Kéo và thả ảnh của bạn</span>
+                                            <span class="dz-or">hoặc</span>
+                                            <div class="dz-btn-row">
+                                                <button id="btn_uploadBackFile_@i" type="button" class="dz-btn" onclick="dzTrigger('input_backFile_@i')">Tải ảnh lên</button>
+                                                <button id="btn_captureBackFile_@i" type="button" class="dz-btn" onclick="dzTrigger('input_backFile_@i')">Chụp ảnh</button>
+                                            </div>
+                                        </div>
+                                        <div class="drop-zone-preview" id="div_dzPreviewBack_@i">
+                                            <img id="img_dzImgBack_@i" src="" alt="Mặt sau CCCD" />
+                                            <button id="btn_clearBackFile_@i" type="button" class="dz-clear" onclick="dzClear('back',@i)" title="Xóa ảnh">
+                                                <span class="material-symbols-outlined">close</span>
+                                            </button>
+                                        </div>
+                                        <input type="file" class="dz-file-input" id="input_backFile_@i" accept="image/*" capture="environment"
+                                               onchange="dzFileChosen(this,'back',@i)" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                                <button type="button" class="btn-scan" onclick="processEkyc(@i)" id="btn_scanCccd_@i">
+                                    <span class="material-symbols-outlined">document_scanner</span>
+                                    Tải lên & Quét
+                                </button>
+                                <div class="scan-msg" id="div_scanMsg_@i"></div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <button id="btn_addOccupant" type="button" class="btn-add-person" onclick="addOccupant()">
+                <span class="material-symbols-outlined">person_add</span>
+                Thêm người ở
+            </button>
+        </section>
+
+        <!-- Section 2: Contract -->
+        <section class="form-section">
+            <div class="section-header">
+                <div class="section-title">
+                    <span class="section-num">2</span>
+                    Thông tin hợp đồng
+                </div>
+            </div>
+            <div class="card">
+                <div class="fields-grid">
+                    <div class="field-group">
+                        <label id="lbl_startDate" asp-for="StartDate">Ngày bắt đầu hợp đồng</label>
+                        <input id="input_startDate" asp-for="StartDate" type="date" />
+                        <span asp-validation-for="StartDate" class="text-danger"></span>
+                    </div>
+                    <div class="field-group">
+                        <label id="lbl_endDate" asp-for="EndDate">Ngày kết thúc hợp đồng</label>
+                        <input id="input_endDate" asp-for="EndDate" type="date" />
+                        <span asp-validation-for="EndDate" class="text-danger"></span>
+                    </div>
+                    <div class="field-group">
+                        <label id="lbl_depositAmount" asp-for="DepositAmount">Tiền cọc</label>
+                        <div class="input-suffix">
+                            <input id="input_depositAmount" asp-for="DepositAmount" type="number" asp-format="{0:0}" step="100000" placeholder="Ví dụ: 2500000" />
+                            <span class="suffix">₫</span>
+                        </div>
+                        <span asp-validation-for="DepositAmount" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Meters -->
+        <section class="form-section">
+            <div class="section-header">
+                <div class="section-title">
+                    <span class="section-num">3</span>
+                    Chỉ số điện nước ban đầu
+                    <span style="font-weight:400; color:var(--text-muted); font-size:0.85rem;">(tùy chọn)</span>
+                </div>
+            </div>
+            <div class="card">
+                <div class="fields-grid" style="grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));">
+                    <div class="field-group">
+                        <label id="lbl_initialElectricReading" asp-for="InitialElectricReading">
+                            <span class="meter-icon">
+                                <span class="material-symbols-outlined" style="color:#f59e0b;">bolt</span>
+                                Chỉ số điện ban đầu (kWh)
+                            </span>
+                        </label>
+                        <input id="input_initialElectricReading" asp-for="InitialElectricReading" type="number" min="0" placeholder="Nhập chỉ số điện hiện tại" />
+                        <span asp-validation-for="InitialElectricReading" class="text-danger"></span>
+                    </div>
+                    <div class="field-group">
+                        <label id="lbl_initialWaterReading" asp-for="InitialWaterReading">
+                            <span class="meter-icon">
+                                <span class="material-symbols-outlined" style="color:#3b82f6;">water_drop</span>
+                                Chỉ số nước ban đầu (m³)
+                            </span>
+                        </label>
+                        <input id="input_initialWaterReading" asp-for="InitialWaterReading" type="number" min="0" placeholder="Nhập chỉ số nước hiện tại" />
+                        <span asp-validation-for="InitialWaterReading" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <hr class="section-divider" />
+        <div class="footer-actions">
+            <a id="lnk_cancelRent" asp-action="Details" asp-route-id="@Model.RoomId" class="btn-cancel">Hủy</a>
+            <button id="btn_submitRent" type="submit" class="btn-submit">
+                <span class="material-symbols-outlined" style="font-size:1.1rem;">assignment_turned_in</span>
+                Xác nhận cho thuê
+            </button>
+        </div>
+    </form>
+
+    <!-- EKYC Modal (unchanged) -->
+    <div id="div_ekycModal" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div class="relative transform overflow-hidden rounded-xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                    <div class="bg-white dark:bg-gray-800 px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                        <div class="flex items-center justify-between mb-4 border-b pb-3 dark:border-gray-700">
+                            <h3 class="text-lg font-bold text-primary" id="lbl_ekycModalTitle">Thông tin trích xuất từ CCCD</h3>
+                            <button id="btn_closeEkycModalIcon" type="button" onclick="closeEkycModal()" class="text-gray-400 hover:text-gray-500">
+                                <span class="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="mb-2 grid grid-cols-2 gap-3">
+                                <div>
+                                    <span class="block text-xs font-bold text-gray-500 text-center mb-1">Mặt trước</span>
+                                    <img id="img_ekycFrontImg" src="" class="w-full rounded border border-gray-200 object-contain bg-gray-50" style="height:120px;" />
+                                </div>
+                                <div>
+                                    <span class="block text-xs font-bold text-gray-500 text-center mb-1">Mặt sau</span>
+                                    <img id="img_ekycBackImg" src="" class="w-full rounded border border-gray-200 object-contain bg-gray-50" style="height:120px;" />
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Họ tên</label>
+                                <input type="text" id="input_ekycName" class="w-full rounded-lg border-gray-300 px-3 py-2 border outline-none" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Số CCCD</label>
+                                <input type="text" id="input_ekycId" class="w-full rounded-lg border-gray-300 px-3 py-2 border outline-none" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Ngày sinh</label>
+                                <input type="date" id="input_ekycDob" class="w-full rounded-lg border-gray-300 px-3 py-2 border outline-none" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Giới tính</label>
+                                <input type="text" id="input_ekycGender" class="w-full rounded-lg border-gray-300 px-3 py-2 border outline-none" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nơi cư trú (Nơi ĐKTT)</label>
+                                <input type="text" id="input_ekycAddress" class="w-full rounded-lg border-gray-300 px-3 py-2 border outline-none" />
+                            </div>
+                            <input type="hidden" id="input_ekycFrontId" />
+                            <input type="hidden" id="input_ekycBackId" />
+                            <input type="hidden" id="input_ekycTargetIndex" />
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 align-items-center">
+                        <button id="btn_fillEkycData" type="button" onclick="fillEkycData()" class="inline-flex w-full justify-center rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-white shadow-sm sm:ml-3 sm:w-auto">Điền thông tin</button>
+                        <button id="btn_closeEkycModal" type="button" onclick="closeEkycModal()" class="mt-3 inline-flex w-full justify-center rounded-lg bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 sm:mt-0 sm:w-auto">Đóng</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        /* ──────────────────────────────────────
+           DROP ZONE HELPERS
+        ────────────────────────────────────── */
+        function dzTrigger(inputId) {
+            document.getElementById(inputId).click();
+        }
+
+        function dzFileChosen(input, side, idx) {
+            if (!input.files || !input.files[0]) return;
+            dzShowPreview(input.files[0], side, idx);
+        }
+
+        function dzDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('drag-over');
+        }
+        function dzDragLeave(e) {
+            e.currentTarget.classList.remove('drag-over');
+        }
+        function dzDrop(e, side, idx) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            if (!file || !file.type.startsWith('image/')) return;
+            // Assign to the real hidden input so processEkyc can read it
+            const inputId = (side === 'front' ? 'input_frontFile_' : 'input_backFile_') + idx;
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            document.getElementById(inputId).files = dt.files;
+            dzShowPreview(file, side, idx);
+        }
+
+        function dzShowPreview(file, side, idx) {
+            const suffix = side === 'front' ? 'Front' : 'Back';
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('img_dzImg' + suffix + '_' + idx).src = e.target.result;
+                document.getElementById('div_dzEmpty'   + suffix + '_' + idx).style.display = 'none';
+                document.getElementById('div_dzPreview' + suffix + '_' + idx).style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function dzClear(side, idx) {
+            const suffix = side === 'front' ? 'Front' : 'Back';
+            const inputId = (side === 'front' ? 'input_frontFile_' : 'input_backFile_') + idx;
+            document.getElementById(inputId).value = '';
+            document.getElementById('img_dzImg'     + suffix + '_' + idx).src = '';
+            document.getElementById('div_dzEmpty'   + suffix + '_' + idx).style.display = '';
+            document.getElementById('div_dzPreview' + suffix + '_' + idx).style.display = 'none';
+        }
+
+        /* ──────────────────────────────────────
+           OCCUPANT ADD / REMOVE
+        ────────────────────────────────────── */
+        function addOccupant() {
+            const container = document.getElementById('div_occupantsContainer');
+            const index = container.querySelectorAll('.occupant-item').length;
+            const max = @Model.MaxOccupants;
+            if (max > 0 && index >= max) {
+                alert('Vượt quá số người tối đa của phòng (' + max + ' người).');
+                return;
+            }
+
+            const html = `
+            <div class="card occupant-card occupant-item" style="margin-top:14px;">
+                <div class="occupant-top">
+                    <div class="occupant-identity">
+                        <div class="occupant-num">${index + 1}</div>
+                        <div><div class="occupant-label">Người ${index + 1}</div></div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                        <label id="lbl_primaryIndex_${index}" class="primary-radio-label">
+                            <input id="radio_primaryIndex_${index}" type="radio" name="PrimaryIndex" value="${index}" />
+                            Tenant chính
+                        </label>
+                        <button id="btn_removeOccupant_${index}" type="button" class="btn-remove" onclick="removeOccupant(this)">
+                            <span class="material-symbols-outlined" style="font-size:1rem;">delete</span> Xóa
+                        </button>
+                    </div>
+                </div>
+                <div class="fields-grid">
+                    <div class="field-group"><label id="lbl_fullName_${index}">Họ tên</label><input id="input_fullName_${index}" type="text" name="Occupants[${index}].FullName" placeholder="Nhập họ và tên" /></div>
+                    <div class="field-group"><label id="lbl_phone_${index}">SĐT</label><input id="input_phone_${index}" type="tel" name="Occupants[${index}].Phone" placeholder="Nhập số điện thoại" /></div>
+                    <div class="field-group"><label id="lbl_email_${index}">Email</label><input id="input_email_${index}" type="email" name="Occupants[${index}].Email" placeholder="Nhập email" /></div>
+                    <div class="field-group"><label id="lbl_identityNo_${index}">CMND / CCCD</label><input id="input_identityNo_${index}" type="text" name="Occupants[${index}].IdentityNo" placeholder="Nhập số CMND/CCCD" /></div>
+                    <div class="field-group"><label id="lbl_dateOfBirth_${index}">Ngày sinh</label><input id="input_dateOfBirth_${index}" type="date" name="Occupants[${index}].DateOfBirth" /></div>
+                    <div class="field-group"><label id="lbl_permanentAddress_${index}">Nơi ĐKTT</label><input type="text" id="input_permanentAddress_${index}" name="Occupants[${index}].PermanentAddress" placeholder="Địa chỉ thường trú" /></div>
+                </div>
+
+                <div class="cccd-section">
+                    <div class="cccd-section-label">
+                        <span class="material-symbols-outlined">badge</span>
+                        Tải lên CCCD để tự động điền thông tin
+                    </div>
+                    <input type="hidden" name="Occupants[${index}].CccdFrontImageId" id="input_frontId_${index}" />
+                    <input type="hidden" name="Occupants[${index}].CccdBackImageId"  id="input_backId_${index}" />
+
+                    <div class="cccd-drop-row">
+                        <div>
+                            <div class="cccd-drop-side-label">Mặt trước</div>
+                            <div class="drop-zone" id="div_dropFront_${index}"
+                                 ondragover="dzDragOver(event)" ondragleave="dzDragLeave(event)"
+                                 ondrop="dzDrop(event,'front',${index})">
+                                <div class="drop-zone-empty" id="div_dzEmptyFront_${index}">
+                                    <div class="drop-zone-icon"><span class="material-symbols-outlined">id_card</span></div>
+                                    <span class="dz-title">Kéo và thả ảnh của bạn</span>
+                                    <span class="dz-or">hoặc</span>
+                                    <div class="dz-btn-row">
+                                        <button id="btn_uploadFrontFile_${index}" type="button" class="dz-btn" onclick="dzTrigger('input_frontFile_${index}')">Tải ảnh lên</button>
+                                        <button id="btn_captureFrontFile_${index}" type="button" class="dz-btn" onclick="dzTrigger('input_frontFile_${index}')">Chụp ảnh</button>
+                                    </div>
+                                </div>
+                                <div class="drop-zone-preview" id="div_dzPreviewFront_${index}">
+                                    <img id="img_dzImgFront_${index}" src="" alt="Mặt trước CCCD" />
+                                    <button id="btn_clearFrontFile_${index}" type="button" class="dz-clear" onclick="dzClear('front',${index})">
+                                        <span class="material-symbols-outlined">close</span>
+                                    </button>
+                                </div>
+                                <input type="file" class="dz-file-input" id="input_frontFile_${index}" accept="image/*" capture="environment"
+                                       onchange="dzFileChosen(this,'front',${index})" />
+                            </div>
+                        </div>
+                        <div>
+                            <div class="cccd-drop-side-label">Mặt sau</div>
+                            <div class="drop-zone" id="div_dropBack_${index}"
+                                 ondragover="dzDragOver(event)" ondragleave="dzDragLeave(event)"
+                                 ondrop="dzDrop(event,'back',${index})">
+                                <div class="drop-zone-empty" id="div_dzEmptyBack_${index}">
+                                    <div class="drop-zone-icon"><span class="material-symbols-outlined">id_card</span></div>
+                                    <span class="dz-title">Kéo và thả ảnh của bạn</span>
+                                    <span class="dz-or">hoặc</span>
+                                    <div class="dz-btn-row">
+                                        <button id="btn_uploadBackFile_${index}" type="button" class="dz-btn" onclick="dzTrigger('input_backFile_${index}')">Tải ảnh lên</button>
+                                        <button id="btn_captureBackFile_${index}" type="button" class="dz-btn" onclick="dzTrigger('input_backFile_${index}')">Chụp ảnh</button>
+                                    </div>
+                                </div>
+                                <div class="drop-zone-preview" id="div_dzPreviewBack_${index}">
+                                    <img id="img_dzImgBack_${index}" src="" alt="Mặt sau CCCD" />
+                                    <button id="btn_clearBackFile_${index}" type="button" class="dz-clear" onclick="dzClear('back',${index})">
+                                        <span class="material-symbols-outlined">close</span>
+                                    </button>
+                                </div>
+                                <input type="file" class="dz-file-input" id="input_backFile_${index}" accept="image/*" capture="environment"
+                                       onchange="dzFileChosen(this,'back',${index})" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                        <button id="btn_scanCccd_${index}" type="button" class="btn-scan" onclick="processEkyc(${index})">
+                            <span class="material-symbols-outlined">document_scanner</span>
+                            Tải lên & Quét
+                        </button>
+                        <div class="scan-msg" id="div_scanMsg_${index}"></div>
+                    </div>
+                </div>
+            </div>`;
+            container.insertAdjacentHTML('beforeend', html);
+        }
+
+        function removeOccupant(btn) {
+            const item = btn.closest('.occupant-item');
+            if (document.querySelectorAll('.occupant-item').length <= 1) {
+                alert('Phải có ít nhất 1 người ở.');
+                return;
+            }
+            item.remove();
+        }
+
+        /* ──────────────────────────────────────
+           EKYC (unchanged logic)
+        ────────────────────────────────────── */
+        function showScanMsg(idx, text, type) {
+            const el = document.getElementById('div_scanMsg_' + idx);
+            el.textContent = text;
+            el.className = 'scan-msg ' + type;
+            el.style.display = 'block';
+        }
+
+        async function processEkyc(index) {
+            const frontFile = document.getElementById('input_frontFile_' + index).files[0];
+            const backFile  = document.getElementById('input_backFile_'  + index).files[0];
+
+            if (!frontFile || !backFile) {
+                showScanMsg(index, 'Vui lòng chọn cả ảnh mặt trước và mặt sau CCCD.', 'err');
+                return;
+            }
+
+            // populate modal preview immediately
+            const rFront = new FileReader();
+            rFront.onload = e => { document.getElementById('img_ekycFrontImg').src = e.target.result; };
+            rFront.readAsDataURL(frontFile);
+            const rBack = new FileReader();
+            rBack.onload  = e => { document.getElementById('img_ekycBackImg').src  = e.target.result; };
+            rBack.readAsDataURL(backFile);
+
+            showScanMsg(index, 'Đang tải lên và nhận dạng...', 'loading');
+            const btn = document.getElementById('btn_scanCccd_' + index);
+            btn.disabled = true;
+
+            const formData = new FormData();
+            formData.append('frontFile', frontFile);
+            formData.append('backFile',  backFile);
+
+            try {
+                const response = await fetch('/api/Ekyc/scan-both', { method: 'POST', body: formData });
+                const result   = await response.json();
+                btn.disabled = false;
+
+                if (result.success) {
+                    document.getElementById('div_scanMsg_' + index).style.display = 'none';
+                    document.getElementById('input_ekycTargetIndex').value = index;
+                    document.getElementById('input_ekycFrontId').value     = result.frontId;
+                    document.getElementById('input_ekycBackId').value      = result.backId;
+
+                    if (result.data) {
+                        document.getElementById('input_ekycName').value    = result.data.name    || '';
+                        document.getElementById('input_ekycId').value      = result.data.id      || '';
+                        document.getElementById('input_ekycAddress').value = result.data.address || '';
+                        document.getElementById('input_ekycGender').value  = result.data.gender  || '';
+                        let dobVal = '';
+                        if (result.data.birthday) {
+                            const p = result.data.birthday.split('/');
+                            if (p.length === 3) dobVal = `${p[2]}-${p[1]}-${p[0]}`;
+                        }
+                        document.getElementById('input_ekycDob').value = dobVal;
+                    }
+                    document.getElementById('div_ekycModal').classList.remove('hidden');
+                } else {
+                    showScanMsg(index, result.message || 'Lỗi nhận dạng', 'err');
+                }
+            } catch (err) {
+                btn.disabled = false;
+                showScanMsg(index, 'Lỗi kết nối máy chủ.', 'err');
+            }
+        }
+
+        function closeEkycModal() {
+            document.getElementById('div_ekycModal').classList.add('hidden');
+        }
+
+        function fillEkycData() {
+            const index = document.getElementById('input_ekycTargetIndex').value;
+            document.getElementById('input_frontId_' + index).value = document.getElementById('input_ekycFrontId').value;
+            document.getElementById('input_backId_'  + index).value = document.getElementById('input_ekycBackId').value;
+
+            const q = s => document.querySelector(`input[name="Occupants[${index}].${s}"]`);
+            if (q('FullName'))        q('FullName').value        = document.getElementById('input_ekycName').value;
+            if (q('IdentityNo'))      q('IdentityNo').value      = document.getElementById('input_ekycId').value;
+            if (q('DateOfBirth'))     q('DateOfBirth').value     = document.getElementById('input_ekycDob').value;
+            if (q('PermanentAddress')) q('PermanentAddress').value = document.getElementById('input_ekycAddress').value;
+
+            closeEkycModal();
+            showScanMsg(index, 'Đã điền thông tin thành công!', 'ok');
+        }
+    </script>
+}

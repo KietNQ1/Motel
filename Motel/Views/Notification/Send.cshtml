@@ -1,0 +1,300 @@
+@{
+    ViewData["Title"] = "Gửi Thông Báo";
+  
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Rentify - Gửi Thông Báo</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#d46211",
+                        "brand-brown": "#5d4037",
+                        "brand-cream": "#efe7dd",
+                        "background-light": "#f8f7f6",
+                        "background-dark": "#221810",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope"]
+                    },
+                    borderRadius: { "DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen">
+    <div class="min-h-screen flex items-center justify-center p-4 md:p-8">
+        <!-- Main Content -->
+        <main class="flex-1 flex">
+            <!-- Content Area -->
+            <div class="max-w-4xl mx-auto w-full">
+                <div class="mb-8">
+                    <h1 class="text-3xl font-bold text-brand-brown dark:text-slate-100">Gửi thông báo</h1>
+                    <p class="text-slate-500 dark:text-slate-400 mt-1">Gửi email thông báo định kỳ hoặc khẩn cấp đến khách thuê trong hệ thống của bạn.</p>
+                </div>
+                <!-- Form Card -->
+                <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+                    <div class="p-6 sm:p-10">
+                        <form id="form_sendNotification" class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Target Selection -->
+                                <div class="space-y-2">
+                                    <label class="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-sm text-primary">send</span> Gửi đến
+                                    </label>
+                                    <select id="select_targetType_notification" class="w-full rounded-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800 focus:border-primary focus:ring-primary transition-colors py-3">
+                                        <option value="tenant">Khách thuê cụ thể</option>
+                                        <option value="room">Tất cả khách trong phòng</option>
+                                        <option value="property">Tất cả khách trong cơ sở</option>
+                                    </select>
+                                </div>
+                                <!-- Building Selection -->
+                                <div class="space-y-2">
+                                    <label class="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-sm text-primary">corporate_fare</span> Cơ sở
+                                    </label>
+                                    <select id="select_property_notification" class="w-full rounded-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800 focus:border-primary focus:ring-primary transition-colors py-3">
+                                        <option value="">Chọn cơ sở</option>
+                                    </select>
+                                </div>
+                                <!-- Room Selection -->
+                                <div class="space-y-2">
+                                    <label class="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-sm text-primary">bed</span> Phòng
+                                    </label>
+                                    <select id="select_room_notification" class="w-full rounded-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800 focus:border-primary focus:ring-primary transition-colors py-3">
+                                        <option value="">Chọn phòng</option>
+                                    </select>
+                                </div>
+                                <!-- Tenant Selection -->
+                                <div class="space-y-2">
+                                    <label class="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-sm text-primary">person</span> Khách thuê
+                                    </label>
+                                    <select id="select_tenant_notification" class="w-full rounded-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800 focus:border-primary focus:ring-primary transition-colors py-3">
+                                        <option value="">Chọn khách thuê</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <!-- Subject -->
+                            <div class="space-y-2">
+                                <label class="text-sm font-semibold text-slate-700 dark:text-slate-300">Tiêu đề</label>
+                                <input id="input_title_notification" class="w-full rounded-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800 focus:border-primary focus:ring-primary transition-colors py-3" placeholder="Nhập tiêu đề email..." type="text" />
+                            </div>
+                            <!-- Content Area -->
+                            <div class="space-y-2">
+                                <label class="text-sm font-semibold text-slate-700 dark:text-slate-300">Nội dung</label>
+                                <div class="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+                                    <!-- Simple Toolbar -->
+                                    <div class="bg-slate-50 dark:bg-slate-800 px-3 py-2 border-b border-slate-200 dark:border-slate-700 flex gap-2">
+                                        <button class="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-600 dark:text-slate-400" type="button">
+                                            <span class="material-symbols-outlined text-sm">format_bold</span>
+                                        </button>
+                                        <button class="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-600 dark:text-slate-400" type="button">
+                                            <span class="material-symbols-outlined text-sm">format_italic</span>
+                                        </button>
+                                        <button class="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-600 dark:text-slate-400" type="button">
+                                            <span class="material-symbols-outlined text-sm">format_list_bulleted</span>
+                                        </button>
+                                        <button class="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-600 dark:text-slate-400 ml-auto" type="button">
+                                            <span class="material-symbols-outlined text-sm">attach_file</span>
+                                        </button>
+                                    </div>
+                                    <textarea id="input_content_notification" class="w-full border-none focus:ring-0 dark:bg-slate-800 p-4 resize-none" placeholder="Viết nội dung thông báo tại đây..." rows="8"></textarea>
+                                </div>
+                            </div>
+                            <!-- Action Buttons -->
+                            <div class="flex flex-col sm:flex-row items-center gap-4 pt-4">
+                                <button id="btn_submit_sendNotification" type="button" onclick="sendNotification()" class="w-full sm:w-auto px-8 py-3 bg-brand-brown hover:bg-brand-brown/90 text-white font-bold rounded-lg transition-all shadow-md flex items-center justify-center gap-2">
+                                    <span class="material-symbols-outlined">send</span>
+                                    Gửi thông báo
+                                </button>
+                                <button class="w-full sm:w-auto px-8 py-3 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 font-semibold rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center justify-center gap-2" type="button">
+                                    <span class="material-symbols-outlined">visibility</span>
+                                    Xem trước
+                                </button>
+                                <p class="text-xs text-slate-400 text-center sm:text-left sm:ml-auto">Lần cuối lưu bản nháp: 10:45 AM</p>
+                            </div>
+                        </form>
+                    </div>
+                    <!-- Bottom Info Footer -->
+                    <div class="bg-brand-cream/30 dark:bg-slate-800/50 p-6 border-t border-slate-200 dark:border-slate-800">
+                        <div class="flex items-start gap-3">
+                            <span class="material-symbols-outlined text-primary">info</span>
+                            <p class="text-sm text-slate-600 dark:text-slate-400">
+                                <span class="font-bold text-brand-brown dark:text-slate-200">Ghi chú:</span> Thông báo này sẽ được gửi dưới dạng email cá nhân hóa. Hệ thống sẽ tự động chèn tên khách thuê và thông tin phòng tương ứng vào nội dung nếu bạn sử dụng các biến có sẵn.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Recent Activity (Optional addition for dashboard feel) -->
+                <div class="mt-12">
+                    <h3 class="text-lg font-semibold mb-4">Thông báo đã gửi gần đây</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-4 p-4 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800">
+                            <div class="w-10 h-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
+                                <span class="material-symbols-outlined">check_circle</span>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-semibold">Thông báo tiền điện tháng 10</p>
+                                <p class="text-xs text-slate-500">Gửi đến 24 khách thuê • 2 giờ trước</p>
+                            </div>
+                            <button class="text-primary text-sm font-medium">Chi tiết</button>
+                        </div>
+                        <div class="flex items-center gap-4 p-4 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800">
+                            <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
+                                <span class="material-symbols-outlined">schedule</span>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-semibold">Nhắc nhở bảo trì thang máy</p>
+                                <p class="text-xs text-slate-500">Gửi đến Toàn bộ cơ sở • Hôm qua</p>
+                            </div>
+                            <button class="text-primary text-sm font-medium">Chi tiết</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            loadProperties();
+
+            $("#select_property_notification").change(function () {
+                let propertyId = $(this).val();
+
+                $("#select_room_notification").html('<option value="">Chọn phòng</option>');
+                $("#select_tenant_notification").html('<option value="">Chọn khách thuê</option>');
+
+                if (propertyId) {
+                    loadRooms(propertyId);
+                }
+            });
+
+            $("#select_room_notification").change(function () {
+                let roomId = $(this).val();
+
+                $("#select_tenant_notification").html('<option value="">Chọn khách thuê</option>');
+
+                if (roomId) {
+                    loadTenants(roomId);
+                }
+            });
+        });
+
+        function loadProperties() {
+            $.get("/api/property")
+                .done(function (data) {
+                    console.log("Property data:", data);
+                    $("#select_property_notification").html('<option value="">Chọn cơ sở</option>');
+                    data.forEach(p => {
+                        $("#propertySelect").append(
+                            `<option value="${p.propertyId}">${p.name}</option>`
+                        );
+                    });
+                })
+                .fail(function (err) {
+                    console.error("Error loading property", err);
+                });
+        }
+
+        function loadRooms(propertyId) {
+            $.get("/api/room/byProperty/" + propertyId)
+                .done(function (data) {
+                    console.log("Room data:", data);
+                    $("#select_room_notification").html('<option value="">Chọn phòng</option>');
+                    data.forEach(r => {
+                        $("#select_room_notification").append(
+                            `<option value="${r.roomId}">${r.roomName}</option>`
+                        );
+                    });
+                })
+                .fail(function (err) {
+                    console.error("Error loading room", err);
+                });
+        }
+
+        function loadTenants(roomId) {
+            $.get("/api/tenant/byRoom/" + roomId)
+                .done(function (data) {
+                    console.log("Tenant data:", data);
+                    $("#select_tenant_notification").html('<option value="">Chọn khách thuê</option>');
+                    data.forEach(t => {
+                        $("#select_tenant_notification").append(
+                            `<option value="${t.tenantId}">${t.fullName}</option>`
+                        );
+                    });
+                })
+                .fail(function (err) {
+                    console.error("Error loading tenant", err);
+                });
+        }
+
+        function sendNotification() {
+            let type = $("#select_targetType_notification").val();
+            let propertyId = $("#select_property_notification").val();
+            let roomId = $("#select_room_notification").val();
+            let tenantId = $("#select_tenant_notification").val();
+            let title = $("#input_title_notification").val();
+            let content = $("#input_content_notification").val();
+
+            let url = "";
+
+            let data = {
+                title: title,
+                content: content
+            };
+
+            if (type === "property") {
+                url = "/Notification/SendToProperty";
+                data.propertyId = propertyId;
+            }
+
+            if (type === "room") {
+                url = "/Notification/SendToRoom";
+                data.roomId = roomId;
+            }
+
+            if (type === "tenant") {
+                url = "/Notification/SendToTenant";
+                data.tenantId = tenantId;
+            }
+
+            $.post(url, data)
+                .done(function () {
+                    alert("Gửi thông báo thành công");
+                    $("#input_title_notification").val("");
+                    $("#input_content_notification").val("");
+                })
+                .fail(function (err) {
+                    console.error(err);
+                    alert("Gửi thất bại. Vui lòng thử lại.");
+                });
+        }
+    </script>
+</body>
+</html>

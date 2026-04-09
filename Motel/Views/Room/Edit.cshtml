@@ -1,0 +1,756 @@
+@model Motel.ViewModels.Room.RoomEditViewModel
+@{
+    ViewData["Title"] = "Chỉnh sửa phòng - " + Model.RoomName;
+    var feeTypes = ViewBag.FeeTypes as List<Motel.Models.FeeType> ?? new List<Motel.Models.FeeType>();
+}
+
+<div class="settings-page">
+
+    <!-- Breadcrumb -->
+    <nav class="settings-breadcrumb" aria-label="breadcrumb">
+        <ol>
+            <li><a asp-action="Index" asp-controller="Property">Nhà trọ của tôi</a></li>
+            <li><span>›</span></li>
+            <li><a asp-action="Details" asp-controller="Property" asp-route-id="@Model.PropertyId">@Model.PropertyName</a></li>
+            <li><span>›</span></li>
+            <li><a asp-action="Details" asp-route-id="@Model.RoomId">Phòng @Model.RoomName</a></li>
+            <li><span>›</span></li>
+            <li class="active">Chỉnh sửa</li>
+        </ol>
+    </nav>
+
+    <!-- Back link -->
+    <a asp-action="Details" asp-route-id="@Model.RoomId" class="back-link">
+        <i class="bi bi-arrow-left"></i> Quay lại
+    </a>
+
+    <h1 class="settings-title">Chỉnh sửa phòng @Model.RoomName</h1>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert-toast success" id="toastMsg">
+            <i class="bi bi-check-circle-fill"></i> @TempData["Success"]
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert-toast error" id="toastMsg">
+            <i class="bi bi-exclamation-circle-fill"></i> @TempData["Error"]
+        </div>
+    }
+
+    <!-- Card: Thông tin cơ bản -->
+    <div class="settings-card">
+        <div class="settings-section-title">
+            <i class="bi bi-info-circle-fill text-primary"></i> Thông tin cơ bản
+        </div>
+
+        <form id="form_editRoom" asp-action="Edit" method="post" class="basic-info-form" enctype="multipart/form-data">
+            <input id="input_roomId" type="hidden" asp-for="RoomId" />
+            <input id="input_propertyId" type="hidden" asp-for="PropertyId" />
+            <input id="input_propertyName" type="hidden" asp-for="PropertyName" />
+
+            <div class="row-fields">
+                <div class="field-group">
+                    <label id="lbl_roomName">Tên phòng <span class="required">*</span></label>
+                    <input id="input_roomName" asp-for="RoomName" type="text" placeholder="101" />
+                    <span asp-validation-for="RoomName" class="field-error"></span>
+                </div>
+                <div class="field-group">
+                    <label id="lbl_rentPrice">Giá thuê (VNĐ/tháng) <span class="required">*</span></label>
+                    <input id="input_rentPrice" asp-for="RentPrice" type="number" step="100000" />
+                    <span asp-validation-for="RentPrice" class="field-error"></span>
+                </div>
+            </div>
+
+            <div class="field-group mt-3">
+                <label id="lbl_maxOccupants">Số người tối đa <span class="required">*</span></label>
+                <input id="input_maxOccupants" asp-for="MaxOccupants" type="number" min="1" max="20" />
+                <span asp-validation-for="MaxOccupants" class="field-error"></span>
+            </div>
+
+            <div class="field-group mt-3" style="border-top: 1px dashed #ddd; padding-top: 16px;">
+                <label>Hình ảnh phòng <small class="text-muted">(Phòng ngủ, nhà vệ sinh, nhà bếp, ban công...)</small></label>
+                
+                @if (Model.ExistingImages != null && Model.ExistingImages.Any())
+                {
+                    <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px;">
+                        @foreach (var img in Model.ExistingImages)
+                        {
+                            <div style="position: relative; width: 120px; height: 120px; border-radius: 8px; overflow: hidden; border: 1px solid #ddd; background: #fafafa;">
+                                <img src="@img.StoragePath" style="width: 100%; height: 100%; object-fit: cover;" alt="Room Image" />
+                                <div style="position: absolute; top: 0; right: 0; background: rgba(255, 255, 255, 0.9); padding: 4px; border-bottom-left-radius: 6px;">
+                                    <label id="lbl_deleteImage_@img.StoredFileId" style="font-size: 0.8rem; margin: 0; cursor: pointer;">
+                                        <input id="cb_deleteImage_@img.StoredFileId" type="checkbox" name="DeleteImageIds" value="@img.StoredFileId" style="margin-right: 4px;" />Xóa
+                                    </label>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+
+                <label id="lbl_newImages" style="font-size: 0.85rem;">Tải thêm ảnh mới</label>
+                <input id="input_newImages" asp-for="NewImages" type="file" multiple accept="image/*" />
+            </div>
+
+            <div class="form-action-right">
+                <button id="btn_submitEditRoom" type="submit" class="btn-orange">
+                    <i class="bi bi-save"></i> Lưu thông tin
+                </button>
+            </div>
+        </form>
+    </div>
+
+    @{
+        string currentStatus = Model.Status ?? "available";
+        string statusLabel = currentStatus switch {
+            "available"   => "Phòng trống",
+            "occupied"    => "Đang cho thuê",
+            "maintenance" => "Đang sửa chữa / bảo trì",
+            _             => currentStatus
+        };
+        string statusClass = currentStatus switch {
+            "available"   => "status-pill available",
+            "occupied"    => "status-pill occupied",
+            "maintenance" => "status-pill maintenance",
+            _             => "status-pill"
+        };
+    }
+
+    <!-- Card: Trạng thái phòng -->
+    <div class="settings-card mt-4">
+        <div class="settings-section-title">
+            <i class="bi bi-wrench-adjustable-circle-fill text-warning"></i> Trạng thái phòng
+        </div>
+
+        <div class="status-row">
+            <div class="status-info">
+                <span>Trạng thái hiện tại:</span>
+                <span class="@statusClass">@statusLabel</span>
+            </div>
+
+            <div class="status-actions">
+                @if (currentStatus == "available")
+                {
+                    <!-- available → có thể chuyển sang maintenance -->
+                    <form id="form_setMaintenance" asp-action="SetMaintenance" asp-route-id="@Model.RoomId" method="post" class="d-inline-form"
+                          onsubmit="return confirm('Xác nhận chuyển phòng @Model.RoomName sang trạng thái đang sửa chữa? Phòng sẽ không thể cho thuê trong thời gian này.');">
+                        @Html.AntiForgeryToken()
+                        <button id="btn_setMaintenance" type="submit" class="btn-maintenance">
+                            <i class="bi bi-tools"></i> Chuyển sang sửa chữa
+                        </button>
+                    </form>
+                }
+                else if (currentStatus == "maintenance")
+                {
+                    <!-- maintenance → có thể kết thúc, trả về available -->
+                    <form id="form_endMaintenance" asp-action="EndMaintenance" asp-route-id="@Model.RoomId" method="post" class="d-inline-form"
+                          onsubmit="return confirm('Xác nhận hoàn tất sửa chữa và mở lại phòng @Model.RoomName cho thuê?');">
+                        @Html.AntiForgeryToken()
+                        <button id="btn_endMaintenance" type="submit" class="btn-end-maintenance">
+                            <i class="bi bi-check2-circle"></i> Hoàn tất sửa chữa
+                        </button>
+                    </form>
+                }
+                else if (currentStatus == "occupied")
+                {
+                    <!-- occupied → không cho phép bảo trì khi đang có người thuê -->
+                    <span class="status-note">
+                        <i class="bi bi-info-circle"></i>
+                        Phòng đang có người thuê. Kết thúc hợp đồng trước khi chuyển sang sửa chữa.
+                    </span>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Card: Phụ phí riêng rẽ cho phòng -->
+    <div class="settings-card mt-4">
+        <div class="fee-card-header">
+            <div>
+                <div class="settings-section-title">
+                    <i class="bi bi-cash-coin text-warning"></i> Phụ phí phòng (Ghi đè)
+                </div>
+                <p class="fee-subtitle">Cấu hình các loại phí áp dụng riêng cho phòng này. Sẽ ghi đè phụ phí mặc định của nhà trọ.</p>
+            </div>
+            <button id="btn_openAddFeeModal" type="button" class="btn-orange-outline" data-bs-toggle="modal" data-bs-target="#modal_addFee">
+                <i class="bi bi-plus-circle"></i> Thêm phụ phí phòng
+            </button>
+        </div>
+
+        @if (Model.RoomLevelFeeSettings == null || !Model.RoomLevelFeeSettings.Any())
+        {
+            <div class="empty-state">
+                <i class="bi bi-inbox"></i>
+                <p>Chưa có phụ phí riêng nào. Phòng đang lấy cấu hình tự động từ nhà trọ.</p>
+            </div>
+        }
+        else
+        {
+            <table class="fee-table">
+                <thead>
+                    <tr>
+                        <th>Loại phí</th>
+                        <th>Cách tính</th>
+                        <th>Mức giá</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var fee in Model.RoomLevelFeeSettings)
+                    {
+                        string methodLabel = fee.CalculationMethod switch
+                        {
+                            "meter" => "Theo số",
+                            "per_person" => "Theo người",
+                            "per_room" => "Theo phòng",
+                            _ => "Cố định"
+                        };
+                        string priceDisplay = fee.CalculationMethod == "meter"
+                            ? fee.UnitPrice.ToString("N0") + " VNĐ"
+                            : fee.BaseAmount.ToString("N0") + " VNĐ";
+
+                        <tr>
+                            <td class="fee-name">@fee.FeeTypeName</td>
+                            <td class="fee-method">@methodLabel</td>
+                            <td class="fee-price">@priceDisplay</td>
+                            <td class="fee-actions">
+                                <button id="btn_openEditFeeModal_@fee.FeeSettingId" class="icon-btn edit"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#modal_editFee"
+                                        data-setting-id="@fee.FeeSettingId"
+                                        data-type-id="@fee.FeeTypeId"
+                                        data-method="@fee.CalculationMethod"
+                                        data-unit-price="@fee.UnitPrice"
+                                        data-base-amount="@fee.BaseAmount"
+                                        title="Chỉnh sửa">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <form id="form_deleteFeeSetting_@fee.FeeSettingId" asp-action="DeleteFeeSetting" method="post" class="d-inline"
+                                      onsubmit="return confirm('Xóa phụ phí này khỏi phòng?');">
+                                    <input id="input_deleteFeeSettingId_@fee.FeeSettingId" type="hidden" name="feeSettingId" value="@fee.FeeSettingId" />
+                                    <input id="input_deleteRoomId_@fee.FeeSettingId" type="hidden" name="roomId" value="@Model.RoomId" />
+                                    <button id="btn_deleteFeeSetting_@fee.FeeSettingId" type="submit" class="icon-btn delete" title="Xóa">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+
+        <!-- Phụ phí mặc định của Property (đang kế thừa, có thể ghi đè) -->
+        @if (Model.PropertyLevelFeeSettings.Any())
+        {
+            <h5 class="mt-5 mb-3" style="font-size: 0.95rem; font-weight: 600; color: #555;">Các loại phí đang kế thừa từ nhà trọ (có thể ghi đè):</h5>
+            <table class="fee-table" style="opacity: 0.85;">
+                <thead>
+                    <tr>
+                        <th>Loại phí</th>
+                        <th>Cách tính</th>
+                        <th>Mức giá (Nhà trọ)</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var fee in Model.PropertyLevelFeeSettings)
+                    {
+                        // Skip if already overridden at room level
+                        if (Model.RoomLevelFeeSettings.Any(r => r.FeeTypeId == fee.FeeTypeId)) continue;
+
+                        string methodLabel = fee.CalculationMethod switch
+                        {
+                            "meter" => "Theo số",
+                            "per_person" => "Theo người",
+                            "per_room" => "Theo phòng",
+                            _ => "Cố định"
+                        };
+                        string priceDisplay = fee.CalculationMethod == "meter"
+                            ? fee.UnitPrice.ToString("N0") + " VNĐ"
+                            : fee.BaseAmount.ToString("N0") + " VNĐ";
+
+                        <tr>
+                            <td class="fee-name">@fee.FeeTypeName</td>
+                            <td class="fee-method">@methodLabel</td>
+                            <td class="fee-price">@priceDisplay</td>
+                            <td class="fee-actions">
+                                <!-- Case 1: no room override yet, settingId=0 creates new room-level fee -->
+                                <button id="btn_inheritFee_@fee.FeeTypeId" class="icon-btn edit"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#modal_editFee"
+                                        data-setting-id="0"
+                                        data-type-id="@fee.FeeTypeId"
+                                        data-method="@fee.CalculationMethod"
+                                        data-unit-price="@fee.UnitPrice"
+                                        data-base-amount="@fee.BaseAmount"
+                                        title="Ghi đè giá cho phòng này">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+
+</div>
+
+<!-- Add Fee Modal -->
+<div class="modal fade" id="modal_addFee" tabindex="-1">
+    <div class="modal-dialog">
+        <form id="form_addFee" asp-action="AddFeeSetting" method="post" class="modal-content settings-modal">
+            <input id="input_addRoomId" type="hidden" name="roomId" value="@Model.RoomId" />
+            <input id="input_addPropertyId" type="hidden" name="propertyId" value="@Model.PropertyId" />
+            <input type="hidden" name="feeTypeId" id="input_addFeeTypeId" value="0" />
+
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-plus-circle text-warning"></i> Thêm phụ phí phòng</h5>
+                <button id="btn_closeAddFeeModalIcon" type="button" class="btn-close" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="field-group mb-3" id="div_addCustomFeeName">
+                    <label id="lbl_newFeeTypeName">Tên phí mới <span class="required">*</span></label>
+                    <input type="text" name="newFeeTypeName" id="input_addCustomFeeName" class="form-control" placeholder="VD: Phí gửi xe, Phí vệ sinh..." required />
+                </div>
+
+                <div class="field-group mb-3">
+                    <label id="lbl_addCalcMethod">Cách tính</label>
+                    <select name="calculationMethod" id="select_addCalcMethod" class="form-select" required>
+                        <option value="per_room">Theo phòng (cố định mỗi phòng)</option>
+                        <option value="per_person">Theo đầu người</option>
+                        <option value="meter">Theo chỉ số đồng hồ (điện, nước...)</option>
+                    </select>
+                </div>
+
+                <div class="field-group mb-3 d-none" id="div_addUnitPrice">
+                    <label id="lbl_addUnitPrice">Đơn giá (VNĐ / đơn vị)</label>
+                    <input type="number" name="unitPrice" id="input_addUnitPrice" class="form-control" value="0" min="0" step="100" />
+                </div>
+
+                <div class="field-group mb-3" id="div_addBaseAmount">
+                    <label id="lbl_addBaseAmount">Mức phí (VNĐ)</label>
+                    <input type="number" name="baseAmount" id="input_addBaseAmount" class="form-control" value="0" min="0" step="1000" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="btn_cancelAddFeeModal" type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
+                <button id="btn_submitAddFee" type="submit" class="btn-orange">Thêm mới</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Fee Modal -->
+<div class="modal fade" id="modal_editFee" tabindex="-1">
+    <div class="modal-dialog">
+        <form id="form_editFee" asp-action="EditFeeSetting" method="post" class="modal-content settings-modal">
+            <input id="input_editRoomId" type="hidden" name="roomId" value="@Model.RoomId" />
+            <input id="input_editPropertyId" type="hidden" name="propertyId" value="@Model.PropertyId" />
+            <input type="hidden" name="feeSettingId" id="input_editFeeSettingId" />
+            <input type="hidden" name="feeTypeId" id="input_editFeeTypeId" />
+
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-pencil-square text-primary"></i> Cập nhật mức phí</h5>
+                <button id="btn_closeEditFeeModalIcon" type="button" class="btn-close" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-light border small py-2 mb-3">
+                    <i class="bi bi-clock-history text-muted"></i>
+                    Mức giá mới sẽ áp dụng cho phòng này từ hôm nay.
+                </div>
+
+                <div class="field-group mb-3">
+                    <label id="lbl_editCalcMethod">Cách tính</label>
+                    <select name="calculationMethod" id="select_editCalcMethod" class="form-select" required>
+                        <option value="per_room">Theo phòng</option>
+                        <option value="per_person">Theo đầu người</option>
+                        <option value="meter">Theo chỉ số đồng hồ</option>
+                    </select>
+                </div>
+
+                <div class="field-group mb-3 d-none" id="div_editUnitPrice">
+                    <label id="lbl_editUnitPrice">Đơn giá (VNĐ / đơn vị)</label>
+                    <input type="number" name="unitPrice" id="input_editUnitPrice" class="form-control" min="0" step="100" />
+                </div>
+
+                <div class="mb-3 field-group" id="div_editBaseAmount">
+                    <label id="lbl_editBaseAmount">Mức phí (VNĐ)</label>
+                    <input type="number" name="baseAmount" id="input_editBaseAmount" class="form-control" min="0" step="1000" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="btn_cancelEditFeeModal" type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
+                <button id="btn_submitEditFee" type="submit" class="btn-orange">Lưu thay đổi</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body { background: #f5f5f5; }
+
+        .settings-page {
+            max-width: 880px;
+            margin: 0 auto;
+            padding: 28px 20px 60px;
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+        }
+
+        /* Breadcrumb */
+        .settings-breadcrumb ol {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            list-style: none;
+            margin: 0 0 12px;
+            padding: 0;
+            font-size: 0.85rem;
+            color: #888;
+        }
+        .settings-breadcrumb a { color: #888; text-decoration: none; }
+        .settings-breadcrumb a:hover { color: #f97316; }
+        .settings-breadcrumb .active { color: #f97316; font-weight: 500; }
+
+        /* Back link */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+            color: #555;
+            text-decoration: none;
+            margin-bottom: 10px;
+        }
+        .back-link:hover { color: #f97316; }
+
+        .settings-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #111;
+            margin: 0 0 24px;
+        }
+
+        /* Cards */
+        .settings-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 28px 32px;
+            box-shadow: 0 1px 4px rgba(0,0,0,.08);
+        }
+
+        .settings-section-title {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #111;
+            margin-bottom: 20px;
+        }
+        .settings-section-title i { margin-right: 8px; }
+
+        /* Basic info form layout */
+        .row-fields {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @@media (max-width: 600px) { .row-fields { grid-template-columns: 1fr; } }
+
+        .field-group { display: flex; flex-direction: column; gap: 6px; }
+        .field-group label { font-size: 0.84rem; color: #444; font-weight: 500; }
+        .field-group input, .field-group textarea, .field-group select {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 0.92rem;
+            outline: none;
+            color: #222;
+            background: #fff;
+            transition: border-color .2s;
+        }
+        .field-group input:focus, .field-group textarea:focus, .field-group select:focus {
+            border-color: #f97316;
+            box-shadow: 0 0 0 3px rgba(249, 115, 22, .12);
+        }
+        .required { color: #ef4444; }
+        .field-error { color: #ef4444; font-size: 0.78rem; }
+        .mt-3 { margin-top: 16px; }
+        .form-action-right {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        /* Orange buttons */
+        .btn-orange {
+            background: #f97316;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 22px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            transition: background .2s;
+        }
+        .btn-orange:hover { background: #ea6c0a; color: #fff; }
+
+        .btn-orange-outline {
+            background: #fff4ed;
+            color: #f97316;
+            border: 1.5px solid #f97316;
+            border-radius: 8px;
+            padding: 8px 18px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            transition: background .2s;
+        }
+        .btn-orange-outline:hover { background: #f97316; color: #fff; }
+
+        /* Fee card header */
+        .fee-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+        .fee-card-header .settings-section-title { margin-bottom: 4px; }
+        .fee-subtitle { font-size: 0.82rem; color: #777; margin: 0; }
+
+        /* Fee table */
+        .fee-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .fee-table thead tr {
+            border-bottom: 1.5px solid #eee;
+        }
+        .fee-table th {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #999;
+            padding: 10px 12px;
+            text-align: left;
+        }
+        .fee-table tbody tr {
+            border-bottom: 1px solid #f4f4f4;
+            transition: background .15s;
+        }
+        .fee-table tbody tr:last-child { border-bottom: none; }
+        .fee-table tbody tr:hover { background: #fafafa; }
+        .fee-table td { padding: 14px 12px; font-size: 0.92rem; }
+
+        .fee-name { font-weight: 500; color: #222; }
+        .fee-method { color: #555; }
+        .fee-price { color: #f97316; font-weight: 600; }
+
+        .fee-actions { display: flex; align-items: center; gap: 8px; }
+        .icon-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            border: 1.5px solid transparent;
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+            transition: all .17s;
+        }
+        .icon-btn.edit { color: #3b82f6; border-color: #bfdbfe; }
+        .icon-btn.edit:hover { background: #eff6ff; }
+        .icon-btn.delete { color: #9ca3af; border-color: #e5e7eb; }
+        .icon-btn.delete:hover { color: #ef4444; border-color: #fecaca; background: #fff5f5; }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #aaa;
+        }
+        .empty-state i { font-size: 2rem; display: block; margin-bottom: 8px; }
+
+        /* Toast */
+        .alert-toast {
+            display: flex; align-items: center; gap: 8px;
+            padding: 12px 18px; border-radius: 10px;
+            font-size: 0.9rem; margin-bottom: 16px;
+        }
+        .alert-toast.success { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+        .alert-toast.error   { background: #fff5f5; color: #dc2626; border: 1px solid #fecaca; }
+
+        /* Modals */
+        .settings-modal .modal-header { border-bottom: 1px solid #f3f3f3; }
+        .settings-modal .modal-footer { border-top: 1px solid #f3f3f3; }
+
+        /* Custom Modal Styles (No Bootstrap JS/CSS required) */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050; background-color: rgba(0,0,0,0.5); align-items: flex-start; justify-content: center; opacity: 0; transition: opacity 0.2s ease; }
+        .modal.show { display: flex; opacity: 1; }
+        .modal-dialog { background-color: #fff; border-radius: 12px; width: 90%; max-width: 500px; margin: 40px auto; box-shadow: 0 4px 20px rgba(0,0,0,0.15); transform: translateY(-20px); transition: transform 0.2s ease; }
+        .modal.show .modal-dialog { transform: translateY(0); }
+        .modal-content { display: flex; flex-direction: column; width: 100%; border: none; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #f0f0f0; }
+        .modal-title { font-size: 1.15rem; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 8px; }
+        .btn-close { background: transparent; border: none; font-size: 1.2rem; line-height: 1; color: #888; cursor: pointer; padding: 4px; border-radius: 4px; transition: background 0.2s; }
+        .btn-close:hover { color: #333; background: #f5f5f5; }
+        .modal-body { padding: 20px; }
+        .modal-footer { padding: 16px 20px; border-top: 1px solid #f0f0f0; display: flex; justify-content: flex-end; gap: 10px; }
+        .btn-light { background-color: #f3f4f6; color: #374151; border: 1px solid #d1d5db; padding: 8px 16px; border-radius: 6px; font-weight: 500; cursor: pointer; transition: background .2s; margin-left:8px;}
+        .btn-light:hover { background-color: #e5e7eb; }
+
+        /* Missing Bootstrap Utility Classes */
+        .d-none { display: none !important; }
+        .d-inline { display: inline-block !important; }
+        .text-primary { color: #3b82f6 !important; }
+        .text-warning { color: #f59e0b !important; }
+        .text-muted { color: #6b7280 !important; }
+        .alert { padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 0.9rem; }
+        .alert-light { background-color: #f9fafb; border: 1px solid #e5e7eb; color: #374151; display: flex; align-items: center; gap: 8px; }
+        .mb-3 { margin-bottom: 1rem; }
+        .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+        .border { border: 1px solid #e5e7eb; }
+        .small { font-size: 0.85rem; }
+        .form-select, .form-control { width: 100%; box-sizing: border-box; }
+
+        /* ── Status card ── */
+        .status-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 14px;
+        }
+        .status-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.93rem;
+            color: #444;
+            font-weight: 500;
+        }
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            font-weight: 600;
+        }
+        .status-pill.available   { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+        .status-pill.occupied    { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+        .status-pill.maintenance { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+
+        .status-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+        .btn-maintenance {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1.5px solid #fcd34d;
+            border-radius: 8px;
+            padding: 9px 18px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: background .18s, color .18s;
+        }
+        .btn-maintenance:hover { background: #f59e0b; color: #fff; border-color: #f59e0b; }
+
+        .btn-end-maintenance {
+            background: #f0fdf4;
+            color: #15803d;
+            border: 1.5px solid #86efac;
+            border-radius: 8px;
+            padding: 9px 18px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: background .18s, color .18s;
+        }
+        .btn-end-maintenance:hover { background: #16a34a; color: #fff; border-color: #16a34a; }
+
+        .status-note {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.83rem;
+            color: #6b7280;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 8px 14px;
+        }
+        .d-inline-form { display: inline; }
+
+    </style>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function toggleMethodInputs(method, prefix) {
+            if (method === 'meter') {
+                $('#div_' + prefix + 'UnitPrice').removeClass('d-none');
+                $('#div_' + prefix + 'BaseAmount').addClass('d-none');
+            } else {
+                $('#div_' + prefix + 'UnitPrice').addClass('d-none');
+                $('#div_' + prefix + 'BaseAmount').removeClass('d-none');
+            }
+        }
+
+        $(document).ready(function () {
+            // Initialize add method selects
+            $('#select_addCalcMethod').on('change', function () { toggleMethodInputs($(this).val(), 'add'); });
+            toggleMethodInputs($('#select_addCalcMethod').val(), 'add');
+
+            // Custom modal toggle logic (replaces Bootstrap JS)
+            $('[data-bs-toggle="modal"]').click(function(e) {
+                e.preventDefault();
+                var target = $(this).attr('data-bs-target');
+                $(target).addClass('show');
+            });
+            $('.btn-close, [data-bs-dismiss="modal"]').click(function(e) {
+                e.preventDefault();
+                $(this).closest('.modal').removeClass('show');
+            });
+            $('.modal').click(function(e) {
+                if ($(e.target).hasClass('modal')) {
+                    $(this).removeClass('show');
+                }
+            });
+
+            // Edit fee validation and population
+            $('.icon-btn.edit').click(function () {
+                var btn = this;
+                $('#input_editFeeSettingId').val(btn.dataset.settingId);
+                $('#input_editFeeTypeId').val(btn.dataset.typeId);
+                $('#select_editCalcMethod').val(btn.dataset.method);
+                $('#input_editUnitPrice').val(parseFloat(btn.dataset.unitPrice) || 0);
+                $('#input_editBaseAmount').val(parseFloat(btn.dataset.baseAmount) || 0);
+                toggleMethodInputs(btn.dataset.method, 'edit');
+            });
+            $('#select_editCalcMethod').on('change', function () { toggleMethodInputs($(this).val(), 'edit'); });
+
+            // Auto-dismiss toast
+            setTimeout(function() { var t = document.getElementById('toastMsg'); if(t) t.remove(); }, 4000);
+        });
+    </script>
+}

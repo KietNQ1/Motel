@@ -1,0 +1,30 @@
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Đã gửi yêu cầu tiền mặt";
+    var invoiceId = (int)ViewBag.InvoiceId;
+    var paymentIntentId = (int)ViewBag.PaymentIntentId;
+}
+
+<div class="mx-auto flex min-h-[calc(100vh-8rem)] max-w-md items-center px-4 py-8">
+    <div class="w-full rounded-2xl border border-[#e7d9cf] bg-white p-8 text-center shadow-sm dark:border-gray-700 dark:bg-gray-800 space-y-5">
+        <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+            <span class="material-symbols-outlined text-4xl">schedule</span>
+        </div>
+        <div>
+            <h1 class="text-xl font-extrabold text-text-main dark:text-white">Đã chọn thanh toán tiền mặt</h1>
+            <p class="mt-3 text-sm text-text-sub dark:text-gray-400 leading-relaxed text-left">
+                Yêu cầu của bạn đã được ghi nhận. Hãy <span class="font-semibold text-text-main dark:text-gray-200">mang tiền mặt đúng số tiền trên hóa đơn</span> và giao cho chủ trọ. Sau khi nhận tiền, <span class="font-semibold text-text-main dark:text-gray-200">chủ trọ sẽ xác nhận trên hệ thống</span> — lúc đó hóa đơn mới được đánh dấu đã thanh toán.
+            </p>
+        </div>
+        <div class="rounded-xl border border-gray-100 bg-secondary/40 px-4 py-3 text-left text-xs text-text-sub dark:border-gray-600 dark:bg-gray-700/50 dark:text-gray-400 space-y-1">
+            <div><span class="text-text-sub dark:text-gray-500">Hóa đơn:</span> <span class="font-mono font-semibold text-text-main dark:text-white">#@invoiceId</span></div>
+            <div><span class="text-text-sub dark:text-gray-500">Mã tham chiếu:</span> <span class="font-mono font-semibold text-text-main dark:text-white">#INTENT-@paymentIntentId</span></div>
+        </div>
+        <div class="flex flex-col gap-3">
+            <a id="lnk_home_cashPaymentSubmitted" asp-controller="Home" asp-action="Index"
+               class="inline-flex items-center justify-center rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition hover:bg-primary-dark">
+                Về trang chủ
+            </a>
+        </div>
+    </div>
+</div>

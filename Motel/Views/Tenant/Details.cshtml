@@ -1,0 +1,282 @@
+@model Motel.Models.Tenant
+@{
+    ViewData["Title"] = "Chi tiết người thuê";
+}
+
+@section Styles {
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<style>
+    :root {
+        --primary: #ec5b13;
+        --primary-light: rgba(236,91,19,0.10);
+        --primary-glow: rgba(236,91,19,0.25);
+        --bg: #f7f5f3;
+        --surface: #ffffff;
+        --border: #e8e3df;
+        --text: #1a1410;
+        --text-muted: #7a6f68;
+        --radius: 14px;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Be Vietnam Pro', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    .page-wrapper { max-width: 860px; margin: 0 auto; padding: 36px 20px 80px; }
+
+    /* Breadcrumb */
+    .breadcrumb-nav { display: flex; align-items: center; gap: 8px; margin-bottom: 28px; font-size: 0.82rem; }
+    .breadcrumb-nav a { color: var(--primary); text-decoration: none; font-weight: 600; }
+    .breadcrumb-nav a:hover { text-decoration: underline; }
+    .breadcrumb-sep { color: #bbb; }
+    .breadcrumb-nav span.current { color: var(--text-muted); font-weight: 500; }
+
+    /* Page title row */
+    .page-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 28px; }
+    .page-title-row h1 { font-size: clamp(1.7rem, 4vw, 2.3rem); font-weight: 900; letter-spacing: -0.03em; margin: 0 0 4px; }
+    .page-title-row .subtitle { color: var(--text-muted); font-size: 0.88rem; }
+    .header-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+    /* Buttons */
+    .btn-primary-solid {
+        display: inline-flex; align-items: center; gap: 7px;
+        padding: 10px 22px; background: var(--primary); border: none; border-radius: 10px;
+        font-family: inherit; font-size: 0.88rem; font-weight: 800; color: #fff;
+        cursor: pointer; text-decoration: none;
+        box-shadow: 0 4px 14px var(--primary-glow);
+        transition: background 0.15s, transform 0.1s;
+    }
+    .btn-primary-solid:hover { background: #d44e0e; color: #fff; transform: translateY(-1px); }
+    .btn-primary-solid:active { transform: translateY(0); }
+    .btn-outline {
+        display: inline-flex; align-items: center; gap: 7px;
+        padding: 10px 20px; border: 1.5px solid var(--border); background: transparent;
+        border-radius: 10px; font-family: inherit; font-size: 0.88rem; font-weight: 700;
+        color: var(--text-muted); cursor: pointer; text-decoration: none;
+        transition: background 0.15s, color 0.15s;
+    }
+    .btn-outline:hover { background: #f0ece8; color: var(--text); }
+
+    /* Alert */
+    .alert-ok {
+        display: flex; align-items: center; gap: 10px;
+        background: #d4f5e2; border-radius: 10px; padding: 12px 16px;
+        font-size: 0.88rem; font-weight: 600; color: #1a7a4a; margin-bottom: 20px;
+    }
+
+    /* Card */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 1px 4px rgba(0,0,0,0.05); overflow: hidden; margin-bottom: 20px; }
+
+    .card-header-bar { display: flex; align-items: center; gap: 10px; padding: 16px 22px; border-bottom: 1px solid var(--border); background: #faf8f6; }
+    .card-header-bar .material-symbols-outlined { color: var(--primary); font-size: 1.1rem; }
+    .card-header-bar .title { font-weight: 800; font-size: 0.95rem; }
+
+    .card-body { padding: 22px; }
+
+    /* Tenant hero */
+    .tenant-hero { display: flex; align-items: center; gap: 18px; padding: 20px 22px; border-bottom: 1px solid var(--border); }
+    .tenant-avatar {
+        width: 58px; height: 58px; border-radius: 50%;
+        background: var(--primary-light); border: 2px solid var(--primary);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.5rem; font-weight: 900; color: var(--primary); flex-shrink: 0;
+    }
+    .tenant-hero .t-name { font-size: 1.15rem; font-weight: 800; margin: 0 0 3px; }
+    .tenant-hero .t-meta { font-size: 0.8rem; color: var(--text-muted); }
+
+    /* Info grid */
+    .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px 28px; }
+    @@media (min-width: 600px) { .info-grid { grid-template-columns: repeat(3, 1fr); } }
+    .info-cell .lbl { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); margin-bottom: 4px; }
+    .info-cell .val { font-size: 0.93rem; font-weight: 600; color: var(--text); word-break: break-word; }
+    .info-cell .val.empty { color: #c5bdb8; font-style: italic; font-weight: 400; }
+
+    /* CCCD images */
+    .cccd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @@media (max-width: 480px) { .cccd-grid { grid-template-columns: 1fr; } }
+    .cccd-img-wrap { position: relative; }
+    .cccd-side-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 6px; text-align: center; }
+    .cccd-img-wrap img {
+        width: 100%; height: auto; object-fit: contain;
+        border-radius: 10px; border: 1.5px solid var(--border);
+        cursor: pointer; transition: opacity 0.15s, transform 0.15s; display: block;
+    }
+    .cccd-img-wrap img:hover { opacity: 0.88; transform: scale(1.01); }
+    .cccd-hint { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.5); color: #fff; border-radius: 6px; padding: 2px 7px; font-size: 0.68rem; font-weight: 700; pointer-events: none; }
+
+    /* Footer meta */
+    .footer-meta { padding: 11px 22px; background: #faf8f6; border-top: 1px solid var(--border); font-size: 0.75rem; color: var(--text-muted); }
+</style>
+}
+
+<div class="page-wrapper">
+
+    <nav class="breadcrumb-nav">
+        <a id="lnk_breadcrumb_propertyIndex" asp-controller="Property" asp-action="Index">Nhà trọ của tôi</a>
+        <span class="breadcrumb-sep">/</span>
+        <span class="current">Chi tiết người thuê</span>
+    </nav>
+
+    <div class="page-title-row">
+        <div>
+            <h1>Chi tiết người thuê</h1>
+            <div class="subtitle">Thông tin cá nhân và giấy tờ tùy thân</div>
+        </div>
+        <div class="header-actions">
+            <a id="lnk_edit_@Model.TenantId" asp-action="Edit" asp-route-id="@Model.TenantId" asp-route-occupancyId="@ViewBag.OccupancyId" class="btn-primary-solid">
+                <span class="material-symbols-outlined" style="font-size:1rem;">edit</span>
+                Chỉnh sửa
+            </a>
+            <a id="lnk_back_propertyIndex" asp-controller="Property" asp-action="Index" class="btn-outline">
+                <span class="material-symbols-outlined" style="font-size:1rem;">arrow_back</span>
+                Quay lại
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert-ok">
+            <span class="material-symbols-outlined">check_circle</span>
+            @TempData["Success"]
+        </div>
+    }
+
+    @* Main info card *@
+    <div class="card">
+        <div class="tenant-hero">
+            <div class="tenant-avatar">
+                @(string.IsNullOrEmpty(Model.FullName) ? "?" : Model.FullName.Split(' ').Last().Substring(0,1).ToUpper())
+            </div>
+            <div>
+                <div class="t-name">@Model.FullName</div>
+                <div class="t-meta">
+                    @(string.IsNullOrEmpty(Model.Phone) ? "Chưa có SĐT" : Model.Phone)
+                    @if (!string.IsNullOrEmpty(Model.Email))
+                    {
+                        <span style="margin:0 6px;opacity:.35;">·</span>@Model.Email
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="info-grid">
+                <div class="info-cell">
+                    <div class="lbl">Họ tên</div>
+                    <div class="val">@Model.FullName</div>
+                </div>
+                <div class="info-cell">
+                    <div class="lbl">Số điện thoại</div>
+                    <div class="val @(string.IsNullOrEmpty(Model.Phone)?"empty":"")">
+                        @(string.IsNullOrEmpty(Model.Phone) ? "Chưa có" : Model.Phone)
+                    </div>
+                </div>
+                <div class="info-cell">
+                    <div class="lbl">Email</div>
+                    <div class="val @(string.IsNullOrEmpty(Model.Email)?"empty":"")">
+                        @(string.IsNullOrEmpty(Model.Email) ? "Chưa có" : Model.Email)
+                    </div>
+                </div>
+                <div class="info-cell">
+                    <div class="lbl">CCCD / CMND</div>
+                    <div class="val @(string.IsNullOrEmpty(Model.IdentityNo)?"empty":"")">
+                        @(string.IsNullOrEmpty(Model.IdentityNo) ? "Chưa có" : Model.IdentityNo)
+                    </div>
+                </div>
+                <div class="info-cell">
+                    <div class="lbl">Ngày sinh</div>
+                    <div class="val @(!Model.DateOfBirth.HasValue?"empty":"")">
+                        @(Model.DateOfBirth.HasValue ? Model.DateOfBirth.Value.ToString("dd/MM/yyyy") : "Chưa có")
+                    </div>
+                </div>
+                <div class="info-cell">
+                    <div class="lbl">Nơi ĐKTT</div>
+                    <div class="val @(string.IsNullOrEmpty(Model.PermanentAddress)?"empty":"")">
+                        @(string.IsNullOrEmpty(Model.PermanentAddress) ? "Chưa có" : Model.PermanentAddress)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-meta">Ngày tạo: @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+    </div>
+
+    @* CCCD images *@
+    @if (!string.IsNullOrEmpty(ViewBag.FrontImage as string) || !string.IsNullOrEmpty(ViewBag.BackImage as string))
+    {
+        <div class="card">
+            <div class="card-header-bar">
+                <span class="material-symbols-outlined">badge</span>
+                <span class="title">Ảnh CCCD / CMND</span>
+            </div>
+            <div class="card-body">
+                <div class="cccd-grid">
+                    @if (!string.IsNullOrEmpty(ViewBag.FrontImage as string))
+                    {
+                        <div class="cccd-img-wrap">
+                            <div class="cccd-side-label">Mặt trước</div>
+                            <img id="img_cccdFront" src="@ViewBag.FrontImage" alt="Mặt trước CCCD" onclick="window.open(this.src,'_blank')" />
+                            <span class="cccd-hint">Xem lớn</span>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(ViewBag.BackImage as string))
+                    {
+                        <div class="cccd-img-wrap">
+                            <div class="cccd-side-label">Mặt sau</div>
+                            <img id="img_cccdBack" src="@ViewBag.BackImage" alt="Mặt sau CCCD" onclick="window.open(this.src,'_blank')" />
+                            <span class="cccd-hint">Xem lớn</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
+    @* CT01 and Residence Proof *@
+    <div class="card">
+        <div class="card-header-bar">
+            <span class="material-symbols-outlined">home_pin</span>
+            <span class="title">Xác minh tạm trú</span>
+        </div>
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="text-primary mb-0">Hồ sơ đăng ký tạm trú</h6>
+                <a id="lnk_printCT01_@Model.TenantId" asp-action="PrintCT01" asp-route-id="@Model.TenantId" asp-route-occupancyId="@ViewBag.OccupancyId" class="btn btn-sm btn-outline-info" style="display:inline-flex; align-items:center; gap:5px; padding: 6px 12px; border: 1px solid #17a2b8; border-radius: 6px; color: #17a2b8; text-decoration: none;">
+                    <span class="material-symbols-outlined" style="font-size: 1rem;">print</span> Tạo mẫu CT01
+                </a>
+            </div>
+            
+            @if (!string.IsNullOrEmpty(ViewBag.ResidenceProofImage as string))
+            {
+                <div class="text-success mb-2 fw-bold" style="color: #1a7a4a; display:flex; align-items:center; gap:5px;"><span class="material-symbols-outlined" style="font-size: 1.1rem;">check_circle</span> Đã có minh chứng tạm trú</div>
+                <img id="img_residenceProof" src="@ViewBag.ResidenceProofImage" alt="Minh chứng tạm trú" class="img-fluid rounded border zoomable" style="cursor: pointer; max-height: 300px; object-fit: contain; width: 100%; border-radius: 10px; border: 1.5px solid var(--border);" onclick="window.open(this.src, '_blank')" />
+                
+                <!-- Form update existing proof -->
+                <form id="form_updateResidenceProof" asp-action="UploadResidenceProof" method="post" enctype="multipart/form-data" class="mt-3" style="margin-top: 15px;">
+                    @Html.AntiForgeryToken()
+                    <input id="input_tenantId" type="hidden" name="tenantId" value="@Model.TenantId" />
+                    <input id="input_occupancyId" type="hidden" name="occupancyId" value="@ViewBag.OccupancyId" />
+                    <div style="display: flex; gap: 8px;">
+                        <input id="input_proofImageExisting" type="file" class="form-control" name="proofImage" accept="image/*" required style="flex: 1; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px;">
+                        <button id="btn_submit_updateProof" class="btn-primary-solid" type="submit" style="padding: 6px 16px;">Cập nhật ảnh</button>
+                    </div>
+                </form>
+            }
+            else
+            {
+                <div class="text-danger mb-2 fw-bold" style="color: #dc3545; display:flex; align-items:center; gap:5px;"><span class="material-symbols-outlined" style="font-size: 1.1rem;">cancel</span> Chưa có minh chứng tạm trú</div>
+                <form id="form_uploadResidenceProof" asp-action="UploadResidenceProof" method="post" enctype="multipart/form-data" style="background: #faf8f6; padding: 15px; border-radius: 10px; border: 1px solid var(--border); margin-top: 10px;">
+                    @Html.AntiForgeryToken()
+                    <input id="input_tenantIdNew" type="hidden" name="tenantId" value="@Model.TenantId" />
+                    <input id="input_occupancyIdNew" type="hidden" name="occupancyId" value="@ViewBag.OccupancyId" />
+                    <label id="lbl_proofImage" class="small text-muted mb-2" style="display: block; margin-bottom: 8px; font-size: 0.85rem;">Tải lên ảnh xác nhận đăng ký tạm trú:</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input id="input_proofImageNew" type="file" class="form-control" name="proofImage" accept="image/*" required style="flex: 1; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px;">
+                        <button id="btn_submit_uploadProof" class="btn-primary-solid" type="submit" style="padding: 6px 16px;">Lưu minh chứng</button>
+                    </div>
+                </form>
+            }
+        </div>
+    </div>
+
+</div>

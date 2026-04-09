@@ -17,6 +17,36 @@ public partial class AspNetUser
 
     public DateTime CreatedAt { get; set; }
 
+    public string? UserName { get; set; }
+
+    public string? NormalizedUserName { get; set; }
+
+    public string? NormalizedEmail { get; set; }
+
+    public bool EmailConfirmed { get; set; }
+
+    public string? SecurityStamp { get; set; }
+
+    public string? ConcurrencyStamp { get; set; }
+
+    public string? PhoneNumber { get; set; }
+
+    public bool PhoneNumberConfirmed { get; set; }
+
+    public bool TwoFactorEnabled { get; set; }
+
+    public DateTimeOffset? LockoutEnd { get; set; }
+
+    public bool LockoutEnabled { get; set; }
+
+    public int AccessFailedCount { get; set; }
+
+    public virtual ICollection<AspNetUserClaim> AspNetUserClaims { get; set; } = new List<AspNetUserClaim>();
+
+    public virtual ICollection<AspNetUserLogin> AspNetUserLogins { get; set; } = new List<AspNetUserLogin>();
+
+    public virtual ICollection<AspNetUserToken> AspNetUserTokens { get; set; } = new List<AspNetUserToken>();
+
     public virtual Landlord? Landlord { get; set; }
 
     public virtual ICollection<MeterReading> MeterReadings { get; set; } = new List<MeterReading>();
@@ -24,4 +54,6 @@ public partial class AspNetUser
     public virtual ICollection<StoredFile> StoredFiles { get; set; } = new List<StoredFile>();
 
     public virtual ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
+
+    public virtual ICollection<AspNetRole> Roles { get; set; } = new List<AspNetRole>();
 }

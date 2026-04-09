@@ -1,0 +1,49 @@
+@model Motel.ViewModels.Account.ProfileViewModel
+@{
+    ViewData["Title"] = "Hồ sơ cá nhân";
+    Layout = "_Layout";
+}
+
+<div class="mx-auto max-w-2xl">
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Hồ sơ cá nhân</h1>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Thông tin tài khoản của bạn</p>
+    </div>
+
+    <div class="rounded-2xl border border-[#e7d9cf] dark:border-gray-700 bg-white dark:bg-gray-800/50 shadow-sm overflow-hidden">
+        <div class="border-b border-gray-100 dark:border-gray-700 bg-gradient-to-r from-primary/5 to-transparent px-6 py-4 dark:from-primary/10">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Thông tin chung</h2>
+        </div>
+        <div class="p-6 space-y-5">
+            <div>
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Họ và tên</label>
+                <p class="mt-1 text-base font-medium text-gray-900 dark:text-white">@Model.FullName</p>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Email</label>
+                <p class="mt-1 text-base font-medium text-gray-900 dark:text-white">@Model.Email</p>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Số điện thoại</label>
+                <p class="mt-1 text-base font-medium text-gray-900 dark:text-white">@(Model.PhoneNumber ?? "—")</p>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Vai trò</label>
+                <p class="mt-1 text-base font-medium text-gray-900 dark:text-white">@(Model.Role ?? "—")</p>
+            </div>
+            @if (!string.IsNullOrEmpty(Model.LandlordDisplayName))
+            {
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tên hiển thị (chủ trọ)</label>
+                    <p class="mt-1 text-base font-medium text-gray-900 dark:text-white">@Model.LandlordDisplayName</p>
+                </div>
+            }
+        </div>
+        <div class="border-t border-gray-100 dark:border-gray-700 px-6 py-4 bg-gray-50/50 dark:bg-gray-900/30">
+            <a asp-controller="Dashboard" asp-action="Index" class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-dark">
+                <span class="material-symbols-outlined text-lg">arrow_back</span>
+                Về Dashboard
+            </a>
+        </div>
+    </div>
+</div>

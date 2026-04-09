@@ -1,0 +1,63 @@
+@model Motel.ViewModels.Room.RoomCreateViewModel
+@{
+    ViewData["Title"] = "Thêm phòng mới";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white text-center">
+                    <h4 class="mb-0">Thêm phòng mới - Tầng @Model.Floor</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form id="form_createSingleRoom" asp-controller="Room" asp-action="CreateSingleRoom" method="post" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
+                        <input id="input_propertyId" type="hidden" asp-for="PropertyId" />
+                        <input id="input_floor" type="hidden" asp-for="Floor" />
+
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="mb-3">
+                            <label id="lbl_roomName" asp-for="RoomName" class="form-label fw-bold">Tên phòng mới</label>
+                            <input id="input_roomName" asp-for="RoomName" class="form-control" placeholder="Ví dụ: @ViewBag.SuggestedRoomName hoặc VIP 1" />
+                            <span asp-validation-for="RoomName" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label id="lbl_rentPrice" asp-for="RentPrice" class="form-label fw-bold">Giá thuê (VNĐ/tháng)</label>
+                            <input id="input_rentPrice" asp-for="RentPrice" class="form-control" type="number" min="0" step="10000" />
+                            <span asp-validation-for="RentPrice" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label id="lbl_maxOccupants" asp-for="MaxOccupants" class="form-label fw-bold">Số người ở tối đa</label>
+                            <input id="input_maxOccupants" asp-for="MaxOccupants" class="form-control" type="number" min="1" />
+                            <span asp-validation-for="MaxOccupants" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label id="lbl_images" asp-for="Images" class="form-label fw-bold">Hình ảnh phòng</label>
+                            <span class="text-muted small d-block mb-1">(Phòng ngủ, nhà vệ sinh, nhà bếp, ban công...)</span>
+                            <input id="input_images" asp-for="Images" type="file" class="form-control" multiple accept="image/*" />
+                            <span asp-validation-for="Images" class="text-danger small"></span>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a id="lnk_cancel_propertyDetails" asp-controller="Property" asp-action="Details" asp-route-id="@Model.PropertyId" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Quay lại
+                            </a>
+                            <button id="btn_submit_createSingleRoom" type="submit" class="btn btn-primary fw-bold">
+                                <i class="bi bi-check-circle"></i> Xác nhận thêm
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

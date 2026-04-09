@@ -1,0 +1,91 @@
+@model Motel.ViewModels.Contract.ContractCreateViewModel
+@{
+    ViewData["Title"] = "Tạo hợp đồng";
+}
+
+<div class="container py-4">
+    <h3 class="mb-3">Tạo hợp đồng - Phòng @Model.RoomName</h3>
+
+    <div class="alert alert-info">
+        Tối đa <strong>@Model.MaxOccupants</strong> người ở (bao gồm người thuê chính).
+    </div>
+
+    <form id="form_createContract" asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
+
+        <input type="hidden" asp-for="RoomId" />
+        <input type="hidden" asp-for="PropertyId" />
+        <input type="hidden" asp-for="RoomName" />
+        <input type="hidden" asp-for="MaxOccupants" />
+
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="mb-3">
+            <label asp-for="TenantId" class="form-label">Người thuê chính</label>
+            <select id="select_tenant_createContract" asp-for="TenantId" asp-items="Model.TenantOptions" class="form-select">
+                <option value="">-- Chọn người thuê --</option>
+            </select>
+            <div class="form-text">
+                Chưa có người thuê?
+                <a asp-controller="Tenant" asp-action="Create" asp-route-returnRoomId="@Model.RoomId">Tạo người thuê</a>
+            </div>
+            <span asp-validation-for="TenantId" class="text-danger"></span>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <label asp-for="DepositAmount" class="form-label">Tiền cọc</label>
+                <input asp-for="DepositAmount" class="form-control" />
+                <span asp-validation-for="DepositAmount" class="text-danger"></span>
+            </div>
+            <div class="col-md-4 mb-3">
+                <label asp-for="StartDate" class="form-label">Ngày bắt đầu</label>
+                <input asp-for="StartDate" class="form-control" type="date" />
+                <span asp-validation-for="StartDate" class="text-danger"></span>
+            </div>
+            <div class="col-md-4 mb-3">
+                <label asp-for="EndDate" class="form-label">Ngày kết thúc</label>
+                <input asp-for="EndDate" class="form-control" type="date" />
+                <span asp-validation-for="EndDate" class="text-danger"></span>
+            </div>
+        </div>
+
+        <hr />
+
+        <h5 class="mb-2">Người ở trong phòng (ở ghép)</h5>
+        <div class="form-text mb-2">
+            Tick những người sẽ ở chung. Người thuê chính sẽ được tự động thêm vào danh sách này khi lưu.
+        </div>
+
+        <div class="border rounded p-3">
+            @if (Model.TenantOptions == null || !Model.TenantOptions.Any())
+            {
+                <div class="text-muted">Chưa có người thuê để chọn.</div>
+            }
+            else
+            {
+                foreach (var t in Model.TenantOptions)
+                {
+                    <div class="form-check">
+                        <input class="form-check-input"
+                               type="checkbox"
+                               name="OccupantTenantIds"
+                               value="@t.Value"
+                               id="occ_@t.Value" />
+                        <label class="form-check-label" for="occ_@t.Value">@t.Text</label>
+                    </div>
+                }
+            }
+        </div>
+
+        <div class="d-flex gap-2 mt-3">
+            <a id="lnk_cancel_createContract" asp-controller="Property" asp-action="Details" asp-route-id="@Model.PropertyId"
+               class="btn btn-secondary">Hủy</a>
+            <button id="btn_submit_createContract" type="submit" class="btn btn-success">Tạo hợp đồng</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

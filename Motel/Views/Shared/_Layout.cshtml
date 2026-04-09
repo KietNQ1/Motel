@@ -1,48 +1,294 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+@inject Microsoft.AspNetCore.Identity.UserManager<Motel.Models.ApplicationUser> UserManager
+
+@{
+    var currentUser = await UserManager.GetUserAsync(User);
+    var fullName = currentUser?.FullName ?? "Guest";
+    var nameParts = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+    var initials = nameParts.Length == 1
+        ? (nameParts[0].Length >= 2 ? nameParts[0].Substring(0, 2) : nameParts[0]).ToUpper()
+        : (nameParts[0][0].ToString() + nameParts[nameParts.Length - 1][0].ToString()).ToUpper();
+}
+
+<!DOCTYPE html>
+<html lang="vi">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Motel</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <title>@ViewData["Title"] - Quản lý nhà trọ</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#d46211',
+                        'primary-dark': '#b04f0b',
+                        secondary: '#efe7dd',
+                        'background-light': '#fcfaf8',
+                        'text-main': '#1b130d',
+                        'text-sub': '#6b594e',
+                        info: '#0ea5e9',
+                        success: '#10b981',
+                        warning: '#f59e0b',
+                        danger: '#ef4444'
+                    },
+                    fontFamily: {
+                        display: ['Manrope', 'sans-serif'],
+                        body: ['Manrope', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
+
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.0/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.51.0/dist/apexcharts.min.js"></script>
+
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/Motel.styles.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
 </head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Motel</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
+<body class="bg-background-light dark:bg-gray-900 text-text-main font-display min-h-screen">
+    <!-- Header - Landing style -->
+    <header class="sticky top-0 z-50 w-full border-b border-[#e7d9cf] dark:border-gray-700 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md">
+        <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 md:px-6">
+            <a asp-controller="Home" asp-action="Index" class="flex items-center gap-2 shrink-0">
+                <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-white shadow-lg shadow-primary/25">
+                    <span class="material-symbols-outlined text-2xl">apartment</span>
+                </div>
+                <span class="text-xl font-bold tracking-tight text-text-main dark:text-white">Rentify</span>
+            </a>
+
+            <nav class="hidden md:flex items-center gap-1">
+                <a asp-controller="Dashboard" asp-action="Index"
+                   class="rounded-lg px-3 py-2 text-sm font-medium text-text-sub dark:text-gray-400 transition hover:bg-primary/10 hover:text-primary dark:hover:text-primary">
+                    Dashboard
+                </a>
+                <a asp-controller="Property" asp-action="Index"
+                   class="rounded-lg px-3 py-2 text-sm font-medium text-text-sub dark:text-gray-400 transition hover:bg-primary/10 hover:text-primary dark:hover:text-primary">
+                    Tòa nhà
+                </a>
+                <a asp-controller="Notification" asp-action="Send"
+                   class="rounded-lg px-3 py-2 text-sm font-medium text-text-sub dark:text-gray-400 transition hover:bg-primary/10 hover:text-primary dark:hover:text-primary">
+                    Thông báo
+                </a>
+                <a asp-controller="Tenant" asp-action="Index"
+                   class="rounded-lg px-3 py-2 text-sm font-medium text-text-sub dark:text-gray-400 transition hover:bg-primary/10 hover:text-primary dark:hover:text-primary">
+                    Người thuê
+                </a>
+                <a asp-controller="Contract" asp-action="Index"
+                   class="rounded-lg px-3 py-2 text-sm font-medium text-text-sub dark:text-gray-400 transition hover:bg-primary/10 hover:text-primary dark:hover:text-primary">
+                    Hợp đồng
+                </a>
+                <a asp-controller="Invoice" asp-action="Index"
+                   class="rounded-lg px-3 py-2 text-sm font-medium text-text-sub dark:text-gray-400 transition hover:bg-primary/10 hover:text-primary dark:hover:text-primary">
+                    Hóa đơn
+                </a>
+                <a asp-controller="Invoice" asp-action="History"
+                   class="rounded-lg px-3 py-2 text-sm font-medium text-text-sub dark:text-gray-400 transition hover:bg-primary/10 hover:text-primary dark:hover:text-primary">
+                    Thanh toán
+                </a>
+
+                <a asp-controller="Tax" asp-action="Index" 
+                   class="rounded-lg px-3 py-2 text-sm font-medium text-text-sub dark:text-gray-400 transition hover:bg-primary/10 hover:text-primary dark:hover:text-primary">
+                    Ước tính thuế
+                </a>
+            </nav>
+
+            <div class="flex items-center gap-2">
+                <div x-data="{ userMenuOpen: false }" class="relative">
+                    <button @@click="userMenuOpen = !userMenuOpen"
+                            class="flex items-center gap-2 rounded-xl border border-[#e7d9cf] dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-semibold text-white">
+                            @initials
+                        </div>
+                        <span class="hidden text-sm font-medium text-text-main dark:text-gray-300 sm:block max-w-[120px] truncate">@fullName</span>
+                        <span class="material-symbols-outlined text-lg text-text-sub">expand_more</span>
+                    </button>
+                    <div x-show="userMenuOpen"
+                         @@click.away="userMenuOpen = false"
+                         x-transition
+                         class="absolute right-0 mt-2 w-52 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 py-1 shadow-xl">
+                        <a asp-controller="Account" asp-action="Profile" class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <span class="material-symbols-outlined text-lg">person</span>
+                            Hồ sơ cá nhân
+                        </a>
+                        <a asp-controller="PaymentSettings" asp-action="Index" class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <span class="material-symbols-outlined text-lg">settings</span>
+                            Cài đặt
+                        </a>
+                        <hr class="my-1 border-gray-200 dark:border-gray-700" />
+                        <form asp-controller="Account" asp-action="Logout" method="post">
+                            <button type="submit" class="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20">
+                                <span class="material-symbols-outlined text-lg">logout</span>
+                                Đăng xuất
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <button class="md:hidden rounded-xl p-2 text-text-main dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        aria-label="Menu"
+                        @@click="$dispatch('toggle-mobile-nav')">
+                    <span class="material-symbols-outlined">menu</span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+            </div>
+        </div>
+
+        <!-- Mobile nav (dropdown under header) -->
+        <div x-data="{ mobileOpen: false }"
+             @@toggle-mobile-nav.window="mobileOpen = !mobileOpen"
+             class="border-t border-[#e7d9cf] dark:border-gray-700 bg-white dark:bg-gray-800 md:hidden"
+             x-show="mobileOpen"
+             x-cloak
+             x-transition>
+            <nav class="flex flex-col gap-0.5 p-3">
+                <a asp-controller="Dashboard" asp-action="Index" class="rounded-lg px-4 py-3 text-sm font-medium hover:bg-primary/10">Dashboard</a>
+                <a asp-controller="Property" asp-action="Index" class="rounded-lg px-4 py-3 text-sm font-medium hover:bg-primary/10">Tòa nhà</a>
+                <a asp-controller="Room" asp-action="Index" class="rounded-lg px-4 py-3 text-sm font-medium hover:bg-primary/10">Phòng</a>
+                <a asp-controller="Tenant" asp-action="Index" class="rounded-lg px-4 py-3 text-sm font-medium hover:bg-primary/10">Người thuê</a>
+                <a asp-controller="Contract" asp-action="Index" class="rounded-lg px-4 py-3 text-sm font-medium hover:bg-primary/10">Hợp đồng</a>
+                <a asp-controller="Invoice" asp-action="Index" class="rounded-lg px-4 py-3 text-sm font-medium hover:bg-primary/10">Hóa đơn</a>
+                <a asp-controller="Invoice" asp-action="History" class="rounded-lg px-4 py-3 text-sm font-medium hover:bg-primary/10">Thanh toán</a>
+                <a asp-controller="PaymentSettings" asp-action="Index" class="rounded-lg px-4 py-3 text-sm font-medium hover:bg-primary/10">Cài đặt thanh toán</a>
+                <a asp-controller="Tax" asp-action="Index" class="rounded-lg px-4 py-3 text-sm font-medium hover:bg-primary/10">Thuế</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="mx-auto max-w-7xl w-full flex-1 px-4 py-6 sm:px-6 sm:py-8">
+        @if (TempData["Success"] != null)
+        {
+            <div class="mb-4 rounded-xl bg-success/10 border border-success/30 px-4 py-3 text-sm font-medium text-success">
+                @TempData["Success"]
+            </div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="mb-4 rounded-xl bg-danger/10 border border-danger/30 px-4 py-3 text-sm font-medium text-danger">
+                @TempData["Error"]
+            </div>
+        }
+        @if (TempData["Info"] != null)
+        {
+            <div class="mb-4 rounded-xl bg-info/10 border border-info/30 px-4 py-3 text-sm font-medium text-info">
+                @TempData["Info"]
+            </div>
+        }
+        @RenderBody()
+    </main>
+
+    <footer class="bg-background-light pt-16 pb-8 border-t border-[#e7d9cf]">
+        <div class="mx-auto max-w-7xl px-4 md:px-10">
+            <div class="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
+                <div>
+                    <a asp-controller="Home" asp-action="Index" class="mb-4 flex items-center gap-2">
+                        <div class="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-white">
+                            <span class="material-symbols-outlined text-lg">apartment</span>
+                        </div>
+                        <h2 class="text-lg font-bold text-text-main">Rentify</h2>
+                    </a>
+                    <p class="text-sm text-text-sub">
+                        Giải pháp quản lý nhà trọ, phòng trọ, căn hộ dịch vụ hàng đầu tại Việt Nam.
+                    </p>
+                </div>
+                <div>
+                    <h3 class="mb-4 font-bold text-text-main">Sản phẩm</h3>
+                    <ul class="space-y-2 text-sm text-text-sub">
+                        <li><a class="hover:text-primary" href="#">Tính năng</a></li>
+                        <li><a class="hover:text-primary" href="#">Bảng giá</a></li>
+                        <li><a class="hover:text-primary" href="#">Ứng dụng di động</a></li>
+                        <li><a class="hover:text-primary" href="#">Phần cứng IoT</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="mb-4 font-bold text-text-main">Hỗ trợ</h3>
+                    <ul class="space-y-2 text-sm text-text-sub">
+                        <li><a class="hover:text-primary" href="#">Trung tâm trợ giúp</a></li>
+                        <li><a class="hover:text-primary" href="#">Hướng dẫn sử dụng</a></li>
+                        <li><a class="hover:text-primary" href="#">Cộng đồng</a></li>
+                        <li><a class="hover:text-primary" href="#">Liên hệ</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="mb-4 font-bold text-text-main">Liên hệ</h3>
+                    <ul class="space-y-2 text-sm text-text-sub">
+                        <li class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-base">call</span>
+                            <span>0909 123 456</span>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                        <li class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-base">mail</span>
+                            <span>hotro@rentify.vn</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-base">location_on</span>
+                            <span>TP. Hồ Chí Minh, Việt Nam</span>
                         </li>
                     </ul>
                 </div>
             </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
-
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - Motel - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            <div class="mt-16 border-t border-[#e7d9cf] pt-8 text-center text-sm text-text-sub">
+                <p>© 2024 Rentify. All rights reserved.</p>
+            </div>
         </div>
     </footer>
+
+    <div class="fixed bottom-6 right-6 z-40" x-data="{ chatOpen: false }">
+        <div x-show="chatOpen"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 translate-y-4"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 translate-y-0"
+             x-transition:leave-end="opacity-0 translate-y-4"
+             class="absolute bottom-14 right-0 w-[360px] max-w-[calc(100vw-2rem)] rounded-2xl border border-[#e7d9cf] dark:border-gray-600 bg-white dark:bg-gray-800 shadow-xl overflow-hidden"
+             style="max-height: 28rem;">
+            <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-700 bg-primary/10 dark:bg-primary/20 px-4 py-3">
+                <div class="flex items-center gap-2">
+                    <span class="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-white">
+                        <span class="material-symbols-outlined text-lg">smart_toy</span>
+                    </span>
+                    <span class="font-semibold text-gray-900 dark:text-white">Trợ lý ảo</span>
+                </div>
+                <button @@click="chatOpen = false" class="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="h-64 overflow-y-auto p-4 space-y-3 bg-gray-50/50 dark:bg-gray-900/30">
+                <div class="flex gap-2">
+                    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-white text-xs">TL</span>
+                    <div class="rounded-2xl rounded-tl-sm bg-white dark:bg-gray-700 px-3 py-2 text-sm shadow-sm">
+                        Xin chào! Tôi là trợ lý ảo của Rentify. Bạn có thể hỏi về hóa đơn, hợp đồng, phòng trọ... Tính năng đang được phát triển.
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-100 dark:border-gray-700 p-3">
+                <div class="flex gap-2">
+                    <input type="text"
+                           placeholder="Nhập tin nhắn..."
+                           class="flex-1 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20"
+                           disabled />
+                    <button type="button" class="rounded-xl bg-primary px-4 py-2.5 text-white hover:bg-primary-dark disabled:opacity-50" disabled title="Đang phát triển">
+                        <span class="material-symbols-outlined text-lg">send</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <button @@click="chatOpen = !chatOpen"
+                class="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg shadow-primary/30 hover:bg-primary-dark transition-all hover:scale-105">
+            <span class="material-symbols-outlined text-2xl" x-show="!chatOpen">chat</span>
+            <span class="material-symbols-outlined text-2xl" x-show="chatOpen" x-cloak>close</span>
+        </button>
+    </div>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

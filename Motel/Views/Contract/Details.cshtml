@@ -1,0 +1,432 @@
+@model Motel.Models.Contract
+@{
+    ViewData["Title"] = "Chi tiết hợp đồng";
+    var occupants = ViewBag.Occupants as List<Motel.Models.RoomOccupancy> ?? new();
+    var feeSettings = ViewBag.FeeSettings as List<Motel.Models.FeeSetting> ?? new();
+    var furnitures = ViewBag.Furnitures as IEnumerable<Motel.ViewModels.Room.RoomFurnitureViewModel> ?? Enumerable.Empty<Motel.ViewModels.Room.RoomFurnitureViewModel>();
+
+    // Landlord info
+    var landlordName    = Model.Room?.Property?.Landlord?.DisplayName ?? "";
+    var landlordPhone   = Model.Room?.Property?.Landlord?.User?.PhoneNumber ?? "";
+    var landlordCccd    = Model.Room?.Property?.Landlord?.IdentityNo ?? "";
+    var landlordAddress = Model.Room?.Property?.Landlord?.PermanentAddress ?? Model.Room?.Property?.Landlord?.Address ?? "";
+
+    // Tenant (primary) info
+    var tenantName    = Model.Tenant?.FullName ?? "";
+    var tenantPhone   = Model.Tenant?.Phone ?? "";
+    var tenantCccd    = Model.Tenant?.IdentityNo ?? "";
+    var tenantDob     = Model.Tenant?.DateOfBirth?.ToString("yyyy-MM-dd") ?? "";
+    var tenantAddress = Model.Tenant?.PermanentAddress ?? "";
+
+    // Room / contract
+    var propertyAddress = Model.Room?.Property?.Address ?? "";
+    var roomName        = Model.Room?.RoomName ?? "";
+    var rentAmount      = (int)(Model.Room?.RentPrice ?? 0);
+    var depositAmount   = (int)Model.DepositAmount;
+    int billingDay      = 5;
+    var startDate       = Model.StartDate.ToString("yyyy-MM-dd");
+    var endDate         = Model.EndDate.ToString("yyyy-MM-dd");
+
+    // Furniture text
+    var furnitureList = furnitures.Any()
+        ? string.Join(", ", furnitures.Select(f => $"{f.Name} ({f.Quantity})"))
+        : "Không có";
+
+    // Occupant count
+    int occupantCount = occupants.Count > 0 ? occupants.Count : 1;
+}
+
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    body { font-family: 'Inter', sans-serif; }
+    .contract-content p { margin-bottom: 10px; line-height: 1.8; }
+    .contract-content h2 { margin-top: 20px; margin-bottom: 12px; }
+
+    @@media print {
+        .no-print { display: none !important; }
+        nav, header, footer { display: none !important; }
+        html, body { background: white !important; margin: 0 !important; padding: 0 !important; overflow: visible !important; height: auto !important; }
+        main, .bg-slate-100, .max-w-7xl, .grid { display: block !important; width: 100% !important; overflow: visible !important; padding: 0 !important; margin: 0 !important; background: white !important; }
+        .print-container { box-shadow: none !important; border: none !important; margin: 0 !important; padding: 20px !important; width: 100% !important; overflow: visible !important; page-break-inside: avoid; }
+        .contract-content p, .contract-content h2 { page-break-inside: avoid; orphans: 3; widows: 3; }
+        .grid.grid-cols-2 { display: grid !important; grid-template-columns: 1fr 1fr !important; }
+    }
+</style>
+
+<div class="bg-slate-100 text-slate-800 p-4 md:p-8 rounded" style="font-family: 'Inter', sans-serif;">
+  <div class="max-w-7xl mx-auto">
+    <!-- Nút điều hướng (đặt ngoài thẻ nội dung, không dính với form) -->
+    <div class="no-print flex flex-wrap items-center gap-2 mb-4">
+      <a asp-controller="Contract" asp-action="Index"
+         class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:border-primary hover:bg-primary/5 hover:text-primary dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-primary dark:hover:bg-primary/10">
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+        Danh sách hợp đồng
+      </a>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+    <!-- ── Left panel (no-print) ── -->
+    <section class="no-print xl:col-span-1 bg-white rounded-2xl shadow-sm border border-slate-200 p-5 h-fit">
+      <div class="mb-5 flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-slate-900">Chi tiết hợp đồng</h1>
+          <p class="text-sm text-slate-500 mt-1">Chỉnh thông tin rồi in hợp đồng.</p>
+        </div>
+        <a asp-controller="Property" asp-action="Details" asp-route-id="@Model.Room.PropertyId"
+           class="flex items-center gap-1 text-sm text-slate-600 hover:text-slate-900 border border-slate-300 rounded-xl px-3 py-2 hover:bg-slate-50 transition">←</a>
+      </div>
+
+      <div class="space-y-3">
+        <!-- ── Bên A (chủ trọ) ── -->
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-wide pt-1">Bên A – Chủ trọ</p>
+
+        <div>
+          <label class="block text-sm font-medium mb-1">Tên chủ trọ</label>
+          <input id="landlordName" type="text" value="@landlordName" oninput="fillContract()"
+                 class="w-full rounded-xl border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-slate-300 text-sm" />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-medium mb-1">SĐT chủ trọ</label>
+            <input id="landlordPhone" type="text" value="@landlordPhone" oninput="fillContract()"
+                   class="w-full rounded-xl border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-slate-300 text-sm" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">CCCD chủ trọ</label>
+            <input id="landlordCccd" type="text" value="@landlordCccd" oninput="fillContract()"
+                   class="w-full rounded-xl border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-slate-300 text-sm" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Nơi ĐKTT chủ trọ</label>
+          <input id="landlordAddress" type="text" value="@landlordAddress" oninput="fillContract()"
+                 class="w-full rounded-xl border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-slate-300 text-sm" />
+        </div>
+
+        <!-- ── Bên B (người thuê) ── -->
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-wide pt-2">Bên B – Người thuê</p>
+
+        <div>
+          <label class="block text-sm font-medium mb-1">Tên khách thuê</label>
+          <input id="tenantName" type="text" value="@tenantName" oninput="fillContract()"
+                 class="w-full rounded-xl border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-slate-300 text-sm" />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-medium mb-1">SĐT khách</label>
+            <input id="tenantPhone" type="text" value="@tenantPhone" oninput="fillContract()"
+                   class="w-full rounded-xl border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-slate-300 text-sm" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">CCCD khách</label>
+            <input id="tenantCccd" type="text" value="@tenantCccd" oninput="fillContract()"
+                   class="w-full rounded-xl border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-slate-300 text-sm" />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-medium mb-1">Ngày sinh</label>
+            <input id="tenantDob" type="date" value="@tenantDob" oninput="fillContract()"
+                   class="w-full rounded-xl border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-slate-300 text-sm" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Nơi ĐKTT khách</label>
+            <input id="tenantAddress" type="text" value="@tenantAddress" oninput="fillContract()"
+                   class="w-full rounded-xl border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-slate-300 text-sm" />
+          </div>
+        </div>
+
+        <!-- ── Hợp đồng ── -->
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-wide pt-2">Hợp đồng</p>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-medium mb-1">Tên phòng</label>
+            <input id="roomName" type="text" value="@roomName" oninput="fillContract()"
+                   class="w-full rounded-xl border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-slate-300 text-sm" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Địa chỉ phòng</label>
+            <input id="propertyAddress" type="text" value="@propertyAddress" oninput="fillContract()"
+                   class="w-full rounded-xl border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-slate-300 text-sm" />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-medium mb-1">Tiền thuê/tháng</label>
+            <input id="rentAmount" type="number" value="@rentAmount" oninput="fillContract()"
+                   class="w-full rounded-xl border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-slate-300 text-sm" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Tiền cọc</label>
+            <input id="depositAmount" type="number" value="@depositAmount" oninput="fillContract()"
+                   class="w-full rounded-xl border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-slate-300 text-sm" />
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="block text-sm font-medium mb-1">Ngày TT hàng tháng</label>
+            <input id="billingDay" type="number" value="@billingDay" min="1" max="28" oninput="fillContract()"
+                   class="w-full rounded-xl border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-slate-300 text-sm" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Ngày bắt đầu</label>
+            <input id="startDate" type="date" value="@startDate" oninput="fillContract()"
+                   class="w-full rounded-xl border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-slate-300 text-sm" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Ngày kết thúc</label>
+            <input id="endDate" type="date" value="@endDate" oninput="fillContract()"
+                   class="w-full rounded-xl border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-slate-300 text-sm" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Báo trước trả phòng (ngày)</label>
+          <input id="noticeDays" type="number" value="30" min="1" oninput="fillContract()"
+                 class="w-full rounded-xl border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-slate-300 text-sm" />
+        </div>
+
+        <!-- ── Phí ── -->
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-wide pt-2">Phụ phí</p>
+        @foreach (var fee in feeSettings)
+        {
+            string feeId = "fee_" + fee.FeeTypeId;
+            decimal defaultVal = fee.CalculationMethod == "meter" ? fee.UnitPrice : fee.BaseAmount;
+            string unit = fee.CalculationMethod == "meter" ? "/đv đo" : (fee.CalculationMethod == "per_person" ? "/người/tháng" : "/tháng");
+            <div class="flex items-center gap-2">
+                <div class="flex-1">
+                    <label class="block text-xs font-medium mb-1 text-slate-600">@(fee.FeeType?.Name ?? "Phí") (@unit)</label>
+                    <input id="@feeId" type="number" value="@((int)defaultVal)"
+                           data-method="@fee.CalculationMethod" data-name="@(fee.FeeType?.Name ?? "Phí")"
+                           oninput="fillContract()"
+                           class="w-full rounded-xl border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-slate-300 text-sm fee-input" />
+                </div>
+            </div>
+        }
+        @if (!feeSettings.Any())
+        {
+            <p class="text-sm text-slate-400 italic">Chưa có phụ phí nào.</p>
+        }
+      </div>
+
+      <div class="mt-6 flex flex-col gap-3">
+        <button id="btn_print_contractDetails" onclick="window.print()"
+                class="rounded-xl bg-slate-900 text-white px-4 py-2.5 font-medium hover:bg-slate-700 transition text-center">
+          🖨️ Tải / In hợp đồng
+        </button>
+
+        @if (Model.Status == "active")
+        {
+            <form id="form_endContract" asp-action="End" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="contractId" value="@Model.ContractId" />
+                <button type="submit"
+                        class="w-full rounded-xl border border-red-300 bg-red-50 text-red-600 px-4 py-2.5 font-medium hover:bg-red-100 transition"
+                        onclick="return confirm('Kết thúc hợp đồng phòng @Model.Room.RoomName?');">
+                  Kết thúc hợp đồng này
+                </button>
+            </form>
+        }
+      </div>
+
+      <div class="mt-6 pt-4 border-t border-slate-200">
+        <h2 class="text-sm font-bold mb-2">Người đang ở (@occupants.Count):</h2>
+        <ul class="text-sm text-slate-600 pl-4 list-disc">
+          @if (!occupants.Any())
+          {
+              <li>Chưa có ai ở</li>
+          }
+          else
+          {
+              @foreach (var o in occupants)
+              {
+                  <li>@o.Tenant.FullName @if (o.IsPrimary) { <span class="text-slate-400 font-semibold">(Chính)</span> }</li>
+              }
+          }
+        </ul>
+      </div>
+    </section>
+
+    <!-- ── Contract preview ── -->
+    <section class="xl:col-span-2">
+      <div class="print-container bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-10">
+        <div class="text-center mb-8">
+          <p class="font-semibold uppercase">Cộng hòa xã hội chủ nghĩa Việt Nam</p>
+          <p class="font-semibold">Độc lập - Tự do - Hạnh phúc</p>
+          <div class="w-40 h-px bg-slate-400 mx-auto my-3"></div>
+          <h1 class="text-2xl md:text-3xl font-bold uppercase">Hợp đồng thuê phòng trọ</h1>
+        </div>
+
+        <div class="contract-content text-[12px]">
+          <p>Hôm nay, ngày <strong id="todayDate"></strong>, tại địa chỉ <strong id="viewPropertyAddressTop"></strong>, các Bên gồm:</p>
+
+          <h2 class="font-bold text-lg uppercase">Bên cho thuê (Bên A)</h2>
+          <p>Họ và tên: <strong id="viewLandlordName"></strong></p>
+          <p>Số điện thoại: <strong id="viewLandlordPhone"></strong></p>
+          <p>CCCD số: <strong id="viewLandlordCccd"></strong> &nbsp;&nbsp; Cơ quan cấp: Cục CSQLHC</p>
+          <p>Nơi ĐKTT: <strong id="viewLandlordAddress"></strong></p>
+
+          <h2 class="font-bold text-lg uppercase">Bên thuê (Bên B)</h2>
+          <p>Họ và tên: <strong id="viewTenantName"></strong></p>
+          <p>Số điện thoại: <strong id="viewTenantPhone"></strong></p>
+          <p>CCCD số: <strong id="viewTenantCccd"></strong> &nbsp;&nbsp; Ngày sinh: <strong id="viewTenantDob"></strong> &nbsp;&nbsp; Cơ quan cấp: Cục CSQLHC</p>
+          <p>Nơi ĐKTT: <strong id="viewTenantAddress"></strong></p>
+
+          <p>Bên A và Bên B sau đây gọi chung là <strong>"Hai Bên"</strong> hoặc <strong>"Các Bên"</strong>.</p>
+          <p>Sau khi thảo luận, Hai bên thống nhất đi đến ký kết hợp đồng thuê phòng với các điều khoản và điều kiện dưới đây:</p>
+
+          <h2 class="font-bold text-lg uppercase">Điều 1. Phòng thuê ở và các tài sản cho thuê kèm theo</h2>
+          <p>1. Bên A đồng ý cho Bên B thuê và Bên B cũng đồng ý thuê một phòng số <strong id="viewRoomName"></strong> tại địa chỉ <strong id="viewPropertyAddress"></strong>.</p>
+          <p>- Nội thất bao gồm: <strong id="viewFurniture">@furnitureList</strong></p>
+          <p>- Số người ở: <strong id="viewOccupantCount">@occupantCount người</strong></p>
+
+          <h2 class="font-bold text-lg uppercase">Điều 2. Bàn giao và thời hạn thuê</h2>
+          <p>- Hợp đồng thuê phòng là <strong id="viewDurationMonths"></strong> tháng. Kể từ ngày <strong id="viewStartDate"></strong> đến ngày <strong id="viewEndDate"></strong>.</p>
+          <p>- Hết thời hạn nếu muốn trả phòng thì phải báo trước ít nhất <strong id="viewNoticeDays">30</strong> ngày.</p>
+          <p>- Trường hợp chấm dứt trước hợp đồng thì sẽ mất tiền cọc.</p>
+
+          <h2 class="font-bold text-lg uppercase">Điều 3. Tiền thuê phòng và tiền cọc</h2>
+          <p>- Giá tiền thuê phòng là: <strong id="viewRentAmount"></strong>/tháng.</p>
+          <p>- Tiền cọc: <strong id="viewDepositAmount"></strong>.</p>
+          <p>- Tiền đặt cọc của Bên B sẽ không được dùng để thanh toán tiền thuê. Nếu Bên B vi phạm hợp đồng làm phát sinh thiệt hại cho Bên A thì Bên A có quyền khấu trừ tiền đặt cọc để bù đắp các chi phí khắc phục thiệt hại phát sinh.</p>
+          <p>- Tiền thuê phòng Bên B thanh toán cho Bên A vào ngày <strong id="viewBillingDay"></strong> hàng tháng. Chậm nhất ngày 10 hàng tháng phải thanh toán cho Bên A.</p>
+          <p>- Vào thời điểm kết thúc thời hạn thuê Bên A sẽ hoàn lại cho Bên B số tiền đặt cọc sau khi đã khấu trừ khoản tiền chi phí để khắc phục thiệt hại (nếu có).</p>
+          <!-- Dynamic fee lines -->
+          <div id="div_viewFeeLines_contractDetails"></div>
+
+          <h2 class="font-bold text-lg uppercase">Điều 4. Trách nhiệm và nghĩa vụ của các bên cho thuê phòng</h2>
+          <p><strong>* Trách nhiệm và nghĩa vụ của Bên Cho Thuê:</strong></p>
+          <p>- Bàn giao diện tích thuê, tài sản trong phòng cho Bên B theo đúng thời gian quy định trong hợp đồng.</p>
+          <p>- Đảm bảo cho Bên B thực hiện quyền sử dụng diện tích thuê một cách độc lập và liên tục trong suốt thời hạn thuê, trừ trường hợp vi phạm pháp luật hoặc các quy định của hợp đồng này.</p>
+          <p>- Hướng dẫn Bên B chấp hành đúng các quy định của địa phương, hoàn tất mọi thủ tục đăng ký tạm trú cho Bên B.</p>
+          <p><strong>* Trách nhiệm và nghĩa vụ của Bên Thuê:</strong></p>
+          <p>+ Chỉ sử dụng là nơi để ở, không sử dụng phòng làm nơi buôn bán, tàng trữ, chứa chấp những yếu tố vi phạm pháp luật.</p>
+          <p>+ Để đặc, tài sản, trang thiết bị trong nhà Bên B phải có trách nhiệm bảo quản cẩn thận không làm hư hỏng, mất mát thì Bên B chịu trách nhiệm thay mới.</p>
+          <p>+ Mọi việc sửa chữa, cải tạo, lắp đặt bổ sung các trang thiết bị làm ảnh hưởng đến kết cấu của căn phòng phải có sự đồng ý của Bên A thì Bên B mới thực hiện.</p>
+
+          <h2 class="font-bold text-lg uppercase">Điều 5. Điều Khoản Chung</h2>
+          <p>- Nếu đang trong thời hạn hợp đồng mà Bên B tự ý chấm dứt hợp đồng thì Bên B bị mất số tiền cọc. Ngược lại, nếu Bên A lấy lại phòng hoặc không cho Bên B thuê mặc dù chưa hết hạn hợp đồng thì Bên A trả gấp đôi tiền cọc cho Bên B.</p>
+          <p>- Trường hợp có tranh chấp hoặc một bên vi phạm hợp đồng thì hai bên cùng nhau bàn bạc giải quyết, nếu không giải quyết được thì yêu cầu cơ quan có thẩm quyền giải quyết.</p>
+          <p>- Hợp đồng này sẽ được thanh lý khi hết hạn thuê trong <strong>Điều 2</strong>.</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-8 mt-14 text-center">
+          <div>
+            <p class="font-semibold uppercase">Bên cho thuê</p>
+            <p class="text-sm text-slate-500">(Ký và ghi rõ họ tên)</p>
+            <div class="h-24"></div>
+            <p class="font-semibold" id="signLandlordName"></p>
+          </div>
+          <div>
+            <p class="font-semibold uppercase">Bên thuê</p>
+            <p class="text-sm text-slate-500">(Ký và ghi rõ họ tên)</p>
+            <div class="h-24"></div>
+            <p class="font-semibold" id="signTenantName"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Fee data from server (for dynamic lines)
+  var feeData = [
+    @foreach (var fee in feeSettings)
+    {
+      <text>{ id: 'fee_@fee.FeeTypeId', name: '@(fee.FeeType?.Name ?? "Phí")', method: '@fee.CalculationMethod' },</text>
+    }
+  ];
+
+  function formatCurrency(v) {
+    return Number(v || 0).toLocaleString('vi-VN') + ' VNĐ';
+  }
+
+  function formatDate(s) {
+    if (!s) return '';
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? s : d.toLocaleDateString('vi-VN');
+  }
+
+  function monthsBetween(s, e) {
+    const a = new Date(s), b = new Date(e);
+    if (isNaN(a) || isNaN(b)) return '';
+    const m = (b.getFullYear() - a.getFullYear()) * 12 + (b.getMonth() - a.getMonth());
+    return Math.max(m, 0);
+  }
+
+  function setText(id, v) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = v;
+  }
+
+  function fillContract() {
+    const v = {
+      landlordName:    document.getElementById('landlordName')?.value    ?? '',
+      landlordPhone:   document.getElementById('landlordPhone')?.value   ?? '',
+      landlordCccd:    document.getElementById('landlordCccd')?.value    ?? '',
+      landlordAddress: document.getElementById('landlordAddress')?.value ?? '',
+      tenantName:      document.getElementById('tenantName')?.value      ?? '',
+      tenantPhone:     document.getElementById('tenantPhone')?.value     ?? '',
+      tenantCccd:      document.getElementById('tenantCccd')?.value      ?? '',
+      tenantDob:       document.getElementById('tenantDob')?.value       ?? '',
+      tenantAddress:   document.getElementById('tenantAddress')?.value   ?? '',
+      propertyAddress: document.getElementById('propertyAddress')?.value ?? '',
+      roomName:        document.getElementById('roomName')?.value        ?? '',
+      rentAmount:      document.getElementById('rentAmount')?.value      ?? '0',
+      depositAmount:   document.getElementById('depositAmount')?.value   ?? '0',
+      billingDay:      document.getElementById('billingDay')?.value      ?? '5',
+      startDate:       document.getElementById('startDate')?.value       ?? '',
+      endDate:         document.getElementById('endDate')?.value         ?? '',
+      noticeDays:      document.getElementById('noticeDays')?.value      ?? '30',
+    };
+
+    setText('viewLandlordName',        v.landlordName);
+    setText('viewLandlordPhone',       v.landlordPhone);
+    setText('viewLandlordCccd',        v.landlordCccd || '................................');
+    setText('viewLandlordAddress',     v.landlordAddress || '................................');
+    setText('viewTenantName',          v.tenantName);
+    setText('viewTenantPhone',         v.tenantPhone);
+    setText('viewTenantCccd',          v.tenantCccd || '................................');
+    setText('viewTenantDob',           formatDate(v.tenantDob) || '................................');
+    setText('viewTenantAddress',       v.tenantAddress || '................................');
+    setText('viewPropertyAddress',     v.propertyAddress);
+    setText('viewPropertyAddressTop',  v.propertyAddress);
+    setText('viewRoomName',            v.roomName);
+    setText('viewRentAmount',          formatCurrency(v.rentAmount));
+    setText('viewDepositAmount',       formatCurrency(v.depositAmount));
+    setText('viewBillingDay',          v.billingDay);
+    setText('viewStartDate',           formatDate(v.startDate));
+    setText('viewEndDate',             formatDate(v.endDate));
+    setText('viewNoticeDays',          v.noticeDays);
+    setText('viewDurationMonths',      monthsBetween(v.startDate, v.endDate));
+    setText('signLandlordName',        v.landlordName);
+    setText('signTenantName',          v.tenantName);
+
+    // Today date
+    setText('todayDate', new Date().toLocaleDateString('vi-VN'));
+
+    // Dynamic fee lines
+    var lines = '';
+    feeData.forEach(function(f) {
+      var el = document.getElementById(f.id);
+      if (!el) return;
+      var val = Number(el.value || 0);
+      var label = '';
+      if (f.method === 'meter')       label = f.name + ': ' + formatCurrency(val) + '/đơn vị đo.';
+      else if (f.method === 'per_person') label = f.name + ': ' + formatCurrency(val) + '/người/tháng.';
+      else                            label = f.name + ': ' + formatCurrency(val) + '/tháng.';
+      lines += '<p>- ' + label + '</p>';
+    });
+    var feeDiv = document.getElementById('viewFeeLines');
+    if (feeDiv) feeDiv.innerHTML = lines;
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    fillContract();
+  });
+</script>

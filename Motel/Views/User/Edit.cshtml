@@ -1,0 +1,164 @@
+@model Motel.ViewModels.User.UserEditViewModel
+
+@{
+    ViewData["Title"] = "Edit User";
+}
+
+<h2 class="page-title">Edit User</h2>
+
+<div id="div_editUserContainer" class="form-container">
+
+    <form id="form_editUser" method="post" class="user-form">
+        @Html.AntiForgeryToken()
+
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="Email" />
+        <input type="hidden" asp-for="FullName" />
+        <input type="hidden" asp-for="CreatedAt" />
+
+        <div class="form-group">
+            <label id="lbl_email">Email</label>
+            <input id="input_email" value="@Model.Email" disabled class="input disabled" />
+        </div>
+
+        <div class="form-group">
+            <label id="lbl_fullName">Full Name</label>
+            <input id="input_fullName" value="@Model.FullName" disabled class="input disabled" />
+        </div>
+
+        <div class="form-group">
+            <label id="lbl_phoneNumber">Phone Number</label>
+            <input id="input_phoneNumber" asp-for="PhoneNumber" class="input" />
+        </div>
+
+        <div class="form-group">
+            <label id="lbl_createdAt">Created Date</label>
+            <input id="input_createdAt" value="@Model.CreatedAt.ToString("dd/MM/yyyy")" disabled class="input disabled" />
+        </div>
+
+        <div class="form-group checkbox-group">
+            <label id="lbl_isLocked">
+                <input id="chk_isLocked" type="checkbox" asp-for="IsLocked" />
+                Lock Account
+            </label>
+        </div>
+
+        <div class="form-group">
+            <label id="lbl_newPassword">New Password (optional)</label>
+            <input id="input_newPassword" asp-for="NewPassword" type="password" class="input" placeholder="Leave blank if not changing password" />
+        </div>
+
+        <div class="form-actions">
+            <button id="btn_submit_editUser" type="submit" class="btn btn-save">
+                Save
+            </button>
+
+            <a id="lnk_cancel_editUser" asp-action="Index" class="btn btn-cancel">
+                Cancel
+            </a>
+        </div>
+
+    </form>
+
+</div>
+
+
+<style>
+
+    body {
+        background: #f5f6fa;
+    }
+
+    .page-title {
+        font-size: 26px;
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+
+    .form-container {
+        max-width: 500px;
+        background: #fff;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    }
+
+    .form-group {
+        margin-bottom: 18px;
+        display: flex;
+        flex-direction: column;
+    }
+
+        .form-group label {
+            font-size: 14px;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #374151;
+        }
+
+    .input {
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid #dcdcdc;
+        font-size: 14px;
+        outline: none;
+        transition: 0.2s;
+    }
+
+        .input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px rgba(37,99,235,0.1);
+        }
+
+    .disabled {
+        background: #f3f4f6;
+        color: #6b7280;
+    }
+
+    .checkbox-group {
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+    }
+
+        .checkbox-group input {
+            width: 16px;
+            height: 16px;
+        }
+
+    .form-actions {
+        margin-top: 25px;
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn {
+        padding: 10px 16px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+        text-decoration: none;
+        display: inline-block;
+        transition: 0.2s;
+    }
+
+    .btn-save {
+        background: #2563eb;
+        color: white;
+    }
+
+        .btn-save:hover {
+            background: #1d4ed8;
+        }
+
+    .btn-cancel {
+        background: #f3f4f6;
+        color: #111827;
+    }
+
+        .btn-cancel:hover {
+            background: #e5e7eb;
+        }
+
+</style>

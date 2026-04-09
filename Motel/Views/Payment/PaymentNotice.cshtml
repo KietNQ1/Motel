@@ -1,0 +1,24 @@
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Thông báo thanh toán";
+    var message = ViewBag.Message as string ?? "Không có nội dung.";
+}
+
+<div class="mx-auto flex min-h-[50vh] max-w-2xl items-center px-4 py-8">
+    <div class="w-full overflow-hidden rounded-2xl border border-[#e7d9cf] bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+        <div class="flex flex-col items-center px-6 pb-8 pt-10 text-center">
+            <div class="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-warning/15 dark:bg-warning/20">
+                <span class="material-symbols-outlined text-4xl text-warning">info</span>
+            </div>
+            <h1 class="mb-2 text-xl font-extrabold text-text-main dark:text-white">Thông báo</h1>
+            <p class="text-left text-sm leading-relaxed text-text-sub dark:text-gray-400">@message</p>
+        </div>
+        <div class="border-t border-gray-100 px-6 py-6 dark:border-gray-700">
+            <a id="lnk_home_paymentNotice" asp-controller="Home" asp-action="Index"
+               class="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary font-bold text-white shadow-lg shadow-primary/25 transition hover:bg-primary-dark">
+                <span class="material-symbols-outlined text-lg">home</span>
+                Về trang chủ
+            </a>
+        </div>
+    </div>
+</div>

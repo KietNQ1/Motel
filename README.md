@@ -16,7 +16,7 @@
 * Thanh toán hóa đơn *(dự kiến tích hợp ZaloPay)*
 * Lưu trữ file hợp đồng (scan)
 
-Dự án được thiết kế theo hướng **thực tế**, sử dụng **Data First**, **soft delete**, **ràng buộc dữ liệu chặt chẽ ở tầng database**, phù hợp cho làm việc nhóm và mở rộng sau này.
+Dự án được thiết kế theo hướng **thực tế**, sử dụng **Code First**, **soft delete**, **ràng buộc dữ liệu chặt chẽ ở tầng database**, phù hợp cho làm việc nhóm và mở rộng sau này.
 
 ---
 
@@ -49,7 +49,7 @@ The project follows a **Data First approach** with strong **database constraints
 
 * **.NET 8**
 * **ASP.NET Core MVC**
-* **Entity Framework Core – Data First**
+* **Entity Framework Core – Code First**
 * **SQL Server (SSMS 2022)**
 * **ASP.NET Core Identity**
 * **ZaloPay** *(planned)*
@@ -123,28 +123,26 @@ Các kỹ thuật chính:
 
 ---
 
-## 🗄️ Database Setup (Data First – BẮT BUỘC)
+## 🗄️ Database Setup (Code First + Thêm Logic DB)
 
-⚠️ **Dự án sử dụng Data First. KHÔNG dùng EF Migration để tạo database.**
+Dự án này sử dụng EF Core (Code First) để quản lý cấu trúc bảng, tuy nhiên một số logic nghiệp vụ nâng cao ở phía cơ sở dữ liệu (View, Stored Procedures, Triggers) vẫn cần tạo qua kịch bản SQL thuần túy. Lưu ý rằng thư mục Migration đã được đưa vào Git Ignore nên mỗi dev cấu hình độc lập.
 
-### Thứ tự setup database
+### Thứ tự setup / đồng bộ database
 
-1. Mở **SQL Server Management Studio (SSMS 2022)**
-2. Chạy file:
+1. **Chuẩn bị file `appsettings.json`:**
+   Đảm bảo `appsettings.json` có trỏ đến SQL Server của bạn.
 
+2. **Khởi tạo bảng (Auto-create) và Seed Dữ Liệu:**
+   Bạn **chỉ** cần chạy ứng dụng:
+   ```bash
+   dotnet run
    ```
-   /database/db.sql
-   ```
-3. Seed dữ liệu hệ thống (admin, landlord):
+   *Lớp `DbSeeder` bên trong mã sẽ tự động gọi `context.Database.EnsureCreated()` (hoặc cấu trúc `Migrate`) để nạp toàn bộ cấu trúc bảng và chèn các tài khoản mặc định `admin@motel.local`, `landlord1@motel.local` cũng như nạp dữ liệu demo về phòng trọ, khách thuê, hóa đơn và hợp đồng.*
 
-   ```
-   /database/seed_core.sql
-   ```
-4. Seed dữ liệu demo nghiệp vụ:
-
-   ```
-   /database/seed_demo.sql
-   ```
+3. **Cập nhật Stored Procedures, Views, Triggers (Chỉ làm MỘT LẦN ở database mới):**
+   Mở **SQL Server Management Studio (SSMS 2022)** và kết nối tới database `MotelDb`.
+   Chạy toàn bộ lệnh trong file `Database/custom_objects.sql`.
+   Điều này là bắt buộc để các tính năng xóa mềm (soft delete) và báo cáo danh sách thanh toán (views) không bị sập.
 
 ---
 

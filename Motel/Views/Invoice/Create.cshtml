@@ -1,0 +1,888 @@
+@model Motel.ViewModels.Invoice.CreateInvoiceViewModel
+
+@{
+    ViewData["Title"] = "Tạo hóa đơn";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <style>
+        /* ── Design tokens (same as ConfigureRooms) ── */
+        .rc-page {
+            font-family: 'Manrope', sans-serif;
+            --rc-primary: #994200;
+            --rc-primary-dark: #c05500;
+            --rc-primary-fixed: #ffdbca;
+            --rc-on-primary-fixed: #331100;
+            --rc-secondary-fixed: #ffdbca;
+            --rc-outline-var: #dec0b2;
+            --rc-surface-low: #f3f3f3;
+            --rc-surface-lowest: #ffffff;
+            --rc-on-surface: #1a1c1c;
+            --rc-on-surface-var: #574238;
+            --rc-tertiary-fixed: #d1e4ff;
+            --rc-tertiary: #005fa0;
+            --rc-error: #ba1a1a;
+        }
+
+            .rc-page .msym {
+                font-family: 'Material Symbols Outlined';
+                font-size: 20px;
+                line-height: 1;
+                user-select: none;
+                vertical-align: middle;
+            }
+
+        /* Breadcrumb */
+        .rc-breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+            font-size: .82rem;
+            color: var(--rc-on-surface-var);
+            margin-bottom: 1.5rem;
+        }
+
+            .rc-breadcrumb a {
+                color: inherit;
+                text-decoration: none;
+            }
+
+                .rc-breadcrumb a:hover {
+                    color: var(--rc-primary);
+                }
+
+            .rc-breadcrumb strong {
+                color: var(--rc-on-surface);
+            }
+
+        /* Page heading */
+        .rc-page-header {
+            margin-bottom: 2rem;
+        }
+
+            .rc-page-header h1 {
+                font-size: clamp(1.8rem, 4vw, 2.6rem);
+                font-weight: 800;
+                letter-spacing: -0.02em;
+                color: var(--rc-on-surface);
+                line-height: 1.1;
+                margin-bottom: .4rem;
+            }
+
+            .rc-page-header p {
+                color: var(--rc-on-surface-var);
+                font-size: .92rem;
+                margin: 0;
+            }
+
+        .rc-room-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            background: var(--rc-primary-fixed);
+            color: var(--rc-on-primary-fixed);
+            font-size: .78rem;
+            font-weight: 700;
+            padding: .3rem .75rem;
+            border-radius: 2rem;
+            margin-top: .5rem;
+        }
+
+            .rc-room-badge .msym {
+                font-size: 15px;
+            }
+
+        /* Layout */
+        .rc-layout {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.75rem;
+            align-items: start;
+        }
+
+        @@media (min-width: 992px) {
+            .rc-layout {
+                grid-template-columns: 1fr 280px;
+            }
+        }
+
+        .rc-main-col {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .rc-side-col {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        /* Cards */
+        .rc-card {
+            background: var(--rc-surface-lowest);
+            border-radius: 1rem;
+            padding: 1.75rem;
+            box-shadow: 0 1px 6px rgba(0,0,0,.06);
+        }
+
+        .rc-card-muted {
+            background: var(--rc-surface-low);
+            border-radius: 1rem;
+            padding: 1.75rem;
+            border: 1px solid rgba(222,192,178,.25);
+        }
+
+            .rc-card h3, .rc-card-muted h3 {
+                font-size: 1rem;
+                font-weight: 700;
+                color: var(--rc-on-surface);
+                display: flex;
+                align-items: center;
+                gap: .5rem;
+                margin-bottom: 1.5rem;
+            }
+
+                .rc-card h3 .msym,
+                .rc-card-muted h3 .msym {
+                    color: var(--rc-primary);
+                }
+
+        /* Two-col */
+        .rc-two-col {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.25rem;
+        }
+
+        @@media (min-width: 576px) {
+            .rc-two-col {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .rc-three-col {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        @@media (min-width: 576px) {
+            .rc-three-col {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+        }
+
+        /* Fields */
+        .rc-field {
+            margin-bottom: 0;
+        }
+
+            .rc-field label {
+                display: block;
+                font-size: .68rem;
+                font-weight: 700;
+                letter-spacing: .1em;
+                text-transform: uppercase;
+                color: var(--rc-on-surface-var);
+                margin-bottom: .35rem;
+            }
+
+        .rc-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid var(--rc-outline-var);
+            border-radius: 0;
+            padding: .5rem 0;
+            font-size: 1.05rem;
+            font-weight: 500;
+            font-family: 'Manrope', sans-serif;
+            color: var(--rc-on-surface);
+            transition: border-color .2s;
+            outline: none;
+            box-shadow: none;
+        }
+
+            .rc-input:focus {
+                border-bottom-color: var(--rc-primary);
+                box-shadow: none;
+            }
+
+            .rc-input::placeholder {
+                color: #ccc;
+            }
+
+            .rc-input:disabled {
+                opacity: .55;
+                cursor: not-allowed;
+                border-bottom-style: dashed;
+            }
+
+        /* Validation */
+        .rc-validation-summary {
+            background: #fff0f0;
+            border-left: 3px solid var(--rc-error);
+            padding: .65rem .9rem;
+            border-radius: .5rem;
+            font-size: .82rem;
+            color: #93000a;
+            margin-bottom: 1rem;
+        }
+
+        .rc-field-error {
+            font-size: .75rem;
+            color: var(--rc-error);
+            margin-top: .2rem;
+            display: block;
+        }
+
+        /* ── Fee item block ── */
+        .rc-fee-item {
+            padding: 1.25rem 0;
+            border-bottom: 1px solid rgba(222,192,178,.3);
+        }
+
+            .rc-fee-item:last-child {
+                border-bottom: none;
+                padding-bottom: 0;
+            }
+
+            .rc-fee-item:first-child {
+                padding-top: 0;
+            }
+
+        .rc-fee-name {
+            font-size: .8rem;
+            font-weight: 700;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            color: var(--rc-primary);
+            margin-bottom: .85rem;
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+        }
+
+            .rc-fee-name .msym {
+                font-size: 16px;
+            }
+
+        /* ── Extra charges table ── */
+        .rc-charges-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .rc-add-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            padding: .4rem .9rem;
+            background: transparent;
+            border: 1.5px solid var(--rc-outline-var);
+            border-radius: .5rem;
+            font-size: .78rem;
+            font-weight: 700;
+            font-family: 'Manrope', sans-serif;
+            color: var(--rc-primary);
+            cursor: pointer;
+            transition: background .15s, border-color .15s;
+        }
+
+            .rc-add-btn:hover {
+                background: var(--rc-primary-fixed);
+                border-color: var(--rc-primary);
+            }
+
+            .rc-add-btn .msym {
+                font-size: 17px;
+            }
+
+        .rc-charges-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+            .rc-charges-table thead th {
+                font-size: .67rem;
+                font-weight: 700;
+                letter-spacing: .08em;
+                text-transform: uppercase;
+                color: var(--rc-on-surface-var);
+                padding: .4rem .5rem .75rem;
+                border-bottom: 2px solid var(--rc-outline-var);
+            }
+
+            .rc-charges-table tbody tr {
+                border-bottom: 1px solid rgba(222,192,178,.2);
+                transition: background .15s;
+            }
+
+                .rc-charges-table tbody tr:hover {
+                    background: rgba(255,219,202,.12);
+                }
+
+            .rc-charges-table td {
+                padding: .6rem .5rem;
+                vertical-align: middle;
+            }
+
+        /* Inline select / input in table */
+        .rc-table-select,
+        .rc-table-input {
+            background: transparent;
+            border: none;
+            border-bottom: 1.5px solid var(--rc-outline-var);
+            border-radius: 0;
+            padding: .3rem 0;
+            font-size: .88rem;
+            font-weight: 500;
+            font-family: 'Manrope', sans-serif;
+            color: var(--rc-on-surface);
+            width: 100%;
+            outline: none;
+            transition: border-color .2s;
+        }
+
+            .rc-table-select:focus,
+            .rc-table-input:focus {
+                border-bottom-color: var(--rc-primary);
+            }
+
+        .rc-table-select {
+            cursor: pointer;
+        }
+
+        .rc-del-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: #aaa;
+            padding: .2rem .4rem;
+            border-radius: .35rem;
+            transition: color .15s, background .15s;
+            display: flex;
+            align-items: center;
+        }
+
+            .rc-del-btn:hover {
+                color: var(--rc-error);
+                background: #fff0f0;
+            }
+
+            .rc-del-btn .msym {
+                font-size: 18px;
+            }
+
+        .rc-empty-row td {
+            text-align: center;
+            padding: 2rem;
+            color: var(--rc-on-surface-var);
+            font-size: .82rem;
+            font-style: italic;
+        }
+
+        /* ── Summary sidebar ── */
+        .rc-summary-box {
+            background: var(--rc-surface-lowest);
+            border-radius: 1rem;
+            padding: 1.4rem;
+            box-shadow: 0 1px 6px rgba(0,0,0,.06);
+        }
+
+            .rc-summary-box h4 {
+                font-size: .88rem;
+                font-weight: 700;
+                color: var(--rc-on-surface);
+                display: flex;
+                align-items: center;
+                gap: .4rem;
+                margin-bottom: 1rem;
+            }
+
+                .rc-summary-box h4 .msym {
+                    color: var(--rc-primary);
+                    font-size: 18px;
+                }
+
+        .rc-summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: .45rem 0;
+            border-bottom: 1px solid rgba(222,192,178,.2);
+            font-size: .82rem;
+        }
+
+            .rc-summary-row:last-child {
+                border-bottom: none;
+            }
+
+            .rc-summary-row .label {
+                color: var(--rc-on-surface-var);
+            }
+
+            .rc-summary-row .value {
+                font-weight: 700;
+                color: var(--rc-on-surface);
+            }
+
+        .rc-summary-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: .75rem;
+            padding-top: .75rem;
+            border-top: 2px solid var(--rc-outline-var);
+        }
+
+            .rc-summary-total .label {
+                font-size: .8rem;
+                font-weight: 700;
+                letter-spacing: .06em;
+                text-transform: uppercase;
+                color: var(--rc-on-surface-var);
+            }
+
+            .rc-summary-total .value {
+                font-size: 1.2rem;
+                font-weight: 800;
+                color: var(--rc-primary);
+            }
+
+        /* Buttons */
+        .rc-btn-primary {
+            width: 100%;
+            padding: .9rem;
+            background: linear-gradient(135deg, var(--rc-primary), var(--rc-primary-dark));
+            color: #fff;
+            border: none;
+            border-radius: .75rem;
+            font-weight: 800;
+            font-size: .92rem;
+            font-family: 'Manrope', sans-serif;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+            box-shadow: 0 6px 20px rgba(153,66,0,.22);
+            transition: box-shadow .2s, transform .15s;
+        }
+
+            .rc-btn-primary:hover {
+                box-shadow: 0 10px 28px rgba(153,66,0,.32);
+                color: #fff;
+            }
+
+            .rc-btn-primary:active {
+                transform: scale(.97);
+            }
+
+        .rc-btn-secondary {
+            width: 100%;
+            padding: .9rem;
+            background: transparent;
+            color: var(--rc-on-surface);
+            border: 2px solid var(--rc-outline-var);
+            border-radius: .75rem;
+            font-weight: 700;
+            font-size: .92rem;
+            font-family: 'Manrope', sans-serif;
+            cursor: pointer;
+            transition: background .15s, transform .15s;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+        }
+
+            .rc-btn-secondary:hover {
+                background: var(--rc-surface-low);
+                color: var(--rc-on-surface);
+            }
+
+            .rc-btn-secondary:active {
+                transform: scale(.97);
+            }
+
+        /* Tip box */
+        .rc-tip-box {
+            background: var(--rc-tertiary-fixed);
+            border-radius: 1rem;
+            padding: 1.1rem 1.25rem;
+            display: flex;
+            gap: .65rem;
+            align-items: flex-start;
+        }
+
+            .rc-tip-box .msym {
+                color: var(--rc-tertiary);
+                font-size: 18px;
+                flex-shrink: 0;
+                margin-top: 1px;
+            }
+
+            .rc-tip-box p {
+                font-size: .75rem;
+                color: #001d36;
+                line-height: 1.55;
+                margin: 0;
+            }
+
+                .rc-tip-box p strong {
+                    font-weight: 700;
+                }
+    </style>
+}
+
+<div class="rc-page py-4 py-lg-5">
+    <div class="container-lg">
+
+        @* Breadcrumb *@
+        <nav class="rc-breadcrumb" aria-label="Breadcrumb">
+            <a asp-controller="Room" asp-action="Details" asp-route-id="@Model.RoomId">Chi tiết phòng</a>
+            <span class="msym">chevron_right</span>
+            <strong>Tạo hóa đơn</strong>
+        </nav>
+
+        @* Page heading *@
+        <div class="rc-page-header">
+            <h1>Tạo hóa đơn</h1>
+            <p>Lập hóa đơn thu tiền định kỳ cho phòng thuê.</p>
+            @if (!string.IsNullOrEmpty(Model.RoomName))
+            {
+                <span class="rc-room-badge">
+                    <span class="msym">meeting_room</span>
+                    Phòng @Model.RoomName
+                </span>
+            }
+        </div>
+
+        <form asp-controller="Invoice" asp-action="Create" method="post" id="form_invoiceCreate">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="RoomId" />
+            <input type="hidden" asp-for="ContractId" />
+
+            <div class="rc-layout">
+
+                @* ── Main column ── *@
+                <div class="rc-main-col">
+
+                    
+
+                    @* Card 1: General info *@
+                    <div class="rc-card">
+                        <h3>
+                            <span class="msym">receipt_long</span>
+                            Thông tin hóa đơn
+                        </h3>
+                        <div class="rc-two-col">
+                            <div class="rc-field">
+                                <label asp-for="PeriodMonth"></label>
+                                <input asp-for="PeriodMonth" class="rc-input" placeholder="YYYYMM" />
+                                <span asp-validation-for="PeriodMonth" class="rc-field-error"></span>
+                            </div>
+                            <div class="rc-field">
+                                <label asp-for="DueDate"></label>
+                                <input asp-for="DueDate" type="date" class="rc-input" />
+                                <span asp-validation-for="DueDate" class="rc-field-error"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    @* Card 2: Fee items *@
+                    <div class="rc-card-muted">
+                        <h3>
+                            <span class="msym">payments</span>
+                            Chi tiết các loại phí
+                        </h3>
+
+                        <div class="rc-fee-item">
+                            <div class="rc-fee-name">
+                                <span class="msym">bed</span>
+                                Tiền phòng
+                            </div>
+                            <div class="rc-field">
+                                <label>Chi phí cố định (VNĐ)</label>
+                                <input class="rc-input" value="@Model.RentPrice.ToString("N0")" disabled />
+                            </div>
+                        </div>
+
+                        @for (int i = 0; i < Model.FeeItems.Count; i++)
+                        {
+                            <input type="hidden" asp-for="FeeItems[i].FeeTypeId" />
+                            <input type="hidden" asp-for="FeeItems[i].FeeTypeName" />
+                            <input type="hidden" asp-for="FeeItems[i].CalculationMethod" />
+                            <input type="hidden" asp-for="FeeItems[i].UnitPrice" />
+                            <input type="hidden" asp-for="FeeItems[i].BaseAmount" />
+
+                            <div class="rc-fee-item">
+                                <div class="rc-fee-name">
+                                    @if (Model.FeeItems[i].CalculationMethod == "meter")
+                                    {
+                                        <span class="msym">bolt</span>
+                                    }
+                                    else if (Model.FeeItems[i].CalculationMethod == "per_person")
+                                    {
+                                        <span class="msym">group</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="msym">home</span>
+                                    }
+                                    @Model.FeeItems[i].FeeTypeName
+                                </div>
+
+                                @if (Model.FeeItems[i].CalculationMethod == "meter")
+                                {
+                                    <div class="rc-three-col">
+                                        <div class="rc-field">
+                                            <label asp-for="FeeItems[i].PreviousReading">Chỉ số đầu</label>
+                                            <input asp-for="FeeItems[i].PreviousReading" class="rc-input" placeholder="0" />
+                                        </div>
+                                        <div class="rc-field">
+                                            <label asp-for="FeeItems[i].CurrentReading">Chỉ số cuối</label>
+                                            <input asp-for="FeeItems[i].CurrentReading" class="rc-input" placeholder="0" />
+                                        </div>
+                                        <div class="rc-field">
+                                            <label>Đơn giá</label>
+                                            <input class="rc-input" value="@Model.FeeItems[i].UnitPrice.ToString("N0")" disabled />
+                                        </div>
+                                    </div>
+                                }
+                                else if (Model.FeeItems[i].CalculationMethod == "per_person")
+                                {
+                                    <div class="rc-two-col">
+                                        <div class="rc-field">
+                                            <label asp-for="FeeItems[i].Quantity">Số người</label>
+                                            <input asp-for="FeeItems[i].Quantity" class="rc-input" value="@(Model.FeeItems[i].Quantity ?? 1)" placeholder="1" />
+                                        </div>
+                                        <div class="rc-field">
+                                            <label>Đơn giá (VNĐ/người)</label>
+                                            <input class="rc-input" value="@Model.FeeItems[i].BaseAmount.ToString("N0")" disabled />
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="rc-field">
+                                        <label>Chi phí cố định (VNĐ)</label>
+                                        <input class="rc-input" value="@Model.FeeItems[i].BaseAmount.ToString("N0")" disabled />
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    @* Card 3: Extra charges *@
+                    <div class="rc-card">
+                        <div class="rc-charges-header">
+                            <h3 style="margin-bottom:0;">
+                                <span class="msym">add_circle</span>
+                                Phí phát sinh
+                            </h3>
+                            <button type="button" class="rc-add-btn" id="btn_addExtraCharge_invoiceCreate">
+                                <span class="msym">add</span>
+                                Thêm phí
+                            </button>
+                        </div>
+
+                        <table class="rc-charges-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:28%">Loại phí</th>
+                                    <th style="width:42%">Mô tả</th>
+                                    <th style="width:22%">Số tiền (VNĐ)</th>
+                                    <th style="width:8%"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody_extraCharges_invoiceCreate">
+                                <tr class="rc-empty-row" id="tr_empty_invoiceCreate">
+                                    <td colspan="4">
+                                        <span class="msym" style="font-size:28px;color:#dec0b2;display:block;margin-bottom:.4rem;">inbox</span>
+                                        Chưa có phí phát sinh nào
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+
+                @* ── Sidebar ── *@
+                <div class="rc-side-col">
+
+                    @* Summary box *@
+                    <div class="rc-summary-box">
+                        <h4>
+                            <span class="msym">calculate</span>
+                            Tổng kết
+                        </h4>
+                        <div id="div_summaryRows_invoiceCreate">
+                            <div class="rc-summary-row">
+                                <span class="label">Các khoản phí</span>
+                                <span class="value" id="txt_summaryFeeCount_invoiceCreate">—</span>
+                            </div>
+                            <div class="rc-summary-row">
+                                <span class="label">Phí phát sinh</span>
+                                <span class="value" id="txt_summaryExtraCount_invoiceCreate">0 khoản</span>
+                            </div>
+                        </div>
+                        <div class="rc-summary-total">
+                            <span class="label">Ước tính</span>
+                            <span class="value" id="txt_summaryTotal_invoiceCreate">—</span>
+                        </div>
+                    </div>
+
+                    @* Action buttons *@
+                    <button type="submit" form="form_invoiceCreate" class="rc-btn-primary">
+                        <span class="msym">check_circle</span>
+                        Tạo hóa đơn
+                    </button>
+
+                    <a asp-action="Details" asp-controller="Room" asp-route-id="@Model.RoomId"
+                       class="rc-btn-secondary">Hủy</a>
+
+                    @* Tip *@
+                    <div class="rc-tip-box">
+                        <span class="msym">info</span>
+                        <p>
+                            <strong>Lưu ý:</strong> Hóa đơn sẽ được gửi cho khách thuê sau khi tạo.
+                            Bạn có thể chỉnh sửa trước khi gửi.
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function () {
+            let chargeIndex = 0;
+
+            function updateEmptyRow() {
+                const count = $('#extraChargesBody tr:not(#emptyRow)').length;
+                if (count > 0) {
+                    $('#emptyRow').hide();
+                } else {
+                    $('#emptyRow').show();
+                }
+                $('#summaryExtraCount').text(count + ' khoản');
+                updateTotal();
+            }
+
+            function updateTotal() {
+                let total = parseFloat('@Model.RentPrice.ToString(System.Globalization.CultureInfo.InvariantCulture)') || 0;
+
+                const feeItems = [
+                    @for (int i = 0; i < Model.FeeItems.Count; i++)
+                    {
+                        <text>
+                        {
+                            index: @i,
+                            method: '@Model.FeeItems[i].CalculationMethod',
+                            unitPrice: parseFloat('@Model.FeeItems[i].UnitPrice'),
+                            baseAmount: parseFloat('@Model.FeeItems[i].BaseAmount')
+                        },
+                        </text>
+                    }
+                ];
+
+                feeItems.forEach(item => {
+                    if (item.method === 'meter') {
+                        const prev = parseFloat($(`[name="FeeItems[${item.index}].PreviousReading"]`).val()) || 0;
+                        const curr = parseFloat($(`[name="FeeItems[${item.index}].CurrentReading"]`).val()) || 0;
+                        let diff = curr - prev;
+                        if (diff < 0) diff = 0;
+                        total += diff * item.unitPrice;
+                    } else if (item.method === 'per_person') {
+                        const qty = parseFloat($(`[name="FeeItems[${item.index}].Quantity"]`).val()) || 0;
+                        total += qty * item.baseAmount;
+                    } else {
+                        total += item.baseAmount;
+                    }
+                });
+
+                $('#extraChargesBody tr:not(#emptyRow)').each(function () {
+                    const val = parseFloat($(this).find('input[type=number]').val()) || 0;
+                    total += val;
+                });
+
+                const feeCount = @Model.FeeItems.Count + 1;
+                $('#summaryFeeCount').text(feeCount + ' khoản (gồm tiền phòng)');
+                $('#summaryTotal').text(total.toLocaleString('vi-VN') + ' ₫');
+            }
+
+            $('#addExtraChargeBtn').click(function () {
+                const rowHtml = `
+                    <tr id="charge-row-${chargeIndex}">
+                        <td>
+                            <select name="ExtraCharges[${chargeIndex}].ItemType" class="rc-table-select">
+                                <option value="other">Khác</option>
+                                <option value="service">Dịch vụ</option>
+                                <option value="repair">Sửa chữa</option>
+                                <option value="penalty">Phạt</option>
+                            </select>
+                        </td>
+                        <td>
+                            <input type="text"
+                                   name="ExtraCharges[${chargeIndex}].Description"
+                                   class="rc-table-input"
+                                   placeholder="Nhập mô tả..." />
+                        </td>
+                        <td>
+                            <input type="number"
+                                   name="ExtraCharges[${chargeIndex}].Amount"
+                                   class="rc-table-input extra-amount"
+                                   value="0" min="0" />
+                        </td>
+                        <td>
+                            <button type="button"
+                                    class="rc-del-btn remove-charge-btn"
+                                    data-id="${chargeIndex}">
+                                <span class="msym">delete</span>
+                            </button>
+                        </td>
+                    </tr>`;
+                $('#extraChargesBody').append(rowHtml);
+                chargeIndex++;
+                updateEmptyRow();
+            });
+
+            $(document).on('click', '.remove-charge-btn', function () {
+                const id = $(this).data('id');
+                $(`#charge-row-${id}`).remove();
+
+                $('#extraChargesBody tr:not(#emptyRow)').each(function (index) {
+                    $(this).find('select, input').each(function () {
+                        const name = $(this).attr('name');
+                        if (name) {
+                            $(this).attr('name', name.replace(/\[\d+\]/, '[' + index + ']'));
+                        }
+                    });
+                    $(this).find('.remove-charge-btn').data('id', index);
+                    $(this).attr('id', 'charge-row-' + index);
+                });
+                chargeIndex = $('#extraChargesBody tr:not(#emptyRow)').length;
+                updateEmptyRow();
+            });
+
+            $(document).on('input', '.extra-amount, .rc-input', function () {
+                updateTotal();
+            });
+
+            // Init
+            updateEmptyRow();
+        });
+    </script>
+}

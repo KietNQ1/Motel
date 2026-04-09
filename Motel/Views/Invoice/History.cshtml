@@ -1,0 +1,157 @@
+@model List<Motel.ViewModels.Invoice.TransactionHistoryViewModel>
+
+@{
+    ViewData["Title"] = "Lịch sử giao dịch";
+}
+
+<div class="mb-6">
+    <h1 class="text-2xl font-bold text-text-main dark:text-white">Lịch sử giao dịch</h1>
+    <p class="text-sm text-text-sub mt-1">Danh sách tất cả hóa đơn và trạng thái thanh toán</p>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="flex flex-col items-center justify-center py-20 text-center">
+        <svg class="h-16 w-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                  d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" />
+        </svg>
+        <p class="text-gray-500 text-lg">Chưa có giao dịch nào</p>
+        <p class="text-gray-400 text-sm mt-1">Tạo hóa đơn đầu tiên để bắt đầu theo dõi</p>
+    </div>
+}
+else
+{
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700">
+            <p class="text-sm text-text-sub dark:text-gray-400">Tổng hóa đơn</p>
+            <p class="text-2xl font-bold text-text-main dark:text-white mt-1">@Model.Count</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700">
+            <p class="text-sm text-text-sub dark:text-gray-400">Đã thanh toán</p>
+            <p class="text-2xl font-bold text-success mt-1">@Model.Count(x => x.InvoiceStatus == "paid")</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700">
+            <p class="text-sm text-text-sub dark:text-gray-400">Chưa thanh toán</p>
+            <p class="text-2xl font-bold text-danger mt-1">@Model.Count(x => x.InvoiceStatus == "unpaid")</p>
+        </div>
+    </div>
+
+    <!-- Transaction Table -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table id="tbl_transactionHistory" class="w-full text-sm">
+                <thead class="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                    <tr>
+                        <th class="text-left px-4 py-3 font-semibold text-text-sub dark:text-gray-300">Tháng</th>
+                        <th class="text-left px-4 py-3 font-semibold text-text-sub dark:text-gray-300">Người thuê</th>
+                        <th class="text-left px-4 py-3 font-semibold text-text-sub dark:text-gray-300">Phòng</th>
+                        <th class="text-left px-4 py-3 font-semibold text-text-sub dark:text-gray-300">Nhà trọ</th>
+                        <th class="text-right px-4 py-3 font-semibold text-text-sub dark:text-gray-300">Tổng tiền</th>
+                        <th class="text-center px-4 py-3 font-semibold text-text-sub dark:text-gray-300">Trạng thái</th>
+                        <th class="text-center px-4 py-3 font-semibold text-text-sub dark:text-gray-300">Ngày tạo</th>
+                        <th class="text-center px-4 py-3 font-semibold text-text-sub dark:text-gray-300">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                    @foreach (var item in Model)
+                    {
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+
+                            <!-- Tháng -->
+                            <td class="px-4 py-3">
+                                <span class="font-medium text-text-main dark:text-white">@item.PeriodLabel</span>
+                            </td>
+
+                            <!-- Người thuê -->
+                            <td class="px-4 py-3">
+                                <div class="flex items-center gap-2">
+                                    <div class="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                        <span class="text-xs font-medium text-primary">
+                                            @(item.TenantName.Length > 0 ? item.TenantName[0].ToString().ToUpper() : "?")
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium text-text-main dark:text-white">@item.TenantName</p>
+                                        @if (!string.IsNullOrEmpty(item.TenantPhone))
+                                        {
+                                            <p class="text-xs text-text-sub">@item.TenantPhone</p>
+                                        }
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- Phòng -->
+                            <td class="px-4 py-3">
+                                <a asp-controller="Room" asp-action="Details" asp-route-id="@item.RoomId"
+                                   class="text-primary hover:underline font-medium">
+                                    @item.RoomName
+                                </a>
+                            </td>
+
+                            <!-- Nhà trọ -->
+                            <td class="px-4 py-3 text-text-sub dark:text-gray-400">
+                                @item.PropertyName
+                            </td>
+
+                            <!-- Tổng tiền -->
+                            <td class="px-4 py-3 text-right">
+                                <span class="font-semibold text-text-main dark:text-white">
+                                    @item.TotalAmount.ToString("N0") VNĐ
+                                </span>
+                                @if (item.PaidAmount.HasValue && item.PaidAmount > 0)
+                                {
+                                    <p class="text-xs text-success">Đã TT: @item.PaidAmount.Value.ToString("N0")</p>
+                                }
+                            </td>
+
+                            <!-- Trạng thái -->
+                            <td class="px-4 py-3 text-center">
+                                @{
+                                    var badgeClass = item.InvoiceStatus switch
+                                    {
+                                        "paid"      => "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+                                        "unpaid"    => "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+                                        "cancelled" => "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400",
+                                        _           => "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
+                                    };
+                                }
+                                <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium @badgeClass">
+                                    @item.StatusLabel
+                                </span>
+                            </td>
+
+                            <!-- Ngày tạo -->
+                            <td class="px-4 py-3 text-center text-text-sub dark:text-gray-400 text-xs">
+                                @item.InvoiceCreatedAt.ToString("dd/MM/yyyy")
+                            </td>
+
+                            <!-- Thao tác -->
+                            <td class="px-4 py-3 text-center">
+                                <a asp-controller="Invoice" asp-action="Details" asp-route-id="@item.InvoiceId"
+                                   class="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                    Chi tiết
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Footer / Total -->
+        <div class="px-4 py-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 flex justify-between items-center">
+            <span class="text-sm text-text-sub dark:text-gray-400">
+                Tổng cộng @Model.Count giao dịch
+            </span>
+            <span class="font-bold text-text-main dark:text-white">
+                Tổng thu: @Model.Where(x => x.InvoiceStatus == "paid").Sum(x => x.TotalAmount).ToString("N0") VNĐ
+            </span>
+        </div>
+    </div>
+}
